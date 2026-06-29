@@ -35,8 +35,6 @@ func Check(inputPath string) ([]Issue, Statistics, error) {
 
 	baseName := filepath.Base(inputPath)
 
-	fmt.Println("BaseName:", baseName)
-
 	// Do not treat the "." and ".." directories as hidden directories.
 
 	if (baseName != ".") && (baseName != "..") {
@@ -111,6 +109,32 @@ func Check(inputPath string) ([]Issue, Statistics, error) {
 
 	if (relativePath != "..") && ((len(relativePath) < 3) || (relativePath[:3] != ".."+string(filepath.Separator))) {
 		return []Issue{{Type: WorkingDirInInput, Path: inputPath}}, stats, nil
+	}
+
+	//-------------------------------------------------------------------------
+	// Try to read siblings to detect directories and files with ambiguous names
+	//-------------------------------------------------------------------------
+
+	parentPath := filepath.Dir(inputPathAbs)
+
+	dirEntries, err := os.ReadDir(parentPath)
+
+	if err != nil {
+		return []Issue{{Type: DirectoryNotReadable, Path: inputPath, Info: err.Error()}}, stats, nil
+	}
+
+	for _, dirEntry := range dirEntries {
+		if dirEntry.IsDir() {
+			if dirEntry.Name() != baseName { // it's NOT me!
+				if strings.ToLower(dirEntry.Name()) == strings.ToLower(baseName) {
+					fmt.Println("Directory-Sibling found: ", dirEntry.Name())
+				}
+			}
+		} else {
+			if strings.Contains(strings.ToLower(dirEntry.Name()), strings.ToLower(baseName)) {
+				fmt.Println("File-Sibling found: ", dirEntry.Name())
+			}
+		}
 	}
 
 	//-------------------------------------------------------------------------
