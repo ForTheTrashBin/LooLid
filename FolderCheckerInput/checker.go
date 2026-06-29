@@ -21,6 +21,8 @@ func Check(inputPath string) ([]Issue, Statistics, error) {
 		return []Issue{{Type: NoFileInfo, Path: inputPath, Info: err.Error()}}, stats, nil
 	}
 
+	os.IsNotExist(err)
+
 	//-------------------------------------------------------------------------
 	// Check if input-path points to a directory
 	//-------------------------------------------------------------------------
@@ -47,7 +49,7 @@ func Check(inputPath string) ([]Issue, Statistics, error) {
 	// On windows directory must not be hidden or system
 	//-------------------------------------------------------------------------
 
-	if hasHiddenOrSystemOnWindows(inputPath) {
+	if isHiddenOrSystemOnWindows(inputPath) {
 		return []Issue{{Type: DirectoryHiddenOrSystem, Path: inputPath}}, stats, nil
 	}
 
