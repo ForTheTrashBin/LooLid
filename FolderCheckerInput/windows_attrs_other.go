@@ -2,6 +2,6 @@
 
 package FolderCheckerInput
 
-func hasHiddenOrSystemOnWindows(path string) bool {
+func isHiddenOrSystemOnWindows(path string) bool {
 	return false
 }

@@ -1,10 +1,10 @@
 //go:build windows
 
-package checker
+package FolderCheckerInput
 
 import "syscall"
 
-func hasHiddenOrSystemOnWindows(path string) bool {
+func isHiddenOrSystemOnWindows(path string) bool {
 
 	ptr, err := syscall.UTF16PtrFromString(path)
 	if err != nil {
