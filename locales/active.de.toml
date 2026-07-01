@@ -1,0 +1,94 @@
+[flag.mainUsageMessage]
+other = """
+'{{.pureAppName}}' ist ein Werkzeug, welches einen gegebenen Verzeichnisbaum umwandeln kann.
+
+Anwendung:
+
+	{{.pureAppName}} Kommando [flags]
+
+Die möglichen Kommandos sind:
+
+	build		Generiere Ausgabe
+	serve		Generiere Ausgabe und starte einen web-server
+	version		Ausgabe der Versionsinformation
+
+Benutze "{{.pureAppName}} [Kommando] --help" für mehr Informationen über ein bestimmtes Kommando.
+"""
+
+[flag.buildUsageMessage]
+other = """
+Usage: {{.pureAppName}} build
+
+Wandelt den Inhalt eines bestimmten Verzeichnisses unter Anwendung komplexer
+Transformationsregeln in ein anderes Verzeichnis um. Die Konfiguration wird aus
+der Datei '{{.pureAppName}}.config' gelesen, die im aktuellen
+Arbeitverzeichnis plaziert ist. Andernfalls werden Voreinstellungen verwendet.
+
+Beispiel:
+	{{.pureAppName}} build
+"""
+
+[flag.serveUsageMessage]
+other = """
+Usage: {{.pureAppName}} serve [flags]
+
+Wandelt den Inhalt eines bestimmten Verzeichnisses unter Anwendung komplexer
+Transformationsregeln in ein anderes Verzeichnis um. Startet einen WEB-Server,
+damit die Inhalte abgerufen werden können. Die Konfiguration wird aus
+der Datei '{{.pureAppName}}.config' gelesen, die im aktuellen
+Arbeitverzeichnis plaziert ist. Andernfalls werden Voreinstellungen verwendet.
+
+Flags:
+
+	-p	-port	The port the server is listening on (default: 3000)
+	-u	-update	???????
+
+Beispiel:
+	{{.pureAppName}} serve -p 8080
+"""
+
+[flag.versionUsageMessage]
+other = """
+Usage: {{.pureAppName}} version
+
+Zeigt die aktuelle Version der laufenden {{.pureAppName}}-Anwendung an.
+
+Beispiel:
+	{{.pureAppName}} version
+"""
+
+[flag.unknownSubCommand]
+other = "{{.pureAppName}}: unbekanntes Kommando '{{.commandName}}'\n"
+
+
+
+
+
+
+[invalid_windows_chars]
+one = "Es wurde ein Datei- oder Verzeichnisname gefunden, der für Windows ungültige Zeichen enthält."
+other = "Es wurden insgesamt {{.Count}} Datei- oder Verzeichnisnamen gefunden, die für Windows ungültige Zeichen enthalten."
+
+[trailing_dot_or_space]
+other = "Datei- oder Verzeichnisname endet mit einem Punkt oder Leerzeichen."
+
+[reserved_windows_name]
+other = "Verwendet einen reservierten Windows-Dateinamen."
+
+[symbolic_link]
+other = "Symbolischer Link erkannt."
+
+[case_collision]
+other = "Namenskollision mit '{{.OtherPath}}' auf einem case-insensitiven Dateisystem."
+
+[unicode_not_nfc]
+other = "Dateiname ist nicht NFC-normalisiert."
+
+[unicode_collision]
+other = "Unicode-Namenskollision nach NFC-Normalisierung mit '{{.OtherPath}}'."
+
+[path_too_long]
+other = "Pfad ist mit {{.Length}} UTF-16-Codeunits möglicherweise zu lang für Windows."
+
+[name_too_long]
+other = "Datei- oder Verzeichnisname ist mit {{.Length}} UTF-16-Codeunits länger als 255."

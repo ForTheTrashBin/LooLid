@@ -1,0 +1,92 @@
+[flag.mainUsageMessage]
+other = """
+'{{.pureAppName}}' is a specialized tool that can transform a given directory tree.
+
+Usage:
+
+	{{.pureAppName}} command [flags]
+
+The commands are:
+
+	build		Generate output
+	serve		Generate output and start a web server
+	version		Display version
+
+Use "{{.pureAppName}} [command] --help" for more information about a command.
+"""
+
+[flag.buildUsageMessage]
+other = """
+Usage: {{.pureAppName}} build
+
+Converts the contents of a specific directory into another directory
+using complex transformation rules. The configuration is read from the
+'{{.pureAppName}}.config' file, which is located in the current
+working directory. Otherwise, the default settings are used.
+
+Example:
+	{{.pureAppName}} build
+"""
+
+[flag.serveUsageMessage]
+other = """
+Usage: {{.pureAppName}} serve [flags]
+
+Converts the contents of a specific directory into another directory
+using complex transformation rules. Starts a web server so that the
+content can be accessed. The configuration is read from the
+'{{.pureAppName}}.config' file, which is located in the current
+working directory. Otherwise, the default settings are used.
+
+Flags:
+
+	-p	-port	The port the server is listening on (default: 3000)
+	-u	-update	???????
+
+Example:
+	{{.pureAppName}} serve -p 8080
+"""
+
+[flag.versionUsageMessage]
+other = """
+Usage: {{.pureAppName}} version
+
+Displays the current version of the {{.pureAppName}}-application that is running.
+
+Example:
+	{{.pureAppName}} version
+"""
+
+[flag.unknownSubCommand]
+other = "{{.pureAppName}}: unknown command '{{.commandName}}'\n"
+
+
+
+
+
+[invalid_windows_chars]
+other = "Contains characters that are invalid on Windows."
+
+[trailing_dot_or_space]
+other = "Ends with a dot or space."
+
+[reserved_windows_name]
+other = "Uses a reserved Windows file name."
+
+[symbolic_link]
+other = "Symbolic link detected."
+
+[case_collision]
+other = "Name collision with '{{.OtherPath}}' on a case-insensitive filesystem."
+
+[unicode_not_nfc]
+other = "Filename is not NFC-normalized."
+
+[unicode_collision]
+other = "Unicode name collision after NFC normalization with '{{.OtherPath}}'."
+
+[path_too_long]
+other = "Path may be too long for Windows ({{.Length}} UTF-16 code units)."
+
+[name_too_long]
+other = "File or directory name exceeds 255 UTF-16 code units ({{.Length}})."
