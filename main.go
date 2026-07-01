@@ -1,13 +1,13 @@
 package main
 
 import (
-	"LooLid/Commands"
+	"LooLid/commands"
+	"LooLid/helper"
 	"embed"
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
+	"strconv"
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -25,66 +25,15 @@ var LocalFS embed.FS
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-// ----------------
-// Test ist ein Test
-// ...und das ist noch ein Test
-// Und das ist ein weiterer Test
-// ------------------
-func getPureAppName() string {
-
-	//-------------------------------------------------------------------------
-	// "os.Executable()" seems to be more reliable, so only use "os.Args" when nessesarry
-	//-------------------------------------------------------------------------
-
-	executablePath, err := os.Executable()
-
-	if err != nil {
-		executablePath = os.Args[0]
-	}
-
-	//-------------------------------------------------------------------------
-
-	executablePath = executablePath + ".com.exe" // TODO
-
-	executableBase := filepath.Base(executablePath) // Could be "app.exe", "app.v2.exe", "app.com", "app.v2", "app", ...
-
-	//-------------------------------------------------------------------------
-	// Remove repeatedly if there are multiple "renamed executable" extensions appended to the end.
-	//-------------------------------------------------------------------------
-
-	trimmed := true
-
-	executableEndings := []string{".exe", ".com", ".cmd", ".bat"}
-
-	for trimmed {
-		trimmed = false
-
-		ext := filepath.Ext(executableBase)
-
-		for _, executableEnding := range executableEndings {
-			if strings.EqualFold(ext, executableEnding) {
-				executableBase = strings.TrimSuffix(executableBase, ext)
-				trimmed = true
-				break
-			}
-		}
-	}
-
-	return executableBase
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
 var mainUsageMessage string
 
-func mainUsage() {
+func printMainUsageMessage() {
 	fmt.Fprintf(os.Stderr, mainUsageMessage)
 }
 
 //-----------------------------------------------------------------------------
 
-type command interface {
+type commandItem interface {
 	GetName() string
 
 	Parse(
@@ -98,7 +47,7 @@ type command interface {
 
 func testableMain(args []string) int {
 
-	pureAppName := getPureAppName()
+	pureAppName := helper.GetPureAppName()
 
 	//-------------------------------------------------------------------------
 	// Initialize i18n-bundle to use for the lifetime of the application
@@ -121,7 +70,7 @@ func testableMain(args []string) int {
 		panic(err)
 	}
 
-	localizer := i18n.NewLocalizer(bundle, language.English.String())
+	localizer := i18n.NewLocalizer(bundle, language.German.String())
 
 	templateData := map[string]string{"pureAppName": pureAppName}
 
@@ -129,7 +78,7 @@ func testableMain(args []string) int {
 
 	flagSet := flag.NewFlagSet(pureAppName, flag.ContinueOnError)
 
-	flagSet.Usage = mainUsage
+	flagSet.Usage = printMainUsageMessage
 
 	if err := flagSet.Parse(args[1:]); err != nil {
 		if err == flag.ErrHelp {
@@ -140,57 +89,67 @@ func testableMain(args []string) int {
 	}
 
 	if flagSet.NArg() == 0 {
-		mainUsage()
-		return 2
+		printMainUsageMessage()
+		return 0 // 2
 	}
 
-	commands := []command{
-		&Commands.BuildCommand{},
-		&Commands.ServeCommand{},
-		&Commands.VersionCommand{},
+	commandItems := []commandItem{
+		&commands.BuildCommand{},
+		&commands.ServeCommand{},
+		&commands.VersionCommand{},
 	}
 
 	commandName := flagSet.Arg(0)
 
-	for _, command := range commands {
-		if command.GetName() == commandName {
-			if err := command.Parse(localizer, pureAppName, flagSet.Args()[1:]); err != nil {
+	for _, commandItem := range commandItems {
+		if commandItem.GetName() == commandName {
+			if err := commandItem.Parse(localizer, pureAppName, flagSet.Args()[1:]); err != nil {
 				if err != flag.ErrHelp {
-					/*
-										"bad flag syntax: %s", s
-										"flag provided but not defined: -%s", name
-										"invalid boolean value %q for -%s: %v", value, name, err
-										"invalid boolean flag %s: %v", name, err
-										"flag needs an argument: -%s", name
-										"invalid value %q for flag -%s: %v", value, name, err
-						                "Zuviele Kommandos"
-					*/
-					fmt.Fprintln(os.Stderr, err)
+					messageId, varItems := helper.GetFlagMessage(err)
 
-					return 1
+					templateData := make(map[string]string)
+
+					for index, varItem := range varItems {
+						templateData["value"+strconv.Itoa(index+1)] = varItem
+					}
+
+					myMessage, _ := localizer.Localize(
+						&i18n.LocalizeConfig{
+							MessageID:    messageId,
+							TemplateData: templateData,
+						})
+
+					fmt.Fprintln(os.Stderr, myMessage)
+
+					return 0 // 1
 				} else {
 					return 0
 				}
 			}
-			if err := command.Execute(); err != nil {
+
+			if err := commandItem.Execute(); err != nil {
 				fmt.Fprintln(os.Stderr, err)
-				return 1
+				return 0 // 1
 			}
+
 			return 0
 		}
 	}
 
-	unknownSubcommand, _ := localizer.Localize(&i18n.LocalizeConfig{
-		MessageID: "flag.unknownSubCommand",
-		TemplateData: map[string]string{
-			"pureAppName": pureAppName,
-			"commandName": commandName,
-		},
-	})
+	printMainUsageMessage()
+
+	unknownSubcommand, _ := localizer.Localize(
+		&i18n.LocalizeConfig{
+			MessageID: "flag.unknownSubCommand",
+			TemplateData: map[string]string{
+				"pureAppName": pureAppName,
+				"commandName": commandName,
+			},
+		})
 
 	fmt.Fprintf(os.Stderr, unknownSubcommand)
 
-	return 1
+	return 0 // 1
 }
 
 func main() {

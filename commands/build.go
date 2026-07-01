@@ -1,6 +1,7 @@
-package Commands
+package commands
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -48,6 +49,12 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 
 	if err := flagSet.Parse(args); err != nil {
 		return err
+	}
+
+	if flagSet.NArg() > 0 {
+		printBuildUsageMessage()
+
+		return errors.New("invalid number of commands")
 	}
 
 	return nil

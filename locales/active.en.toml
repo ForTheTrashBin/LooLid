@@ -58,9 +58,28 @@ Example:
 """
 
 [flag.unknownSubCommand]
-other = "{{.pureAppName}}: unknown command '{{.commandName}}'\n"
+other = "\n\x1b[31mError:\x1b[0m {{.pureAppName}}: unknown command '{{.commandName}}'\n"
 
+[flag.flag_provided_but_not_defined]
+other = "\n\x1b[31mError:\x1b[0m Flag provided but not defined: {{.value1}}"
 
+[flag.bad_flag_syntax]
+other = "\n\x1b[31mError:\x1b[0m Bad flag syntax: {{.value1}}"
+
+[flag.invalid_boolean_value]
+other = "\n\x1b[31mError:\x1b[0m Invalid boolean value {{.value1}} for {{.value2}}"
+
+[flag.invalid_boolean_flag]
+other = "\n\x1b[31mError:\x1b[0m Invalid boolean flag {{.value1}}: {{.value2}}"
+
+[flag.flag_needs_an_argument]
+other = "\n\x1b[31mError:\x1b[0m Flag needs an argument: {{.value1}}"
+
+[flag.invalid_value]
+other = "\n\x1b[31mError:\x1b[0m Invalid value {{.value1}} for flag {{.value2}}"
+
+[flag.invalid_number_of_commands]
+other = "\n\x1b[31mError:\x1b[0m Invalid number of commands"
 
 
 

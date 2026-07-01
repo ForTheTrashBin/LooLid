@@ -17,7 +17,7 @@ Benutze "{{.pureAppName}} [Kommando] --help" für mehr Informationen über ein b
 
 [flag.buildUsageMessage]
 other = """
-Usage: {{.pureAppName}} build
+Anwendung: {{.pureAppName}} build
 
 Wandelt den Inhalt eines bestimmten Verzeichnisses unter Anwendung komplexer
 Transformationsregeln in ein anderes Verzeichnis um. Die Konfiguration wird aus
@@ -30,7 +30,7 @@ Beispiel:
 
 [flag.serveUsageMessage]
 other = """
-Usage: {{.pureAppName}} serve [flags]
+Anwendung: {{.pureAppName}} serve [Schalter]
 
 Wandelt den Inhalt eines bestimmten Verzeichnisses unter Anwendung komplexer
 Transformationsregeln in ein anderes Verzeichnis um. Startet einen WEB-Server,
@@ -38,7 +38,7 @@ damit die Inhalte abgerufen werden können. Die Konfiguration wird aus
 der Datei '{{.pureAppName}}.config' gelesen, die im aktuellen
 Arbeitverzeichnis plaziert ist. Andernfalls werden Voreinstellungen verwendet.
 
-Flags:
+Schalter:
 
 	-p	-port	The port the server is listening on (default: 3000)
 	-u	-update	???????
@@ -49,7 +49,7 @@ Beispiel:
 
 [flag.versionUsageMessage]
 other = """
-Usage: {{.pureAppName}} version
+Anwendung: {{.pureAppName}} version
 
 Zeigt die aktuelle Version der laufenden {{.pureAppName}}-Anwendung an.
 
@@ -58,9 +58,28 @@ Beispiel:
 """
 
 [flag.unknownSubCommand]
-other = "{{.pureAppName}}: unbekanntes Kommando '{{.commandName}}'\n"
+other = "\n\x1b[31mFehler:\x1b[0m {{.pureAppName}}: unbekanntes Kommando '{{.commandName}}'\n"
 
+[flag.flag_provided_but_not_defined]
+other = "\n\x1b[31mFehler:\x1b[0m Der angegebene Schalter ist nicht definiert: {{.value1}}"
 
+[flag.bad_flag_syntax]
+other = "\n\x1b[31mFehler:\x1b[0m Der angegebene Schalter ist ungültig: {{.value1}}"
+
+[flag.invalid_boolean_value]
+other = "\n\x1b[31mFehler:\x1b[0m Ungültiger boolscher Wert {{.value1}} für {{.value2}}"
+
+[flag.invalid_boolean_flag]
+other = "\n\x1b[31mFehler:\x1b[0m Ungültiger boolscher Schalter {{.value1}}: {{.value2}}"
+
+[flag.flag_needs_an_argument]
+other = "\n\x1b[31mFehler:\x1b[0m Der Schalter brauch ein Argumant: {{.value1}}"
+
+[flag.invalid_value]
+other = "\n\x1b[31mFehler:\x1b[0m Ungültiger Wert {{.value1}} für Schalter {{.value2}}"
+
+[flag.invalid_number_of_commands]
+other = "\n\x1b[31mError:\x1b[0m Ungültige Anzahl von Kommandos"
 
 
 

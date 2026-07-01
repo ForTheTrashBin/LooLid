@@ -1,4 +1,4 @@
-package Commands
+package commands
 
 import (
 	"errors"
@@ -56,7 +56,9 @@ func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	}
 
 	if flagSet.NArg() > 0 {
-		return errors.New("Zuviele Kommandos")
+		printServeUsageMessage()
+
+		return errors.New("invalid number of commands")
 	}
 
 	return nil
