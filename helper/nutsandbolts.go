@@ -1,10 +1,19 @@
 package helper
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+var ErrInvalidNumberOfCommands error = errors.New("invalid number of commands")
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 func GetPureAppName() string {
 
@@ -46,6 +55,19 @@ func GetPureAppName() string {
 
 	return executableBase
 }
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+/*
+*** "bad flag syntax: %s", s
+*** "flag provided but not defined: -%s", name
+*** "invalid boolean value %q for -%s: %v", value, name, err
+*** "invalid boolean flag %s: %v", name, err
+*** "flag needs an argument: -%s", name
+*** "invalid value %q for flag -%s: %v", value, name, err
+*** "invalid number of commands"
+ */
 
 func GetFlagMessage(err error) (string, []string) {
 	if after, found := strings.CutPrefix(err.Error(), "bad flag syntax: "); found {
@@ -92,7 +114,7 @@ func GetFlagMessage(err error) (string, []string) {
 							}
 							return "flag.invalid_value", values
 						} else {
-							if after, found = strings.CutPrefix(err.Error(), "invalid number of commands"); found {
+							if after, found = strings.CutPrefix(err.Error(), ErrInvalidNumberOfCommands.Error()); found {
 								return "flag.invalid_number_of_commands", nil
 							} else {
 								return "", nil
@@ -105,12 +127,12 @@ func GetFlagMessage(err error) (string, []string) {
 	}
 }
 
-/*
-					*** "bad flag syntax: %s", s
-					*** "flag provided but not defined: -%s", name
-					*** "invalid boolean value %q for -%s: %v", value, name, err
-					*** "invalid boolean flag %s: %v", name, err
-					*** "flag needs an argument: -%s", name
-					*** "invalid value %q for flag -%s: %v", value, name, err
-	                *** "invalid number of commands"
-*/
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+func Must[T any](x T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return x
+}
