@@ -1,11 +1,4 @@
-package FolderCheckerInput
-
-//-----------------------------------------------------------------------------
-
-type Statistics struct {
-	Files       int
-	Directories int
-}
+package checkInputFolder
 
 //-----------------------------------------------------------------------------
 
@@ -22,25 +15,28 @@ type Entry struct {
 type ErrorType string
 
 const (
-	NoFileInfo              ErrorType = "no_fileinfo"
-	NoDirectory             ErrorType = "no_directory"
-	DirectoryNotReadable    ErrorType = "directory_not_readable"
-	DirectoryNoPermission   ErrorType = "girectory_no_permission"
-	DirectoryHiddenOrSystem ErrorType = "directory_hidden_or_system"
-	DotHiddenDirectory      ErrorType = "dot_hidden_directory"
-	NoPathAbs               ErrorType = "no_pathabs"
-	NoPathRel               ErrorType = "no_pathrel"
-	NoSymLinks              ErrorType = "no_symlinks"
-	NoWorkingDir            ErrorType = "no_workingdir"
-	WorkingDirInInput       ErrorType = "workingdir_in_input"
-	CaseCollision           ErrorType = "case_collision"
-	UnicodeCollision        ErrorType = "unicode_collision"
-	InvalidWindowsChar      ErrorType = "invalid_windows_character"
-	ReservedWindowsName     ErrorType = "reserved_windows_name"
-	TrailingDotSpace        ErrorType = "trailing_dot_or_space"
-	PathTooLong             ErrorType = "path_too_long"
-	NameTooLong             ErrorType = "name_too_long"
-	SymbolicLinkDetected    ErrorType = "symbolic_link"
+	NoFileInfo              ErrorType = "check.no_fileinfo"
+	NoDirectory             ErrorType = "check.no_directory"
+	DotHiddenDirectory      ErrorType = "check.dot_hidden_directory"
+	DirectoryHiddenOrSystem ErrorType = "check.directory_hidden_or_system"
+	DirectoryNoPermission   ErrorType = "check.directory_no_permission"
+	DirectoryNotReadable    ErrorType = "check.directory_not_readable"
+	NoPathAbs               ErrorType = "check.no_pathabs"
+	NoSymLinks              ErrorType = "check.no_symlinks"
+	NoWorkingDir            ErrorType = "check.no_workingdir"
+	NoPathRel               ErrorType = "check.no_pathrel"
+	WorkingDirInInput       ErrorType = "check.workingdir_in_input"
+
+	DirectorySiblingsFound ErrorType = "check.header.directory_siblings_found"
+	InvalidWindowsChar     ErrorType = "check.header.invalid_windows_chars"
+	TrailingDotSpace       ErrorType = "check.header.trailing_dot_or_space"
+	ReservedWindowsName    ErrorType = "check.header.reserved_windows_name"
+	NameTooLong            ErrorType = "check.header.name_too_long"
+	PathTooLong            ErrorType = "check.header.path_too_long"
+	UnicodeCollision       ErrorType = "check.header.unicode_collision"
+	SymbolicLinkDetected   ErrorType = "check.header.symbolic_link"
+
+	CaseCollision ErrorType = "check.case_collision"
 )
 
 type Issue struct {

@@ -1,17 +1,13 @@
-package FolderCheckerInput
+package checkInputFolder
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
 
-func scanDirectory(root string) ([]Entry, []Issue, Statistics, error) {
+func scanDirectory(root string) ([]Entry, error) {
 
 	var entries []Entry
-	var issues []Issue
-
-	var stats Statistics
 
 	err := filepath.WalkDir(
 		root,
@@ -20,59 +16,77 @@ func scanDirectory(root string) ([]Entry, []Issue, Statistics, error) {
 				return err
 			}
 
+			//-----------------------------------------------------------------
+			// Skip root, because it was checked before
+			//-----------------------------------------------------------------
+
 			if path == root {
 				return nil
 			}
 
 			//-----------------------------------------------------------------
+			// Get the relative path (to root) of this entry
+			//-----------------------------------------------------------------
 
-			info, err := entry.Info()
-
-			if err != nil {
-				return err
-			}
-
-			relative, err := filepath.Rel(root, path)
+			relativePath, err := filepath.Rel(root, path)
 
 			if err != nil {
 				return err
 			}
 
-			relative = filepath.ToSlash(relative)
+			relativePath = filepath.ToSlash(relativePath)
 
+			//-----------------------------------------------------------------
+			// Get fileInfo of this entry
+			//-----------------------------------------------------------------
+
+			fileInfo, err := entry.Info()
+
+			if err != nil {
+				return err
+			}
+
+			//-----------------------------------------------------------------
+			/*
+				fmt.Println("Path         :", path)
+				fmt.Println("RelativePath :", relativePath)
+
+				if fileInfo.IsDir() {
+					fmt.Println("IsDirectory  : true")
+				} else {
+					fmt.Println("IsDirectory  : false")
+				}
+
+				if fileInfo.Mode()&os.ModeSymlink != 0 {
+					fmt.Println("IsSymLink    : true")
+				} else {
+					fmt.Println("IsSymLink    : false")
+				}
+
+				fmt.Println("********************************************")
+			*/
+			//-----------------------------------------------------------------
+			// Check for "hidden" or "system" directories on Windows
+			//-----------------------------------------------------------------
+			/*
+				fmt.Println("Path:", path)
+				if entry.IsDir() {
+					fmt.Println("It's a directory")
+				}
+			*/
 			item := Entry{
-				Path: relative,
+				Path: relativePath,
 				Name: entry.Name(),
 
-				IsDir: info.IsDir(),
+				IsDir: fileInfo.IsDir(),
 
-				IsSymlink: info.Mode()&os.ModeSymlink != 0,
+				IsSymlink: fileInfo.Mode()&os.ModeSymlink != 0,
 			}
-
-			fmt.Println("Entry:", item)
 
 			entries = append(
 				entries,
 				item,
 			)
-
-			if item.IsDir {
-				stats.Directories++
-			} else {
-				stats.Files++
-			}
-
-			if item.IsSymlink {
-
-				issues = append(
-					issues,
-					Issue{
-						Type: SymbolicLinkDetected,
-						Path: relative,
-						Info: "symbolic link detected",
-					},
-				)
-			}
 
 			if item.IsDir {
 				_, err = os.ReadDir(root + "/" + item.Path)
@@ -88,6 +102,6 @@ func scanDirectory(root string) ([]Entry, []Issue, Statistics, error) {
 		},
 	)
 
-	return entries, issues, stats, err
+	return entries, err
 
 }

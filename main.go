@@ -71,7 +71,7 @@ func testableMain(args []string) int {
 	// read and prepare 'mainUsageMessage'
 	//-------------------------------------------------------------------------
 
-	localizer := i18n.NewLocalizer(bundle, language.German.String())
+	localizer := i18n.NewLocalizer(bundle, language.English.String())
 
 	mainUsageMessage = localizer.MustLocalize(
 		&i18n.LocalizeConfig{

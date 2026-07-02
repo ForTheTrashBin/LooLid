@@ -1,4 +1,4 @@
-package FolderCheckerInput
+package checkInputFolder
 
 import (
 	"strings"
@@ -11,21 +11,9 @@ import (
 // Windows does not allow these characters in file and directory names.
 //-----------------------------------------------------------------------------
 
-var invalidWindowsCharacters = []rune{
-	'<',
-	'>',
-	':',
-	'"',
-	'/',
-	'\\',
-	'|',
-	'?',
-	'*',
-}
+var invalidWindowsCharacters = []rune{'<', '>', ':', '"', '/', '\\', '|', '?', '*'}
 
-func checkInvalidWindowsCharacters(entry Entry) []Issue {
-
-	var issues []Issue
+func (chk *checker) checkInvalidWindowsCharacters(entry Entry) {
 
 	for _, character := range entry.Name {
 
@@ -33,48 +21,35 @@ func checkInvalidWindowsCharacters(entry Entry) []Issue {
 
 			if character == invalid {
 
-				issues = append(
-					issues,
-					Issue{
+				chk.issuesInvalidWindowsCharacters = append(
+					chk.issuesInvalidWindowsCharacters, Issue{
 						Type: InvalidWindowsChar,
 						Path: entry.Path,
-						Info: "invalid Windows character: " +
-							string(character),
-					},
-				)
-
-				return issues
+						Info: "invalid Windows character: " + string(character)})
 			}
 		}
 	}
-
-	return issues
 }
 
 //-----------------------------------------------------------------------------
 // Windows does not allow filenames that end with a period or a space
 //-----------------------------------------------------------------------------
 
-func checkTrailingCharacters(entry Entry) []Issue {
+func (chk *checker) checkTrailingCharacters(entry Entry) {
 
-	if len(entry.Name) == 0 {
-		return nil
-	}
+	if len(entry.Name) != 0 {
 
-	last := entry.Name[len(entry.Name)-1]
+		last := entry.Name[len(entry.Name)-1]
 
-	if last == '.' || last == ' ' {
+		if last == '.' || last == ' ' {
 
-		return []Issue{
-			{
-				Type: TrailingDotSpace,
-				Path: entry.Path,
-				Info: "name ends with dot or space",
-			},
+			chk.issuesTrailingCharacters = append(
+				chk.issuesTrailingCharacters, Issue{
+					Type: TrailingDotSpace,
+					Path: entry.Path,
+					Info: "name ends with dot or space"})
 		}
 	}
-
-	return nil
 }
 
 //-----------------------------------------------------------------------------
@@ -109,7 +84,7 @@ var reservedNames = map[string]bool{
 	"LPT9": true,
 }
 
-func checkReservedWindowsName(entry Entry) []Issue {
+func (chk *checker) checkReservedWindowsName(entry Entry) {
 
 	name := entry.Name
 
@@ -121,16 +96,12 @@ func checkReservedWindowsName(entry Entry) []Issue {
 
 	if reservedNames[name] {
 
-		return []Issue{
-			{
+		chk.issuesReservedWindowsName = append(
+			chk.issuesReservedWindowsName, Issue{
 				Type: ReservedWindowsName,
 				Path: entry.Path,
-				Info: "reserved Windows filename",
-			},
-		}
+				Info: "reserved Windows filename"})
 	}
-
-	return nil
 }
 
 //-----------------------------------------------------------------------------
@@ -148,17 +119,15 @@ func utf16Length(
 	)
 }
 
-func checkLength(entry Entry) []Issue {
-
-	var issues []Issue
+func (chk *checker) checkLength(entry Entry) {
 
 	if utf16Length(entry.Name) > 255 {
 
-		issues = append(
-			issues,
+		chk.issuesNameLength = append(
+			chk.issuesNameLength,
 			Issue{
 				Type: NameTooLong,
-				Path: entry.Path,
+				Path: entry.Name,
 				Info: "filename exceeds 255 UTF-16 units",
 			},
 		)
@@ -166,8 +135,8 @@ func checkLength(entry Entry) []Issue {
 
 	if utf16Length(entry.Path) > 240 {
 
-		issues = append(
-			issues,
+		chk.issuesPathLength = append(
+			chk.issuesPathLength,
 			Issue{
 				Type: PathTooLong,
 				Path: entry.Path,
@@ -175,64 +144,57 @@ func checkLength(entry Entry) []Issue {
 			},
 		)
 	}
-
-	return issues
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-func checkUnicodeNormalization(entry Entry) []Issue {
+func (chk *checker) checkUnicodeNormalization(entry Entry) {
 
 	if norm.NFC.String(entry.Path) != entry.Path {
 
-		return []Issue{
-			{
+		chk.issuesUnicodeNormalization = append(
+			chk.issuesUnicodeNormalization,
+			Issue{
+
 				Type: UnicodeCollision,
 				Path: entry.Path,
 				Info: "path is not NFC normalized",
 			},
-		}
+		)
 	}
-
-	return nil
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-func validateEntries(entries []Entry) []Issue {
+func (chk *checker) checkSymLink(entry Entry) {
 
-	var issues []Issue
+	if entry.IsSymlink {
+		chk.issuesSymLink = append(
+			chk.issuesSymLink,
+			Issue{
+
+				Type: SymbolicLinkDetected,
+				Path: entry.Path,
+				Info: "symbolic link detected",
+			},
+		)
+	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+func (chk *checker) validateEntries(entries []Entry) {
 
 	for _, entry := range entries {
 
-		issues = append(
-			issues,
-			checkInvalidWindowsCharacters(entry)...,
-		)
-
-		issues = append(
-			issues,
-			checkTrailingCharacters(entry)...,
-		)
-
-		issues = append(
-			issues,
-			checkReservedWindowsName(entry)...,
-		)
-
-		issues = append(
-			issues,
-			checkLength(entry)...,
-		)
-
-		issues = append(
-			issues,
-			checkUnicodeNormalization(entry)...,
-		)
-
+		chk.checkInvalidWindowsCharacters(entry)
+		chk.checkTrailingCharacters(entry)
+		chk.checkReservedWindowsName(entry)
+		chk.checkLength(entry)
+		chk.checkUnicodeNormalization(entry)
+		chk.checkSymLink(entry)
 	}
-
-	return issues
 }

@@ -128,9 +128,9 @@ other = "\x1b[31mError:\x1b[0m Working-folder is part of the input-folder: {{.va
 
 #------------------------------------------------------------------------------
 
-[check.header.directory_sibbling_found]
-one = "The input folder has a sibbling with ambigious name:\n"
-other = "The input folder has {{.Count}} sibblings with ambigious name:\n"
+[check.header.directory_siblings_found]
+one = "The input folder has a siblings with ambiguous name:\n"
+other = "The input folder has {{.Count}} siblings with ambiguous name:\n"
 
 [check.header.invalid_windows_chars]
 one = "A file or directory name was found that contains characters that are not valid on windows:\n"

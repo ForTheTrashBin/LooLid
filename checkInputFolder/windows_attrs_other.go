@@ -1,6 +1,6 @@
 //go:build !windows
 
-package FolderCheckerInput
+package checkInputFolder
 
 func isHiddenOrSystemOnWindows(path string) bool {
 	return false

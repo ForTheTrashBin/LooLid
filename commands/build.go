@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"LooLid/checkInputFolder"
 	"LooLid/helper"
 	"flag"
 	"fmt"
@@ -61,20 +62,12 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 }
 
 func (cmd *BuildCommand) Execute() error {
-	fmt.Println("************** Execute build **************")
-	/*
-		issues, stats, err := FolderCheckerInput.Check("~")
 
-		if err != nil {
-			fmt.Println("Fatal:", err)
-			os.Exit(2)
-		}
+	if checkInputFolder.CheckAndReport(cmd.localizer, cmd.pureAppName, "checkInputFolder/test/testInputFolder") {
+		fmt.Println("********** build is OK ***************")
+	} else {
+		fmt.Println("********** build is abborted ***************")
+	}
 
-		FolderCheckerInput.Print(issues, stats)
-
-		if len(issues) > 0 {
-			os.Exit(1)
-		}
-	*/
 	return nil
 }

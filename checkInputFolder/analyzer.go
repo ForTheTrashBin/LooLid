@@ -1,4 +1,4 @@
-package FolderCheckerInput
+package checkInputFolder
 
 import (
 	"strings"
