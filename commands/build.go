@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"errors"
+	"LooLid/helper"
 	"flag"
 	"fmt"
 	"io"
@@ -36,7 +36,7 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	cmd.localizer = localizer
 	cmd.pureAppName = pureAppName
 
-	buildUsageMessage, _ = localizer.Localize(&i18n.LocalizeConfig{
+	buildUsageMessage = localizer.MustLocalize(&i18n.LocalizeConfig{
 		MessageID:    "flag." + cmd.GetName() + "UsageMessage",
 		TemplateData: map[string]string{"pureAppName": pureAppName},
 	})
@@ -54,7 +54,7 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	if flagSet.NArg() > 0 {
 		printBuildUsageMessage()
 
-		return errors.New("invalid number of commands")
+		return helper.ErrInvalidNumberOfCommands
 	}
 
 	return nil

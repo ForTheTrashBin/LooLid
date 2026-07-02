@@ -7,6 +7,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"github.com/BurntSushi/toml"
@@ -62,19 +64,22 @@ func testableMain(args []string) int {
 	// Enbed message-files direct into the app, so NO externel files are needed
 	//-------------------------------------------------------------------------
 
-	if _, err := bundle.LoadMessageFileFS(LocalFS, "locales/active.en.toml"); err != nil {
-		panic(err)
-	}
+	helper.Must(bundle.LoadMessageFileFS(LocalFS, "locales/active.en.toml"))
+	helper.Must(bundle.LoadMessageFileFS(LocalFS, "locales/active.de.toml"))
 
-	if _, err := bundle.LoadMessageFileFS(LocalFS, "locales/active.de.toml"); err != nil {
-		panic(err)
-	}
+	//-------------------------------------------------------------------------
+	// read and prepare 'mainUsageMessage'
+	//-------------------------------------------------------------------------
 
 	localizer := i18n.NewLocalizer(bundle, language.German.String())
 
-	templateData := map[string]string{"pureAppName": pureAppName}
+	mainUsageMessage = localizer.MustLocalize(
+		&i18n.LocalizeConfig{
+			MessageID:    "flag.mainUsageMessage",
+			TemplateData: map[string]string{"pureAppName": pureAppName},
+		})
 
-	mainUsageMessage, _ = localizer.Localize(&i18n.LocalizeConfig{TemplateData: templateData, MessageID: "flag.mainUsageMessage"})
+	//-------------------------------------------------------------------------
 
 	flagSet := flag.NewFlagSet(pureAppName, flag.ContinueOnError)
 
@@ -90,7 +95,7 @@ func testableMain(args []string) int {
 
 	if flagSet.NArg() == 0 {
 		printMainUsageMessage()
-		return 0 // 2
+		return 2
 	}
 
 	commandItems := []commandItem{
@@ -113,7 +118,7 @@ func testableMain(args []string) int {
 						templateData["value"+strconv.Itoa(index+1)] = varItem
 					}
 
-					myMessage, _ := localizer.Localize(
+					myMessage := localizer.MustLocalize(
 						&i18n.LocalizeConfig{
 							MessageID:    messageId,
 							TemplateData: templateData,
@@ -121,7 +126,7 @@ func testableMain(args []string) int {
 
 					fmt.Fprintln(os.Stderr, myMessage)
 
-					return 0 // 1
+					return 1
 				} else {
 					return 0
 				}
@@ -129,7 +134,7 @@ func testableMain(args []string) int {
 
 			if err := commandItem.Execute(); err != nil {
 				fmt.Fprintln(os.Stderr, err)
-				return 0 // 1
+				return 1
 			}
 
 			return 0
@@ -138,7 +143,7 @@ func testableMain(args []string) int {
 
 	printMainUsageMessage()
 
-	unknownSubcommand, _ := localizer.Localize(
+	unknownSubcommand := localizer.MustLocalize(
 		&i18n.LocalizeConfig{
 			MessageID: "flag.unknownSubCommand",
 			TemplateData: map[string]string{
@@ -149,9 +154,39 @@ func testableMain(args []string) int {
 
 	fmt.Fprintf(os.Stderr, unknownSubcommand)
 
-	return 0 // 1
+	return 1
 }
 
+//-----------------------------------------------------------------------------
+// Supress private information, when printing the stack-trace at panic()
+// Use "go build -trimpath ." to avoid having privat information in binary
+//-----------------------------------------------------------------------------
+
 func main() {
-	os.Exit(testableMain(os.Args))
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "\x1b[31mInternal error:\x1b[0m %v\n", r)
+
+			pcs := make([]uintptr, 32)
+
+			n := runtime.Callers(3, pcs)
+
+			frames := runtime.CallersFrames(pcs[:n])
+
+			for {
+				frame, more := frames.Next()
+
+				fmt.Printf("%s:%d\n",
+					filepath.Base(frame.File),
+					frame.Line)
+
+				if !more {
+					break
+				}
+			}
+		}
+	}()
+
+	testableMain(os.Args)
 }

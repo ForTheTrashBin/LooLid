@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"errors"
+	"LooLid/helper"
 	"flag"
 	"fmt"
 	"io"
@@ -37,7 +37,7 @@ func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	cmd.localizer = localizer
 	cmd.pureAppName = pureAppName
 
-	serveUsageMessage, _ = localizer.Localize(&i18n.LocalizeConfig{
+	serveUsageMessage = localizer.MustLocalize(&i18n.LocalizeConfig{
 		MessageID:    "flag." + cmd.GetName() + "UsageMessage",
 		TemplateData: map[string]string{"pureAppName": pureAppName},
 	})
@@ -58,14 +58,14 @@ func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	if flagSet.NArg() > 0 {
 		printServeUsageMessage()
 
-		return errors.New("invalid number of commands")
+		return helper.ErrInvalidNumberOfCommands
 	}
 
 	return nil
 }
 
 func (cmd *ServeCommand) Execute() error {
-	fmt.Println("**************Execute serve on port:", cmd.port, " **************")
+	fmt.Println("************** Execute serve on port:", cmd.port, " **************")
 
 	return nil
 }
