@@ -1,3 +1,5 @@
+#------------------------------------------------------------------------------
+
 [flag.mainUsageMessage]
 other = """
 '{{.pureAppName}}' ist ein Werkzeug, welches einen gegebenen Verzeichnisbaum umwandeln kann.
@@ -15,6 +17,8 @@ Die möglichen Kommandos sind:
 Benutze "{{.pureAppName}} [Kommando] --help" für mehr Informationen über ein bestimmtes Kommando.
 """
 
+#------------------------------------------------------------------------------
+
 [flag.buildUsageMessage]
 other = """
 Anwendung: {{.pureAppName}} build
@@ -27,6 +31,8 @@ Arbeitverzeichnis plaziert ist. Andernfalls werden Voreinstellungen verwendet.
 Beispiel:
 	{{.pureAppName}} build
 """
+
+#------------------------------------------------------------------------------
 
 [flag.serveUsageMessage]
 other = """
@@ -47,6 +53,8 @@ Beispiel:
 	{{.pureAppName}} serve -p 8080
 """
 
+#------------------------------------------------------------------------------
+
 [flag.versionUsageMessage]
 other = """
 Anwendung: {{.pureAppName}} version
@@ -56,6 +64,8 @@ Zeigt die aktuelle Version der laufenden {{.pureAppName}}-Anwendung an.
 Beispiel:
 	{{.pureAppName}} version
 """
+
+#------------------------------------------------------------------------------
 
 [flag.unknownSubCommand]
 other = "\n\x1b[31mFehler:\x1b[0m {{.pureAppName}}: unbekanntes Kommando '{{.commandName}}'\n"
@@ -81,8 +91,12 @@ other = "\n\x1b[31mFehler:\x1b[0m Ungültiger Wert {{.value1}} für Schalter {{.
 [flag.invalid_number_of_commands]
 other = "\n\x1b[31mError:\x1b[0m Ungültige Anzahl von Kommandos"
 
+#------------------------------------------------------------------------------
 
+[check.no_fileinfo]
+other = "Test {{.value1}} - {{.value2}}"
 
+#------------------------------------------------------------------------------
 
 [invalid_windows_chars]
 one = "Es wurde ein Datei- oder Verzeichnisname gefunden, der für Windows ungültige Zeichen enthält."

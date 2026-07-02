@@ -1,3 +1,5 @@
+#------------------------------------------------------------------------------
+
 [flag.mainUsageMessage]
 other = """
 '{{.pureAppName}}' is a specialized tool that can transform a given directory tree.
@@ -15,6 +17,8 @@ The commands are:
 Use "{{.pureAppName}} [command] --help" for more information about a command.
 """
 
+#------------------------------------------------------------------------------
+
 [flag.buildUsageMessage]
 other = """
 Usage: {{.pureAppName}} build
@@ -27,6 +31,8 @@ working directory. Otherwise, the default settings are used.
 Example:
 	{{.pureAppName}} build
 """
+
+#------------------------------------------------------------------------------
 
 [flag.serveUsageMessage]
 other = """
@@ -47,6 +53,8 @@ Example:
 	{{.pureAppName}} serve -p 8080
 """
 
+#------------------------------------------------------------------------------
+
 [flag.versionUsageMessage]
 other = """
 Usage: {{.pureAppName}} version
@@ -56,6 +64,8 @@ Displays the current version of the {{.pureAppName}}-application that is running
 Example:
 	{{.pureAppName}} version
 """
+
+#------------------------------------------------------------------------------
 
 [flag.unknownSubCommand]
 other = "\n\x1b[31mError:\x1b[0m {{.pureAppName}}: unknown command '{{.commandName}}'\n"
@@ -81,19 +91,76 @@ other = "\n\x1b[31mError:\x1b[0m Invalid value {{.value1}} for flag {{.value2}}"
 [flag.invalid_number_of_commands]
 other = "\n\x1b[31mError:\x1b[0m Invalid number of commands"
 
+#------------------------------------------------------------------------------
 
+[check.no_fileinfo]
+other = "\x1b[31mError:\x1b[0m Given input not found: {{.value1}}\n"
 
-[invalid_windows_chars]
-other = "Contains characters that are invalid on Windows."
+[check.no_directory]
+other = "\x1b[31mError:\x1b[0m Given input is not a folder: {{.value1}}\n"
 
-[trailing_dot_or_space]
-other = "Ends with a dot or space."
+[check.dot_hidden_directory]
+other = "\x1b[31mError:\x1b[0m Given folder-name starts with a dot and is hidden: {{.value1}}\n"
 
-[reserved_windows_name]
-other = "Uses a reserved Windows file name."
+[check.directory_hidden_or_system]
+other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' and/or 'system': {{.value1}}\n"
 
-[symbolic_link]
-other = "Symbolic link detected."
+[check.directory_no_permission]
+other = "\x1b[31mError:\x1b[0m No permission to read given folder: {{.value1}}\n"
+
+[check.directory_not_readable]
+other = "\x1b[31mError:\x1b[0m Given folder is not readable: {{.value1}}\n"
+
+[check.no_pathabs]
+other = "\x1b[31mError:\x1b[0m Can't evaluate absolute path of given folder: {{.value1}}\n"
+
+[check.no_symlinks]
+other = "\x1b[31mError:\x1b[0m Can't evaluate symbolic link: {{.value1}}\n"
+
+[check.no_workingdir]
+other = "\x1b[31mError:\x1b[0m Can't get current working-folder: {{.value1}}\n"
+
+[check.no_pathrel]
+other = "\x1b[31mError:\x1b[0m Can't evaluate relative path of given folder: {{.value1}}\n"
+
+[check.workingdir_in_input]
+other = "\x1b[31mError:\x1b[0m Working-folder is part of the input-folder: {{.value1}}\n"
+
+#------------------------------------------------------------------------------
+
+[check.header.directory_sibbling_found]
+one = "The input folder has a sibbling with ambigious name:\n"
+other = "The input folder has {{.Count}} sibblings with ambigious name:\n"
+
+[check.header.invalid_windows_chars]
+one = "A file or directory name was found that contains characters that are not valid on windows:\n"
+other = "A total of {{.Count}} file or directory names were found that contain characters that are not valid on windows:\n"
+
+[check.header.trailing_dot_or_space]
+one = "A file or directory name was found that ends with a dot/space and is not valid on windows:\n"
+other = "A total of {{.Count}} file or directory names were found that ends with a dot/space and are not valid on windows:\n"
+
+[check.header.reserved_windows_name]
+one = "A file or directory name was found that uses a reserved windows filename:\n"
+other = "A total of {{.Count}} file or directory names were found that uses a reserved windows filename:\n"
+
+[check.header.path_too_long]
+one = "A path name was found that is longer than 240 utf-16 units :\n"
+other = "A total of {{.Count}} path names were found that are longer than 240 utf-16 units :\n"
+
+[check.header.name_too_long]
+one = "A file name was found that is longer than 255 utf-16 units :\n"
+other = "A total of {{.Count}} file names were found that are longer than 255 utf-16 units :\n"
+
+[check.header_unicode_collision]
+one = "?????"
+other = "?????"
+
+[check.header.symbolic_link]
+one = "A file name was found that is a symbolic link :\n"
+other = "A total of {{.Count}} file names were found that are symbolic links :\n"
+
+#------------------------------------------------------------------------------
 
 [case_collision]
 other = "Name collision with '{{.OtherPath}}' on a case-insensitive filesystem."
