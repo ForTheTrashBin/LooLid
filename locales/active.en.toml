@@ -144,13 +144,13 @@ other = "A total of {{.Count}} file or directory names were found that ends with
 one = "A file or directory name was found that uses a reserved windows filename:\n"
 other = "A total of {{.Count}} file or directory names were found that uses a reserved windows filename:\n"
 
-[check.header.path_too_long]
-one = "A path name was found that is longer than 240 utf-16 units :\n"
-other = "A total of {{.Count}} path names were found that are longer than 240 utf-16 units :\n"
-
-[check.header.name_too_long]
+[check.header.filename_too_long]
 one = "A file name was found that is longer than 255 utf-16 units :\n"
 other = "A total of {{.Count}} file names were found that are longer than 255 utf-16 units :\n"
+
+[check.header.pathname_too_long]
+one = "A path name was found that is longer than 240 utf-16 units :\n"
+other = "A total of {{.Count}} path names were found that are longer than 240 utf-16 units :\n"
 
 [check.header_unicode_collision]
 one = "?????"

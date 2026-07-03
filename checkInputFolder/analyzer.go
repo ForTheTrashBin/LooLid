@@ -42,7 +42,6 @@ func analyzeCaseCollisions(entries []Entry) []Issue {
 			issues = append(
 				issues,
 				Issue{
-					Type: CaseCollision,
 					Path: entry.Path,
 					Info: "conflicts with " + old,
 				},
@@ -77,7 +76,6 @@ func analyzeUnicodeCollisions(entries []Entry) []Issue {
 			issues = append(
 				issues,
 				Issue{
-					Type: UnicodeCollision,
 					Path: entry.Path,
 					Info: "unicode conflict with " + old,
 				},

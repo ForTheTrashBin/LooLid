@@ -10,16 +10,16 @@ import (
 )
 
 type checker struct {
-	localizer                      *i18n.Localizer
-	pureAppName                    string
-	issuesTrailingCharacters       []Issue
-	issuesInvalidWindowsCharacters []Issue
-	issuesReservedWindowsName      []Issue
-	issuesNameLength               []Issue
-	issuesPathLength               []Issue
-	issuesUnicodeNormalization     []Issue
-	issuesSymLink                  []Issue
-	issuesDirectorySiblings        []Issue
+	localizer                  *i18n.Localizer
+	pureAppName                string
+	issuesDirectorySiblings    []Issue // checker.go
+	issuesInvalidWindowsChar   []Issue // rules.go
+	issuesTrailingDotSpace     []Issue // rules.go
+	issuesReservedWindowsName  []Issue // rules.go
+	issuesFileNameLength       []Issue // rules.go
+	issuesPathNameLength       []Issue // rules.go
+	issuesUnicodeNormalization []Issue // rules.go
+	issuesSymLink              []Issue // rules.go
 }
 
 func newChecker(localizer *i18n.Localizer, pureAppName string) *checker {
@@ -38,11 +38,11 @@ func (chk *checker) checkIssues() bool {
 		result = false
 	}
 
-	if len(chk.issuesTrailingCharacters) > 0 {
+	if len(chk.issuesInvalidWindowsChar) > 0 {
 		result = false
 	}
 
-	if len(chk.issuesInvalidWindowsCharacters) > 0 {
+	if len(chk.issuesTrailingDotSpace) > 0 {
 		result = false
 	}
 
@@ -50,11 +50,11 @@ func (chk *checker) checkIssues() bool {
 		result = false
 	}
 
-	if len(chk.issuesNameLength) > 0 {
+	if len(chk.issuesFileNameLength) > 0 {
 		result = false
 	}
 
-	if len(chk.issuesPathLength) > 0 {
+	if len(chk.issuesPathNameLength) > 0 {
 		result = false
 	}
 
@@ -106,7 +106,7 @@ func (chk *checker) check(inputFolder string) bool {
 	fileInfo, err := os.Stat(inputFolder)
 
 	if err != nil {
-		return chk.printLocalizedMessage(NoFileInfo, inputFolder, err.Error())
+		return chk.printLocalizedMessage(CheckError_NoFileInfo, inputFolder, err.Error())
 	}
 
 	//-------------------------------------------------------------------------
@@ -114,7 +114,7 @@ func (chk *checker) check(inputFolder string) bool {
 	//-------------------------------------------------------------------------
 
 	if !fileInfo.IsDir() {
-		return chk.printLocalizedMessage(NoDirectory, inputFolder, "")
+		return chk.printLocalizedMessage(CheckError_NoDirectory, inputFolder, "")
 	}
 
 	//-------------------------------------------------------------------------
@@ -127,7 +127,7 @@ func (chk *checker) check(inputFolder string) bool {
 
 	if (baseName != ".") && (baseName != "..") {
 		if strings.HasPrefix(baseName, ".") {
-			return chk.printLocalizedMessage(DotHiddenDirectory, inputFolder, "")
+			return chk.printLocalizedMessage(CheckError_DotHiddenDirectory, inputFolder, "")
 		}
 	}
 
@@ -136,7 +136,7 @@ func (chk *checker) check(inputFolder string) bool {
 	//-------------------------------------------------------------------------
 
 	if isHiddenOrSystemOnWindows(inputFolder) {
-		return chk.printLocalizedMessage(DirectoryHiddenOrSystem, inputFolder, "")
+		return chk.printLocalizedMessage(CheckError_DirectoryHiddenOrSystem, inputFolder, "")
 	}
 
 	//-------------------------------------------------------------------------
@@ -147,9 +147,9 @@ func (chk *checker) check(inputFolder string) bool {
 
 	if err != nil {
 		if os.IsPermission(err) {
-			chk.printLocalizedMessage(DirectoryNoPermission, inputFolder, "")
+			chk.printLocalizedMessage(CheckError_DirectoryNoPermission, inputFolder, "")
 		} else {
-			chk.printLocalizedMessage(DirectoryNotReadable, inputFolder, err.Error())
+			chk.printLocalizedMessage(CheckError_DirectoryNotReadable, inputFolder, err.Error())
 		}
 
 		return true
@@ -162,13 +162,13 @@ func (chk *checker) check(inputFolder string) bool {
 	inputPathAbs, err := filepath.Abs(inputFolder)
 
 	if err != nil {
-		return chk.printLocalizedMessage(NoPathAbs, inputFolder, err.Error())
+		return chk.printLocalizedMessage(CheckError_NoPathAbs, inputFolder, err.Error())
 	}
 
 	inputPathAbs, err = filepath.EvalSymlinks(inputPathAbs)
 
 	if err != nil {
-		return chk.printLocalizedMessage(NoSymLinks, inputPathAbs, err.Error())
+		return chk.printLocalizedMessage(CheckError_NoSymLinks, inputPathAbs, err.Error())
 	}
 
 	//-------------------------------------------------------------------------
@@ -178,13 +178,13 @@ func (chk *checker) check(inputFolder string) bool {
 	workingDirAbs, err := os.Getwd()
 
 	if err != nil {
-		return chk.printLocalizedMessage(NoWorkingDir, "", err.Error())
+		return chk.printLocalizedMessage(CheckError_NoWorkingDir, "", err.Error())
 	}
 
 	workingDirAbs, err = filepath.EvalSymlinks(workingDirAbs)
 
 	if err != nil {
-		return chk.printLocalizedMessage(NoSymLinks, workingDirAbs, err.Error())
+		return chk.printLocalizedMessage(CheckError_NoSymLinks, workingDirAbs, err.Error())
 	}
 
 	//-------------------------------------------------------------------------
@@ -194,11 +194,11 @@ func (chk *checker) check(inputFolder string) bool {
 	relativePath, err := filepath.Rel(inputPathAbs, workingDirAbs)
 
 	if err != nil {
-		return chk.printLocalizedMessage(NoPathRel, inputPathAbs, err.Error())
+		return chk.printLocalizedMessage(CheckError_NoPathRel, inputPathAbs, err.Error())
 	}
 
 	if (relativePath != "..") && ((len(relativePath) < 3) || (relativePath[:3] != ".."+string(filepath.Separator))) {
-		return chk.printLocalizedMessage(WorkingDirInInput, inputPathAbs, err.Error())
+		return chk.printLocalizedMessage(CheckError_WorkingDirInInput, inputPathAbs, err.Error())
 	}
 
 	//-------------------------------------------------------------------------
@@ -210,7 +210,7 @@ func (chk *checker) check(inputFolder string) bool {
 	dirEntries, err := os.ReadDir(parentPath)
 
 	if err != nil {
-		return chk.printLocalizedMessage(DirectoryNotReadable, parentPath, err.Error())
+		return chk.printLocalizedMessage(CheckError_DirectoryNotReadable, parentPath, err.Error())
 	}
 
 	for _, dirEntry := range dirEntries {
@@ -220,7 +220,6 @@ func (chk *checker) check(inputFolder string) bool {
 					chk.issuesDirectorySiblings = append(
 						chk.issuesDirectorySiblings,
 						Issue{
-							Type: DirectorySiblingsFound,
 							Path: dirEntry.Name(),
 							Info: inputFolder,
 						},
@@ -232,7 +231,6 @@ func (chk *checker) check(inputFolder string) bool {
 				chk.issuesDirectorySiblings = append(
 					chk.issuesDirectorySiblings,
 					Issue{
-						Type: DirectorySiblingsFound,
 						Path: dirEntry.Name(),
 						Info: inputFolder,
 					},

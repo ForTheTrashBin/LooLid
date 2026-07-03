@@ -13,7 +13,7 @@ import (
 
 var invalidWindowsCharacters = []rune{'<', '>', ':', '"', '/', '\\', '|', '?', '*'}
 
-func (chk *checker) checkInvalidWindowsCharacters(entry Entry) {
+func (chk *checker) checkInvalidWindowsChar(entry Entry) {
 
 	for _, character := range entry.Name {
 
@@ -21,11 +21,11 @@ func (chk *checker) checkInvalidWindowsCharacters(entry Entry) {
 
 			if character == invalid {
 
-				chk.issuesInvalidWindowsCharacters = append(
-					chk.issuesInvalidWindowsCharacters, Issue{
-						Type: InvalidWindowsChar,
+				chk.issuesInvalidWindowsChar = append(
+					chk.issuesInvalidWindowsChar, Issue{
 						Path: entry.Path,
-						Info: "invalid Windows character: " + string(character)})
+						Info: string(character),
+					})
 			}
 		}
 	}
@@ -35,7 +35,7 @@ func (chk *checker) checkInvalidWindowsCharacters(entry Entry) {
 // Windows does not allow filenames that end with a period or a space
 //-----------------------------------------------------------------------------
 
-func (chk *checker) checkTrailingCharacters(entry Entry) {
+func (chk *checker) checkTrailingDotSpace(entry Entry) {
 
 	if len(entry.Name) != 0 {
 
@@ -43,11 +43,10 @@ func (chk *checker) checkTrailingCharacters(entry Entry) {
 
 		if last == '.' || last == ' ' {
 
-			chk.issuesTrailingCharacters = append(
-				chk.issuesTrailingCharacters, Issue{
-					Type: TrailingDotSpace,
+			chk.issuesTrailingDotSpace = append(
+				chk.issuesTrailingDotSpace, Issue{
 					Path: entry.Path,
-					Info: "name ends with dot or space"})
+				})
 		}
 	}
 }
@@ -98,14 +97,14 @@ func (chk *checker) checkReservedWindowsName(entry Entry) {
 
 		chk.issuesReservedWindowsName = append(
 			chk.issuesReservedWindowsName, Issue{
-				Type: ReservedWindowsName,
 				Path: entry.Path,
-				Info: "reserved Windows filename"})
+			})
 	}
 }
 
 //-----------------------------------------------------------------------------
-// Windows does not allow filenames longer than 255 UTF-16 units
+// Windows does not allow filenames-length longer than 255 UTF-16 units
+// Windows does not allow pathnames-length longer than 240 UTF-16 units
 //-----------------------------------------------------------------------------
 
 func utf16Length(
@@ -119,28 +118,24 @@ func utf16Length(
 	)
 }
 
-func (chk *checker) checkLength(entry Entry) {
+func (chk *checker) checkFileNameAndPathNameLength(entry Entry) {
 
 	if utf16Length(entry.Name) > 255 {
 
-		chk.issuesNameLength = append(
-			chk.issuesNameLength,
+		chk.issuesFileNameLength = append(
+			chk.issuesFileNameLength,
 			Issue{
-				Type: NameTooLong,
 				Path: entry.Name,
-				Info: "filename exceeds 255 UTF-16 units",
 			},
 		)
 	}
 
 	if utf16Length(entry.Path) > 240 {
 
-		chk.issuesPathLength = append(
-			chk.issuesPathLength,
+		chk.issuesPathNameLength = append(
+			chk.issuesPathNameLength,
 			Issue{
-				Type: PathTooLong,
 				Path: entry.Path,
-				Info: "path exceeds 240 UTF-16 units",
 			},
 		)
 	}
@@ -156,10 +151,7 @@ func (chk *checker) checkUnicodeNormalization(entry Entry) {
 		chk.issuesUnicodeNormalization = append(
 			chk.issuesUnicodeNormalization,
 			Issue{
-
-				Type: UnicodeCollision,
 				Path: entry.Path,
-				Info: "path is not NFC normalized",
 			},
 		)
 	}
@@ -174,10 +166,7 @@ func (chk *checker) checkSymLink(entry Entry) {
 		chk.issuesSymLink = append(
 			chk.issuesSymLink,
 			Issue{
-
-				Type: SymbolicLinkDetected,
 				Path: entry.Path,
-				Info: "symbolic link detected",
 			},
 		)
 	}
@@ -190,10 +179,10 @@ func (chk *checker) validateEntries(entries []Entry) {
 
 	for _, entry := range entries {
 
-		chk.checkInvalidWindowsCharacters(entry)
-		chk.checkTrailingCharacters(entry)
+		chk.checkInvalidWindowsChar(entry)
+		chk.checkTrailingDotSpace(entry)
 		chk.checkReservedWindowsName(entry)
-		chk.checkLength(entry)
+		chk.checkFileNameAndPathNameLength(entry)
 		chk.checkUnicodeNormalization(entry)
 		chk.checkSymLink(entry)
 	}

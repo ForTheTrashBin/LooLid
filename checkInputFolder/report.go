@@ -3,14 +3,13 @@ package checkInputFolder
 import (
 	"fmt"
 	"os"
-	"sort"
 )
 
 func (chk *checker) report() {
 	issueLen := len(chk.issuesDirectorySiblings)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(DirectorySiblingsFound, issueLen)
+		chk.printLocalizedListHeader(CheckError_DirectorySiblingsFound, issueLen)
 
 		for _, issue := range chk.issuesDirectorySiblings {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
@@ -19,24 +18,24 @@ func (chk *checker) report() {
 
 	//---------------------------------------------------------------------
 
-	issueLen = len(chk.issuesInvalidWindowsCharacters)
+	issueLen = len(chk.issuesInvalidWindowsChar)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(InvalidWindowsChar, issueLen)
+		chk.printLocalizedListHeader(CheckError_InvalidWindowsChar, issueLen)
 
-		for _, issue := range chk.issuesInvalidWindowsCharacters {
+		for _, issue := range chk.issuesInvalidWindowsChar {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
 		}
 	}
 
 	//---------------------------------------------------------------------
 
-	issueLen = len(chk.issuesTrailingCharacters)
+	issueLen = len(chk.issuesTrailingDotSpace)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(TrailingDotSpace, issueLen)
+		chk.printLocalizedListHeader(CheckError_TrailingDotSpace, issueLen)
 
-		for _, issue := range chk.issuesTrailingCharacters {
+		for _, issue := range chk.issuesTrailingDotSpace {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
 		}
 	}
@@ -46,7 +45,7 @@ func (chk *checker) report() {
 	issueLen = len(chk.issuesReservedWindowsName)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(ReservedWindowsName, issueLen)
+		chk.printLocalizedListHeader(CheckError_ReservedWindowsName, issueLen)
 
 		for _, issue := range chk.issuesReservedWindowsName {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
@@ -55,24 +54,24 @@ func (chk *checker) report() {
 
 	//---------------------------------------------------------------------
 
-	issueLen = len(chk.issuesNameLength)
+	issueLen = len(chk.issuesFileNameLength)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(NameTooLong, issueLen)
+		chk.printLocalizedListHeader(CheckError_FileNameTooLong, issueLen)
 
-		for _, issue := range chk.issuesNameLength {
+		for _, issue := range chk.issuesFileNameLength {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
 		}
 	}
 
 	//---------------------------------------------------------------------
 
-	issueLen = len(chk.issuesPathLength)
+	issueLen = len(chk.issuesPathNameLength)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(PathTooLong, issueLen)
+		chk.printLocalizedListHeader(CheckError_PathNameTooLong, issueLen)
 
-		for _, issue := range chk.issuesPathLength {
+		for _, issue := range chk.issuesPathNameLength {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
 		}
 	}
@@ -82,7 +81,7 @@ func (chk *checker) report() {
 	issueLen = len(chk.issuesUnicodeNormalization)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(UnicodeCollision, issueLen)
+		chk.printLocalizedListHeader(CheckError_UnicodeCollision, issueLen)
 
 		for _, issue := range chk.issuesUnicodeNormalization {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
@@ -94,7 +93,7 @@ func (chk *checker) report() {
 	issueLen = len(chk.issuesSymLink)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(SymbolicLinkDetected, issueLen)
+		chk.printLocalizedListHeader(CheckError_SymbolicLinkDetected, issueLen)
 
 		for _, issue := range chk.issuesSymLink {
 			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
@@ -102,14 +101,15 @@ func (chk *checker) report() {
 	}
 }
 
+/*
 func SortIssues(issues []Issue) {
 
 	sort.Slice(
 		issues,
 		func(i, j int) bool {
 
-			if issues[i].Type != issues[j].Type {
-				return issues[i].Type < issues[j].Type
+			if issues[i].Typex != issues[j].Typex {
+				return issues[i].Typex < issues[j].Typex
 			}
 
 			return issues[i].Path < issues[j].Path
@@ -132,7 +132,7 @@ func Print(issues []Issue, stats interface{}) {
 
 		fmt.Printf(
 			"ERROR %-28s %s\n",
-			issue.Type,
+			issue.Typex,
 			issue.Path,
 		)
 
@@ -152,3 +152,4 @@ func Print(issues []Issue, stats interface{}) {
 		len(issues),
 	)
 }
+*/
