@@ -15,7 +15,7 @@ var invalidWindowsCharacters = []rune{'<', '>', ':', '"', '/', '\\', '|', '?', '
 
 func (chk *checker) checkInvalidWindowsChar(entry Entry) {
 
-	for _, character := range entry.Name {
+	for _, character := range entry.entryName {
 
 		for _, invalid := range invalidWindowsCharacters {
 
@@ -23,8 +23,9 @@ func (chk *checker) checkInvalidWindowsChar(entry Entry) {
 
 				chk.issuesInvalidWindowsChar = append(
 					chk.issuesInvalidWindowsChar, Issue{
-						Path: entry.Path,
-						Info: string(character),
+						isDir: entry.isDir,
+						path:  entry.relativePath,
+						info:  string(character),
 					})
 			}
 		}
@@ -37,15 +38,16 @@ func (chk *checker) checkInvalidWindowsChar(entry Entry) {
 
 func (chk *checker) checkTrailingDotSpace(entry Entry) {
 
-	if len(entry.Name) != 0 {
+	if len(entry.entryName) != 0 {
 
-		last := entry.Name[len(entry.Name)-1]
+		last := entry.entryName[len(entry.entryName)-1]
 
 		if last == '.' || last == ' ' {
 
 			chk.issuesTrailingDotSpace = append(
 				chk.issuesTrailingDotSpace, Issue{
-					Path: entry.Path,
+					isDir: entry.isDir,
+					path:  entry.relativePath,
 				})
 		}
 	}
@@ -85,7 +87,7 @@ var reservedNames = map[string]bool{
 
 func (chk *checker) checkReservedWindowsName(entry Entry) {
 
-	name := entry.Name
+	name := entry.entryName
 
 	if index := strings.IndexByte(name, '.'); index >= 0 {
 		name = name[:index]
@@ -97,7 +99,8 @@ func (chk *checker) checkReservedWindowsName(entry Entry) {
 
 		chk.issuesReservedWindowsName = append(
 			chk.issuesReservedWindowsName, Issue{
-				Path: entry.Path,
+				isDir: entry.isDir,
+				path:  entry.relativePath,
 			})
 	}
 }
@@ -120,59 +123,66 @@ func utf16Length(
 
 func (chk *checker) checkFileNameAndPathNameLength(entry Entry) {
 
-	if utf16Length(entry.Name) > 255 {
+	if utf16Length(entry.entryName) > 255 {
 
 		chk.issuesFileNameLength = append(
 			chk.issuesFileNameLength,
 			Issue{
-				Path: entry.Name,
+				isDir: entry.isDir,
+				path:  entry.entryName,
 			},
 		)
 	}
 
-	if utf16Length(entry.Path) > 240 {
+	if utf16Length(entry.relativePath) > 240 {
 
 		chk.issuesPathNameLength = append(
 			chk.issuesPathNameLength,
 			Issue{
-				Path: entry.Path,
+				isDir: entry.isDir,
+				path:  entry.relativePath,
 			},
 		)
 	}
 }
 
 //-----------------------------------------------------------------------------
+// Check UTF16-normalisation for MacOs
 //-----------------------------------------------------------------------------
 
 func (chk *checker) checkUnicodeNormalization(entry Entry) {
 
-	if norm.NFC.String(entry.Path) != entry.Path {
+	if norm.NFC.String(entry.relativePath) != entry.relativePath {
 
 		chk.issuesUnicodeNormalization = append(
 			chk.issuesUnicodeNormalization,
 			Issue{
-				Path: entry.Path,
+				isDir: entry.isDir,
+				path:  entry.relativePath,
 			},
 		)
 	}
 }
 
 //-----------------------------------------------------------------------------
+// Do not allow any symbolic links
 //-----------------------------------------------------------------------------
 
 func (chk *checker) checkSymLink(entry Entry) {
 
-	if entry.IsSymlink {
+	if entry.isSymlink {
 		chk.issuesSymLink = append(
 			chk.issuesSymLink,
 			Issue{
-				Path: entry.Path,
+				isDir: entry.isDir,
+				path:  entry.relativePath,
 			},
 		)
 	}
 }
 
 //-----------------------------------------------------------------------------
+// Check all entries with all methods
 //-----------------------------------------------------------------------------
 
 func (chk *checker) validateEntries(entries []Entry) {

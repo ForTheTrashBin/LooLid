@@ -94,34 +94,85 @@ other = "\n\x1b[31mError:\x1b[0m Ungültige Anzahl von Kommandos"
 #------------------------------------------------------------------------------
 
 [check.no_fileinfo]
-other = "Test {{.value1}} - {{.value2}}"
+other = "\x1b[31mError:\x1b[0m Given input not found: {{.value1}}\n"
+
+[check.no_directory]
+other = "\x1b[31mError:\x1b[0m Given input is not a folder: {{.value1}}\n"
+
+[check.dot_hidden_directory]
+other = "\x1b[31mError:\x1b[0m Given folder-name starts with a dot and is hidden: {{.value1}}\n"
+
+[check.directory_hidden_or_system]
+other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' and/or 'system': {{.value1}}\n"
+
+[check.directory_confusion]
+other = "\x1b[31mError:\x1b[0m Der gegebene Verzeichnisname kann mit der Konfigurationsdatei verwechselt werden: {{.value1}}\n"
+
+[check.directory_no_permission]
+other = "\x1b[31mError:\x1b[0m No permission to read given folder: {{.value1}}\n"
+
+[check.directory_not_readable]
+other = "\x1b[31mError:\x1b[0m Given folder is not readable: {{.value1}}\n"
+
+[check.no_pathabs]
+other = "\x1b[31mError:\x1b[0m Can't evaluate absolute path of given folder: {{.value1}}\n"
+
+[check.no_symlinks]
+other = "\x1b[31mError:\x1b[0m Can't evaluate symbolic link: {{.value1}}\n"
+
+[check.no_workingdir]
+other = "\x1b[31mError:\x1b[0m Can't get current working-folder: {{.value1}}\n"
+
+[check.no_pathrel]
+other = "\x1b[31mError:\x1b[0m Can't evaluate relative path of given folder: {{.value1}}\n"
+
+[check.workingdir_in_input]
+other = "\x1b[31mError:\x1b[0m Working-folder is part of the input-folder: {{.value1}}\n"
 
 #------------------------------------------------------------------------------
 
-[invalid_windows_chars]
-one = "Es wurde ein Datei- oder Verzeichnisname gefunden, der für Windows ungültige Zeichen enthält."
-other = "Es wurden insgesamt {{.Count}} Datei- oder Verzeichnisnamen gefunden, die für Windows ungültige Zeichen enthalten."
+[check.header.directory_siblings_found]
+one = "\x1b[31mError:\x1b[0m The input folder has a siblings with ambiguous name:\n"
+other = "\x1b[31mError:\x1b[0m The input folder has {{.count}} siblings with ambiguous name:\n"
 
-[trailing_dot_or_space]
-other = "Datei- oder Verzeichnisname endet mit einem Punkt oder Leerzeichen."
+[check.header.invalid_windows_chars]
+one = "\x1b[31mError:\x1b[0m Es wurde ein Datei- oder Verzeichnisname gefunden, der für Windows ungültige Zeichen enthält:\n"
+other = "\x1b[31mError:\x1b[0m Es wurden insgesamt {{.count}} Datei- oder Verzeichnisnamen gefunden, die für Windows ungültige Zeichen enthalten:\n"
 
-[reserved_windows_name]
-other = "Verwendet einen reservierten Windows-Dateinamen."
+[check.header.trailing_dot_or_space]
+one = "\x1b[31mError:\x1b[0m A file or directory name has been found that ends with a dot/space and is not valid on windows:\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file or directory names were found that ends with a dot/space and are not valid on windows:\n"
 
-[symbolic_link]
-other = "Symbolischer Link erkannt."
+[check.header.reserved_windows_name]
+one = "\x1b[31mError:\x1b[0m A file or directory name has been found that uses a reserved windows filename:\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file or directory names were found that uses a reserved windows filename:\n"
 
-[case_collision]
-other = "Namenskollision mit '{{.OtherPath}}' auf einem case-insensitiven Dateisystem."
+[check.header.filename_too_long]
+one = "\x1b[31mError:\x1b[0m A path name has been found that is longer than 255 utf-16 units :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file names were found that are longer than 255 utf-16 units :\n"
 
-[unicode_not_nfc]
-other = "Dateiname ist nicht NFC-normalisiert."
+[check.header.pathname_too_long]
+one = "\x1b[31mError:\x1b[0m A path name has been found that is longer than 240 utf-16 units :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} path names were found that are longer than 240 utf-16 units :\n"
 
-[unicode_collision]
-other = "Unicode-Namenskollision nach NFC-Normalisierung mit '{{.OtherPath}}'."
+[check.header.unicode_collision]
+one = "\x1b[31mError:\x1b[0m A path name has been found that conflicts with the UTF16-normalisation on MacOs :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} path names were found that conflict with UTF-16 normalisation on macOS :\n"
 
-[path_too_long]
-other = "Pfad ist mit {{.Length}} UTF-16-Codeunits möglicherweise zu lang für Windows."
+[check.header.symbolic_link]
+one = "\x1b[31mError:\x1b[0m A path name has been found that is a symbolic link :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file names were found that are symbolic links :\n"
 
-[name_too_long]
-other = "Datei- oder Verzeichnisname ist mit {{.Length}} UTF-16-Codeunits länger als 255."
+[check.header.config_file]
+one = "\x1b[31mError:\x1b[0m An ambiguous configuration-entry has been found: \n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} ambiguous configuration-entries were found \n"
+
+[check.header.duplicate_entries]
+one = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a folder:\n"
+other = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a total of {{.count}} folders:\n"
+
+[check.content.folder]
+other = "Verzeichnis"
+
+[check.content.file]
+other = "Datei"

@@ -105,6 +105,9 @@ other = "\x1b[31mError:\x1b[0m Given folder-name starts with a dot and is hidden
 [check.directory_hidden_or_system]
 other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' and/or 'system': {{.value1}}\n"
 
+[check.directory_confusion]
+other = "\x1b[31mError:\x1b[0m The specified directory name may be confused with the configuration file: {{.value1}}\n"
+
 [check.directory_no_permission]
 other = "\x1b[31mError:\x1b[0m No permission to read given folder: {{.value1}}\n"
 
@@ -129,50 +132,47 @@ other = "\x1b[31mError:\x1b[0m Working-folder is part of the input-folder: {{.va
 #------------------------------------------------------------------------------
 
 [check.header.directory_siblings_found]
-one = "The input folder has a siblings with ambiguous name:\n"
-other = "The input folder has {{.Count}} siblings with ambiguous name:\n"
+one = "\x1b[31mError:\x1b[0m The input folder has a siblings with ambiguous name:\n"
+other = "\x1b[31mError:\x1b[0m The input folder has {{.count}} siblings with ambiguous name:\n"
 
 [check.header.invalid_windows_chars]
-one = "A file or directory name was found that contains characters that are not valid on windows:\n"
-other = "A total of {{.Count}} file or directory names were found that contain characters that are not valid on windows:\n"
+one = "\x1b[31mError:\x1b[0m A file or directory name has been found that contains characters that are not valid on windows:\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file or directory names were found that contain characters that are not valid on windows:\n"
 
 [check.header.trailing_dot_or_space]
-one = "A file or directory name was found that ends with a dot/space and is not valid on windows:\n"
-other = "A total of {{.Count}} file or directory names were found that ends with a dot/space and are not valid on windows:\n"
+one = "\x1b[31mError:\x1b[0m A file or directory name has been found that ends with a dot/space and is not valid on windows:\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file or directory names were found that ends with a dot/space and are not valid on windows:\n"
 
 [check.header.reserved_windows_name]
-one = "A file or directory name was found that uses a reserved windows filename:\n"
-other = "A total of {{.Count}} file or directory names were found that uses a reserved windows filename:\n"
+one = "\x1b[31mError:\x1b[0m A file or directory name has been found that uses a reserved windows filename:\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file or directory names were found that uses a reserved windows filename:\n"
 
 [check.header.filename_too_long]
-one = "A file name was found that is longer than 255 utf-16 units :\n"
-other = "A total of {{.Count}} file names were found that are longer than 255 utf-16 units :\n"
+one = "\x1b[31mError:\x1b[0m A path name has been found that is longer than 255 utf-16 units :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file names were found that are longer than 255 utf-16 units :\n"
 
 [check.header.pathname_too_long]
-one = "A path name was found that is longer than 240 utf-16 units :\n"
-other = "A total of {{.Count}} path names were found that are longer than 240 utf-16 units :\n"
+one = "\x1b[31mError:\x1b[0m A path name has been found that is longer than 240 utf-16 units :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} path names were found that are longer than 240 utf-16 units :\n"
 
-[check.header_unicode_collision]
-one = "?????"
-other = "?????"
+[check.header.unicode_collision]
+one = "\x1b[31mError:\x1b[0m A path name has been found that conflicts with the UTF16-normalisation on MacOs :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} path names were found that conflict with UTF-16 normalisation on macOS :\n"
 
 [check.header.symbolic_link]
-one = "A file name was found that is a symbolic link :\n"
-other = "A total of {{.Count}} file names were found that are symbolic links :\n"
+one = "\x1b[31mError:\x1b[0m A path name has been found that is a symbolic link :\n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} file names were found that are symbolic links :\n"
 
-#------------------------------------------------------------------------------
+[check.header.config_file]
+one = "\x1b[31mError:\x1b[0m An ambiguous configuration-entry has been found: \n"
+other = "\x1b[31mError:\x1b[0m A total of {{.count}} ambiguous configuration-entries were found \n"
 
-[case_collision]
-other = "Name collision with '{{.OtherPath}}' on a case-insensitive filesystem."
+[check.header.duplicate_entries]
+one = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a folder:\n"
+other = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a total of {{.count}} folders:\n"
 
-[unicode_not_nfc]
-other = "Filename is not NFC-normalized."
+[check.content.folder]
+other = "Folder"
 
-[unicode_collision]
-other = "Unicode name collision after NFC normalization with '{{.OtherPath}}'."
-
-[path_too_long]
-other = "Path may be too long for Windows ({{.Length}} UTF-16 code units)."
-
-[name_too_long]
-other = "File or directory name exceeds 255 UTF-16 code units ({{.Length}})."
+[check.content.file]
+other = "File"

@@ -1,155 +1,153 @@
 package checkInputFolder
 
 import (
+	"LooLid/helper"
 	"fmt"
 	"os"
+	"sort"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-func (chk *checker) report() {
-	issueLen := len(chk.issuesDirectorySiblings)
+//-----------------------------------------------------------------------------
+// Print formatted list of 'issues' with header
+//-----------------------------------------------------------------------------
+
+func (chk *checker) printIssues(errorType ErrorType, issues []Issue) {
+
+	issueLen := len(issues)
 
 	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_DirectorySiblingsFound, issueLen)
 
-		for _, issue := range chk.issuesDirectorySiblings {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
+		helper.PrintLocalizedListHeader(chk.localizer, string(errorType), issueLen)
+
+		//---------------------------------------------------------------------
+		// Sorting for a better customer-experience
+		//---------------------------------------------------------------------
+
+		sort.Slice(issues, func(i, j int) bool {
+			return issues[i].path < issues[j].path
+		})
+
+		//---------------------------------------------------------------------
+
+		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_Folder)})
+		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_File)})
+
+		lenFolder := len(strFolder)
+		lenFile := len(strFile)
+
+		var needed int
+
+		for _, issue := range issues {
+			if issue.isDir {
+				needed = max(needed, lenFolder)
+			} else {
+				needed = max(needed, lenFile)
+			}
 		}
-	}
 
-	//---------------------------------------------------------------------
+		lineFormat := fmt.Sprintf("  - %%-%ds", needed+2)
 
-	issueLen = len(chk.issuesInvalidWindowsChar)
-
-	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_InvalidWindowsChar, issueLen)
-
-		for _, issue := range chk.issuesInvalidWindowsChar {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
-		}
-	}
-
-	//---------------------------------------------------------------------
-
-	issueLen = len(chk.issuesTrailingDotSpace)
-
-	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_TrailingDotSpace, issueLen)
-
-		for _, issue := range chk.issuesTrailingDotSpace {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
-		}
-	}
-
-	//---------------------------------------------------------------------
-
-	issueLen = len(chk.issuesReservedWindowsName)
-
-	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_ReservedWindowsName, issueLen)
-
-		for _, issue := range chk.issuesReservedWindowsName {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
-		}
-	}
-
-	//---------------------------------------------------------------------
-
-	issueLen = len(chk.issuesFileNameLength)
-
-	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_FileNameTooLong, issueLen)
-
-		for _, issue := range chk.issuesFileNameLength {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
-		}
-	}
-
-	//---------------------------------------------------------------------
-
-	issueLen = len(chk.issuesPathNameLength)
-
-	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_PathNameTooLong, issueLen)
-
-		for _, issue := range chk.issuesPathNameLength {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
-		}
-	}
-
-	//---------------------------------------------------------------------
-
-	issueLen = len(chk.issuesUnicodeNormalization)
-
-	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_UnicodeCollision, issueLen)
-
-		for _, issue := range chk.issuesUnicodeNormalization {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
-		}
-	}
-
-	//---------------------------------------------------------------------
-
-	issueLen = len(chk.issuesSymLink)
-
-	if issueLen > 0 {
-		chk.printLocalizedListHeader(CheckError_SymbolicLinkDetected, issueLen)
-
-		for _, issue := range chk.issuesSymLink {
-			fmt.Fprintf(os.Stderr, "    - "+issue.Path+"\n")
-		}
-	}
-}
-
-/*
-func SortIssues(issues []Issue) {
-
-	sort.Slice(
-		issues,
-		func(i, j int) bool {
-
-			if issues[i].Typex != issues[j].Typex {
-				return issues[i].Typex < issues[j].Typex
+		for _, issue := range issues {
+			if issue.isDir {
+				fmt.Fprintf(os.Stderr, lineFormat, strFolder+":")
+			} else {
+				fmt.Fprintf(os.Stderr, lineFormat, strFile+":")
 			}
 
-			return issues[i].Path < issues[j].Path
-
-		},
-	)
-}
-
-func Print(issues []Issue, stats interface{}) {
-
-	SortIssues(issues)
-
-	fmt.Println(
-		"Filesystem portability check",
-	)
-
-	fmt.Println()
-
-	for _, issue := range issues {
-
-		fmt.Printf(
-			"ERROR %-28s %s\n",
-			issue.Typex,
-			issue.Path,
-		)
-
-		if issue.Info != "" {
-
-			fmt.Println(
-				" x  ",
-				issue.Info,
-			)
+			fmt.Fprintf(os.Stderr, "%s\n", issue.path)
 		}
 	}
-
-	fmt.Println()
-
-	fmt.Printf(
-		"Errors: %d\n",
-		len(issues),
-	)
 }
-*/
+
+//-----------------------------------------------------------------------------
+// Print formatted list of 'duplicates' with header
+//-----------------------------------------------------------------------------
+
+func (chk *checker) printDuplicates() {
+
+	numDuplicateGroups := len(chk.duplicateGroups)
+
+	if numDuplicateGroups > 0 {
+
+		helper.PrintLocalizedListHeader(chk.localizer, string(CheckError_DuplicateEntries), numDuplicateGroups)
+
+		//---------------------------------------------------------------------
+		// Sorting for a better customer-experience
+		//---------------------------------------------------------------------
+
+		sort.Slice(chk.duplicateGroups, func(i, j int) bool {
+			return chk.duplicateGroups[i].groupName < chk.duplicateGroups[j].groupName
+		})
+
+		for looperGroups := 0; looperGroups < len(chk.duplicateGroups); looperGroups++ {
+			duplicateGroup := &chk.duplicateGroups[looperGroups]
+
+			sort.Slice(duplicateGroup.items, func(i, j int) bool {
+				return duplicateGroup.items[i].itemName < duplicateGroup.items[j].itemName
+			})
+		}
+
+		//---------------------------------------------------------------------
+
+		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_Folder)})
+		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_File)})
+
+		lenFolder := len(strFolder)
+		lenFile := len(strFile)
+
+		//---------------------------------------------------------------------
+
+		for _, duplicateGroup := range chk.duplicateGroups {
+
+			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strFolder, duplicateGroup.groupName)
+
+			var needed int
+
+			for _, items := range duplicateGroup.items {
+				if items.isDir {
+					needed = max(needed, lenFolder)
+				} else {
+					needed = max(needed, lenFile)
+				}
+			}
+
+			lineheaderFormat := fmt.Sprintf("    - %%-%ds", needed+2)
+
+			for _, items := range duplicateGroup.items {
+
+				if items.isDir {
+					fmt.Fprintf(os.Stderr, lineheaderFormat, strFolder+":")
+				} else {
+					fmt.Fprintf(os.Stderr, lineheaderFormat, strFile+":")
+				}
+
+				fmt.Fprintf(os.Stderr, "%s\n", items.itemName)
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Print all issues
+//-----------------------------------------------------------------------------
+
+func (chk *checker) reportInputFolderErrors() {
+
+	chk.printIssues(CheckError_DirectorySiblingsFound, chk.issuesInputDirectorySiblings)
+}
+
+func (chk *checker) reportBulkDataErrors() {
+
+	chk.printIssues(CheckError_InvalidWindowsChar, chk.issuesInvalidWindowsChar)
+	chk.printIssues(CheckError_TrailingDotSpace, chk.issuesTrailingDotSpace)
+	chk.printIssues(CheckError_ReservedWindowsName, chk.issuesReservedWindowsName)
+	chk.printIssues(CheckError_FileNameTooLong, chk.issuesFileNameLength)
+	chk.printIssues(CheckError_PathNameTooLong, chk.issuesPathNameLength)
+	chk.printIssues(CheckError_UnicodeCollision, chk.issuesUnicodeNormalization)
+	chk.printIssues(CheckError_SymbolicLinkDetected, chk.issuesSymLink)
+	chk.printIssues(CheckError_ConfigFile, chk.issuesConfigFile)
+
+	chk.printDuplicates()
+}

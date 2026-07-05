@@ -63,10 +63,14 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 
 func (cmd *BuildCommand) Execute() error {
 
-	if checkInputFolder.CheckAndReport(cmd.localizer, cmd.pureAppName, "checkInputFolder/test/testInputFolder") {
+	var inputFolder string
+
+	// inputFolder = "/home/u32800"
+	inputFolder = "checkInputFolder/test"
+	// inputFolder = "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
+
+	if checkInputFolder.CheckInputFolderAndReport(cmd.localizer, inputFolder, cmd.pureAppName) {
 		fmt.Println("********** build is OK ***************")
-	} else {
-		fmt.Println("********** build is abborted ***************")
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 package checkInputFolder
 
 import (
-	"fmt"
+	"LooLid/helper"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,33 +10,46 @@ import (
 )
 
 type checker struct {
-	localizer                  *i18n.Localizer
-	pureAppName                string
-	issuesDirectorySiblings    []Issue // checker.go
-	issuesInvalidWindowsChar   []Issue // rules.go
-	issuesTrailingDotSpace     []Issue // rules.go
-	issuesReservedWindowsName  []Issue // rules.go
-	issuesFileNameLength       []Issue // rules.go
-	issuesPathNameLength       []Issue // rules.go
-	issuesUnicodeNormalization []Issue // rules.go
-	issuesSymLink              []Issue // rules.go
+	localizer   *i18n.Localizer
+	inputFolder string
+	pureAppName string
+
+	issuesInputDirectorySiblings []Issue // checker.go
+	issuesInvalidWindowsChar     []Issue // rules.go
+	issuesTrailingDotSpace       []Issue // rules.go
+	issuesReservedWindowsName    []Issue // rules.go
+	issuesFileNameLength         []Issue // rules.go
+	issuesPathNameLength         []Issue // rules.go
+	issuesUnicodeNormalization   []Issue // rules.go
+	issuesSymLink                []Issue // rules.go
+	issuesConfigFile             []Issue // scanner.go
+
+	duplicateGroups []DuplicateGroup
 }
 
-func newChecker(localizer *i18n.Localizer, pureAppName string) *checker {
+func newChecker(localizer *i18n.Localizer, inputFolder string, pureAppName string) *checker {
 	chk := &checker{
 		localizer:   localizer,
+		inputFolder: inputFolder,
 		pureAppName: pureAppName,
 	}
 
 	return chk
 }
 
-func (chk *checker) checkIssues() bool {
-	var result = true
+func (chk *checker) isInputDirectoryCorrect() bool {
+	result := true
 
-	if len(chk.issuesDirectorySiblings) > 0 {
+	if len(chk.issuesInputDirectorySiblings) > 0 {
 		result = false
 	}
+
+	return result
+}
+
+func (chk *checker) isAllTheBulkDataCorrect() bool {
+
+	result := true
 
 	if len(chk.issuesInvalidWindowsChar) > 0 {
 		result = false
@@ -66,47 +79,34 @@ func (chk *checker) checkIssues() bool {
 		result = false
 	}
 
+	if len(chk.issuesConfigFile) > 0 {
+		return false
+	}
+
+	if len(chk.duplicateGroups) > 0 {
+		result = false
+	}
+
 	return result
 }
 
-func (chk *checker) printLocalizedListHeader(errorType ErrorType, listLength int) {
-	localizedMessage := chk.localizer.MustLocalize(
-		&i18n.LocalizeConfig{
-			MessageID: string(errorType),
-			TemplateData: map[string]int{
-				"Count": listLength,
-			},
-			PluralCount: listLength,
-		})
-
-	fmt.Fprintf(os.Stderr, localizedMessage)
-}
-
 func (chk *checker) printLocalizedMessage(errorType ErrorType, value1 string, value2 string) bool {
-	localizedMessage := chk.localizer.MustLocalize(
-		&i18n.LocalizeConfig{
-			MessageID: string(errorType),
-			TemplateData: map[string]string{
-				"value1": value1,
-				"value2": value2,
-			},
-		})
+	helper.PrintLocalizedMessage(chk.localizer, string(errorType), value1, value2)
 
-	fmt.Fprintf(os.Stderr, localizedMessage)
-
-	return true
+	return false
 }
 
-func (chk *checker) check(inputFolder string) bool {
+func (chk *checker) checkInputFolder() bool {
 
 	//-------------------------------------------------------------------------
 	// get fileinfo of given input-path
 	//-------------------------------------------------------------------------
 
-	fileInfo, err := os.Stat(inputFolder)
+	fileInfo, err := os.Stat(chk.inputFolder)
 
 	if err != nil {
-		return chk.printLocalizedMessage(CheckError_NoFileInfo, inputFolder, err.Error())
+
+		return chk.printLocalizedMessage(CheckError_NoFileInfo, chk.inputFolder, err.Error())
 	}
 
 	//-------------------------------------------------------------------------
@@ -114,20 +114,23 @@ func (chk *checker) check(inputFolder string) bool {
 	//-------------------------------------------------------------------------
 
 	if !fileInfo.IsDir() {
-		return chk.printLocalizedMessage(CheckError_NoDirectory, inputFolder, "")
+
+		return chk.printLocalizedMessage(CheckError_NoDirectory, chk.inputFolder, "")
 	}
 
 	//-------------------------------------------------------------------------
 	// Check, if directory-name starts with a dot (.)
 	//-------------------------------------------------------------------------
 
-	baseName := filepath.Base(inputFolder)
+	baseName := filepath.Base(chk.inputFolder)
 
 	// Do not treat the "." and ".." directories as hidden directories.
 
 	if (baseName != ".") && (baseName != "..") {
+
 		if strings.HasPrefix(baseName, ".") {
-			return chk.printLocalizedMessage(CheckError_DotHiddenDirectory, inputFolder, "")
+
+			return chk.printLocalizedMessage(CheckError_DotHiddenDirectory, chk.inputFolder, "")
 		}
 	}
 
@@ -135,39 +138,51 @@ func (chk *checker) check(inputFolder string) bool {
 	// On windows directory must not be hidden or system
 	//-------------------------------------------------------------------------
 
-	if isHiddenOrSystemOnWindows(inputFolder) {
-		return chk.printLocalizedMessage(CheckError_DirectoryHiddenOrSystem, inputFolder, "")
+	if isHiddenOrSystemOnWindows(chk.inputFolder) {
+
+		return chk.printLocalizedMessage(CheckError_DirectoryHiddenOrSystem, chk.inputFolder, "")
+	}
+
+	//-------------------------------------------------------------------------
+	// Check whether the directory name could be confused with the configuration file
+	//-------------------------------------------------------------------------
+
+	if strings.ToLower(baseName) == strings.ToLower(helper.GetConfigFileName()) {
+
+		return chk.printLocalizedMessage(CheckError_Confusion, chk.inputFolder, "")
 	}
 
 	//-------------------------------------------------------------------------
 	// Check, if directory is readable (Just try and check the result)
 	//-------------------------------------------------------------------------
 
-	_, err = os.ReadDir(inputFolder)
+	_, err = os.ReadDir(chk.inputFolder)
 
 	if err != nil {
 		if os.IsPermission(err) {
-			chk.printLocalizedMessage(CheckError_DirectoryNoPermission, inputFolder, "")
-		} else {
-			chk.printLocalizedMessage(CheckError_DirectoryNotReadable, inputFolder, err.Error())
-		}
 
-		return true
+			return chk.printLocalizedMessage(CheckError_DirectoryNoPermission, chk.inputFolder, "")
+		} else {
+
+			return chk.printLocalizedMessage(CheckError_DirectoryNotReadable, chk.inputFolder, err.Error())
+		}
 	}
 
 	//-------------------------------------------------------------------------
 	// Make input-path absolute and evaluate sym-links
 	//-------------------------------------------------------------------------
 
-	inputPathAbs, err := filepath.Abs(inputFolder)
+	inputPathAbs, err := filepath.Abs(chk.inputFolder)
 
 	if err != nil {
-		return chk.printLocalizedMessage(CheckError_NoPathAbs, inputFolder, err.Error())
+
+		return chk.printLocalizedMessage(CheckError_NoPathAbs, chk.inputFolder, err.Error())
 	}
 
 	inputPathAbs, err = filepath.EvalSymlinks(inputPathAbs)
 
 	if err != nil {
+
 		return chk.printLocalizedMessage(CheckError_NoSymLinks, inputPathAbs, err.Error())
 	}
 
@@ -178,12 +193,14 @@ func (chk *checker) check(inputFolder string) bool {
 	workingDirAbs, err := os.Getwd()
 
 	if err != nil {
+
 		return chk.printLocalizedMessage(CheckError_NoWorkingDir, "", err.Error())
 	}
 
 	workingDirAbs, err = filepath.EvalSymlinks(workingDirAbs)
 
 	if err != nil {
+
 		return chk.printLocalizedMessage(CheckError_NoSymLinks, workingDirAbs, err.Error())
 	}
 
@@ -191,14 +208,18 @@ func (chk *checker) check(inputFolder string) bool {
 	// 'Compare' and evaluate if workingDirAbs is inside inputPathAbs
 	//-------------------------------------------------------------------------
 
-	relativePath, err := filepath.Rel(inputPathAbs, workingDirAbs)
+	if true {
+		relativePath, err := filepath.Rel(inputPathAbs, workingDirAbs)
 
-	if err != nil {
-		return chk.printLocalizedMessage(CheckError_NoPathRel, inputPathAbs, err.Error())
-	}
+		if err != nil {
 
-	if (relativePath != "..") && ((len(relativePath) < 3) || (relativePath[:3] != ".."+string(filepath.Separator))) {
-		return chk.printLocalizedMessage(CheckError_WorkingDirInInput, inputPathAbs, err.Error())
+			return chk.printLocalizedMessage(CheckError_NoPathRel, inputPathAbs, err.Error())
+		}
+
+		if (relativePath != "..") && ((len(relativePath) < 3) || (relativePath[:3] != ".."+string(filepath.Separator))) {
+
+			return chk.printLocalizedMessage(CheckError_WorkingDirInInput, inputPathAbs, "")
+		}
 	}
 
 	//-------------------------------------------------------------------------
@@ -210,72 +231,76 @@ func (chk *checker) check(inputFolder string) bool {
 	dirEntries, err := os.ReadDir(parentPath)
 
 	if err != nil {
+
 		return chk.printLocalizedMessage(CheckError_DirectoryNotReadable, parentPath, err.Error())
 	}
 
 	for _, dirEntry := range dirEntries {
+
 		if dirEntry.IsDir() {
+
 			if dirEntry.Name() != baseName { // it's NOT me!
-				if strings.ToLower(dirEntry.Name()) == strings.ToLower(baseName) {
-					chk.issuesDirectorySiblings = append(
-						chk.issuesDirectorySiblings,
+
+				processedEntryName, _ := strings.CutPrefix(strings.ToLower(dirEntry.Name()), ".")
+				processedBaseName, _ := strings.CutPrefix(strings.ToLower(baseName), ".")
+
+				if processedEntryName == processedBaseName {
+
+					chk.issuesInputDirectorySiblings = append(
+						chk.issuesInputDirectorySiblings,
 						Issue{
-							Path: dirEntry.Name(),
-							Info: inputFolder,
+							isDir: dirEntry.IsDir(),
+							path:  dirEntry.Name(),
+							info:  chk.inputFolder,
 						},
 					)
 				}
 			}
-		} else {
-			if strings.Contains(strings.ToLower(dirEntry.Name()), strings.ToLower(baseName)) {
-				chk.issuesDirectorySiblings = append(
-					chk.issuesDirectorySiblings,
-					Issue{
-						Path: dirEntry.Name(),
-						Info: inputFolder,
-					},
-				)
-			}
 		}
 	}
 
-	entries, err := scanDirectory(inputFolder)
+	return chk.isInputDirectoryCorrect()
+}
+
+func (chk *checker) checkBulkData() bool {
+	err := chk.scanDirectories()
 
 	if err != nil {
 		return false
 	}
 
-	chk.validateEntries(entries)
-
-	var issues []Issue
-
-	issues = append(
-		issues,
-		analyzeCollisions(entries)...,
-	)
-
-	return chk.checkIssues()
+	return chk.isAllTheBulkDataCorrect()
 }
 
-func Check(localizer *i18n.Localizer, pureAppName string, inputFolder string) bool {
-	checker := newChecker(
-		localizer,
-		pureAppName,
-	)
+func CheckInputFolder(localizer *i18n.Localizer, inputFolder string, pureAppName string) bool {
 
-	return checker.check(inputFolder)
+	result := false
+
+	checker := newChecker(localizer, inputFolder, pureAppName)
+
+	if result = checker.checkInputFolder(); result {
+
+		result = checker.checkBulkData()
+	}
+
+	return result
 }
 
-func CheckAndReport(localizer *i18n.Localizer, pureAppName string, inputfolder string) bool {
-	checker := newChecker(
-		localizer,
-		pureAppName,
-	)
+func CheckInputFolderAndReport(localizer *i18n.Localizer, inputfolder string, pureAppName string) bool {
 
-	result := checker.check(inputfolder)
+	result := false
 
-	if !result {
-		checker.report()
+	checker := newChecker(localizer, inputfolder, pureAppName)
+
+	if result = checker.checkInputFolder(); result {
+
+		if result = checker.checkBulkData(); !result {
+
+			checker.reportBulkDataErrors()
+		}
+	} else {
+
+		checker.reportInputFolderErrors()
 	}
 
 	return result

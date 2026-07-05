@@ -10,7 +10,14 @@ import (
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-var ErrInvalidNumberOfCommands error = errors.New("invalid number of commands")
+const (
+	ConfigFileExtension = ".config"
+)
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+var ErrInvalidNumberOfCommands = errors.New("invalid number of commands")
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -32,7 +39,7 @@ func GetPureAppName() string {
 	executableBase := filepath.Base(executablePath) // Could be "app.exe", "app.v2.exe", "app.com", "app.v2", "app", ...
 
 	//-------------------------------------------------------------------------
-	// Remove repeatedly if there are multiple "renamed executable" extensions appended to the end.
+	// Remove repeatedly if there are multiple "(renamed) executable" extensions appended to the end.
 	//-------------------------------------------------------------------------
 
 	trimmed := true
@@ -54,6 +61,21 @@ func GetPureAppName() string {
 	}
 
 	return executableBase
+}
+
+func GetConfigFileName() string {
+
+	executableBase := GetPureAppName()
+
+	executableBase, _ = strings.CutPrefix(executableBase, ".")
+	executableBase, _ = strings.CutSuffix(executableBase, ".")
+
+	configFileExtension := ConfigFileExtension
+
+	configFileExtension, _ = strings.CutPrefix(configFileExtension, ".")
+	configFileExtension, _ = strings.CutSuffix(configFileExtension, ".")
+
+	return executableBase + "." + configFileExtension
 }
 
 //-----------------------------------------------------------------------------
