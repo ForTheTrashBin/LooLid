@@ -10,13 +10,6 @@ import (
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-const (
-	ConfigFileExtension = ".config"
-)
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
 var ErrInvalidNumberOfCommands = errors.New("invalid number of commands")
 
 //-----------------------------------------------------------------------------
@@ -70,7 +63,7 @@ func GetConfigFileName() string {
 	executableBase, _ = strings.CutPrefix(executableBase, ".")
 	executableBase, _ = strings.CutSuffix(executableBase, ".")
 
-	configFileExtension := ConfigFileExtension
+	configFileExtension := AppConfig_ConfigFileExtension
 
 	configFileExtension, _ = strings.CutPrefix(configFileExtension, ".")
 	configFileExtension, _ = strings.CutSuffix(configFileExtension, ".")

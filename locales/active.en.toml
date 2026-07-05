@@ -94,13 +94,13 @@ other = "\n\x1b[31mError:\x1b[0m Invalid number of commands"
 #------------------------------------------------------------------------------
 
 [check.no_fileinfo]
-other = "\x1b[31mError:\x1b[0m Given input not found: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory was not found: {{.value1}}\n"
 
 [check.no_directory]
-other = "\x1b[31mError:\x1b[0m Given input is not a folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory is not a directory: {{.value1}}\n"
 
 [check.dot_hidden_directory]
-other = "\x1b[31mError:\x1b[0m Given folder-name starts with a dot and is hidden: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified directory name begins with a dot and is hidden: {{.value1}}\n"
 
 [check.directory_hidden_or_system]
 other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' and/or 'system': {{.value1}}\n"

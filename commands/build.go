@@ -66,7 +66,7 @@ func (cmd *BuildCommand) Execute() error {
 	var inputFolder string
 
 	// inputFolder = "/home/u32800"
-	inputFolder = "checkInputFolder/test"
+	inputFolder = helper.AppConfig_DefaultInputDirectory
 	// inputFolder = "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
 
 	if checkInputFolder.CheckInputFolderAndReport(cmd.localizer, inputFolder, cmd.pureAppName) {
