@@ -103,31 +103,31 @@ other = "\x1b[31mError:\x1b[0m Das gegebene Eingangsverzeichnis ist kein Verzeic
 other = "\x1b[31mError:\x1b[0m Der angegebene Verzeichnisname beginnt mit einem Punkt und ist verborgen: {{.value1}}\n"
 
 [check.directory_hidden_or_system]
-other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' and/or 'system': {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Die Attribute des angegebenen Eingabeverzeichnisses sind „versteckt“ und/oder „System“: {{.value1}}\n"
 
 [check.directory_confusion]
 other = "\x1b[31mError:\x1b[0m Der gegebene Verzeichnisname kann mit der Konfigurationsdatei verwechselt werden: {{.value1}}\n"
 
 [check.directory_no_permission]
-other = "\x1b[31mError:\x1b[0m No permission to read given folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Keine Berechtigungen zum Lesen des angegebenen Eingabeverzeichnisses: {{.value1}}\n"
 
 [check.directory_not_readable]
-other = "\x1b[31mError:\x1b[0m Given folder is not readable: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Das angebene Eingangsverzeichnis kann nicht gelesen werden: {{.value1}}\n"
 
 [check.no_pathabs]
-other = "\x1b[31mError:\x1b[0m Can't evaluate absolute path of given folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Der absolute Pfad des angegebenen Eingabeverzeichnisses kann nicht bestimmt werden: {{.value1}}\n"
 
 [check.no_symlinks]
-other = "\x1b[31mError:\x1b[0m Can't evaluate symbolic link: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Das angegebenen Eingabeverzeichnis ist eine symbolische Verknüpfung: {{.value1}}\n"
 
 [check.no_workingdir]
-other = "\x1b[31mError:\x1b[0m Can't get current working-folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Das aktuelle Arbeitsverzeichnis kann nicht bestimmt werden.\n"
 
 [check.no_pathrel]
-other = "\x1b[31mError:\x1b[0m Can't evaluate relative path of given folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Der relative Pfad zum angegebenen Eingangsverzeichnis kann nicht bestimmt werden: {{.value1}}\n"
 
 [check.workingdir_in_input]
-other = "\x1b[31mError:\x1b[0m Working-folder is part of the input-folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m Das Arbeitsverzeichnis ist Teil des Eingangsverzeichnisses: {{.value1}}\n"
 
 #------------------------------------------------------------------------------
 

@@ -109,25 +109,25 @@ other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' a
 other = "\x1b[31mError:\x1b[0m The specified directory name may be confused with the configuration file: {{.value1}}\n"
 
 [check.directory_no_permission]
-other = "\x1b[31mError:\x1b[0m No permission to read given folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m No permission to read the specified input directory: {{.value1}}\n"
 
 [check.directory_not_readable]
-other = "\x1b[31mError:\x1b[0m Given folder is not readable: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory cannot be read: {{.value1}}\n"
 
 [check.no_pathabs]
-other = "\x1b[31mError:\x1b[0m Can't evaluate absolute path of given folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The absolute path of the specified input directory cannot be determined.: {{.value1}}\n"
 
 [check.no_symlinks]
-other = "\x1b[31mError:\x1b[0m Can't evaluate symbolic link: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory is a symbolic link: {{.value1}}\n"
 
 [check.no_workingdir]
-other = "\x1b[31mError:\x1b[0m Can't get current working-folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The current working directory cannot be determined.\n"
 
 [check.no_pathrel]
-other = "\x1b[31mError:\x1b[0m Can't evaluate relative path of given folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The relative path to the specified input directory cannot be determined: {{.value1}}\n"
 
 [check.workingdir_in_input]
-other = "\x1b[31mError:\x1b[0m Working-folder is part of the input-folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The working directory is part of the input-folder: {{.value1}}\n"
 
 #------------------------------------------------------------------------------
 
