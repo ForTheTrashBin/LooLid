@@ -3,6 +3,7 @@ package main
 import (
 	"LooLid/commands"
 	"LooLid/helper"
+	"LooLid/helper/locales"
 	"embed"
 	"flag"
 	"fmt"
@@ -53,6 +54,9 @@ func testableMain(args []string) int {
 
 	//-------------------------------------------------------------------------
 	// Initialize i18n-bundle to use for the lifetime of the application
+	//
+	// Englich is the bundle default language.
+	// Every unsupported language automatically falls back to English.
 	//-------------------------------------------------------------------------
 
 	bundle := i18n.NewBundle(language.English)
@@ -71,7 +75,13 @@ func testableMain(args []string) int {
 	// read and prepare 'mainUsageMessage'
 	//-------------------------------------------------------------------------
 
-	localizer := i18n.NewLocalizer(bundle, language.English.String())
+	systemLanguage, err := locales.GetLanguage()
+
+	if err != nil {
+		systemLanguage = language.English.String()
+	}
+
+	localizer := i18n.NewLocalizer(bundle, systemLanguage)
 
 	mainUsageMessage = localizer.MustLocalize(
 		&i18n.LocalizeConfig{
