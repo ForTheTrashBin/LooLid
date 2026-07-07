@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"LooLid/helper/constants"
 	"errors"
 	"os"
 	"path/filepath"
@@ -63,7 +64,7 @@ func GetConfigFileName() string {
 	executableBase, _ = strings.CutPrefix(executableBase, ".")
 	executableBase, _ = strings.CutSuffix(executableBase, ".")
 
-	configFileExtension := AppConfig_ConfigFileExtension
+	configFileExtension := constants.AppConfig_ConfigFileExtension
 
 	configFileExtension, _ = strings.CutPrefix(configFileExtension, ".")
 	configFileExtension, _ = strings.CutSuffix(configFileExtension, ".")

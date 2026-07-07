@@ -7,6 +7,7 @@ import (
 	"embed"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -35,6 +36,26 @@ func printMainUsageMessage() {
 }
 
 //-----------------------------------------------------------------------------
+
+func printLocalizedFlagMessage(localizer *i18n.Localizer, err error) {
+
+	messageId, varItems := helper.GetFlagMessage(err)
+
+	templateData := make(map[string]string)
+
+	for index, varItem := range varItems {
+		templateData["value"+strconv.Itoa(index+1)] = varItem
+	}
+
+	myMessage := localizer.MustLocalize(
+		&i18n.LocalizeConfig{
+			MessageID:    messageId,
+			TemplateData: templateData,
+		})
+
+	fmt.Fprintln(os.Stderr, myMessage)
+
+}
 
 type commandItem interface {
 	GetName() string
@@ -95,11 +116,18 @@ func testableMain(args []string) int {
 
 	flagSet.Usage = printMainUsageMessage
 
+	flagSet.SetOutput(io.Discard) // prevent output from flag-library (no i18n)
+
 	if err := flagSet.Parse(args[1:]); err != nil {
-		if err == flag.ErrHelp {
-			return 2
-		} else {
+
+		if err != flag.ErrHelp {
+
+			printLocalizedFlagMessage(localizer, err)
+
 			return 1
+		} else {
+
+			return 0
 		}
 	}
 
@@ -117,33 +145,26 @@ func testableMain(args []string) int {
 	commandName := flagSet.Arg(0)
 
 	for _, commandItem := range commandItems {
+
 		if commandItem.GetName() == commandName {
+
 			if err := commandItem.Parse(localizer, pureAppName, flagSet.Args()[1:]); err != nil {
+
 				if err != flag.ErrHelp {
-					messageId, varItems := helper.GetFlagMessage(err)
 
-					templateData := make(map[string]string)
-
-					for index, varItem := range varItems {
-						templateData["value"+strconv.Itoa(index+1)] = varItem
-					}
-
-					myMessage := localizer.MustLocalize(
-						&i18n.LocalizeConfig{
-							MessageID:    messageId,
-							TemplateData: templateData,
-						})
-
-					fmt.Fprintln(os.Stderr, myMessage)
+					printLocalizedFlagMessage(localizer, err)
 
 					return 1
 				} else {
+
 					return 0
 				}
 			}
 
 			if err := commandItem.Execute(); err != nil {
+
 				fmt.Fprintln(os.Stderr, err)
+
 				return 1
 			}
 
@@ -157,12 +178,11 @@ func testableMain(args []string) int {
 		&i18n.LocalizeConfig{
 			MessageID: "flag.unknownSubCommand",
 			TemplateData: map[string]string{
-				"pureAppName": pureAppName,
-				"commandName": commandName,
+				"value1": commandName,
 			},
 		})
 
-	fmt.Fprintf(os.Stderr, unknownSubcommand)
+	fmt.Fprintf(os.Stderr, "%s\n", unknownSubcommand)
 
 	return 1
 }

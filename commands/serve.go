@@ -26,6 +26,7 @@ type ServeCommand struct {
 	localizer   *i18n.Localizer
 	pureAppName string
 	port        int
+	doUpdate    bool
 }
 
 func (cmd *ServeCommand) GetName() string {
@@ -51,6 +52,9 @@ func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	flagSet.IntVar(&cmd.port, "p", 3000, "Port the server is listening")
 	flagSet.IntVar(&cmd.port, "port", 3000, "Port the server is listening")
 
+	flagSet.BoolVar(&cmd.doUpdate, "u", false, "Automatic update of browser")
+	flagSet.BoolVar(&cmd.doUpdate, "update", false, "Automatic update of browser")
+
 	if err := flagSet.Parse(args); err != nil {
 		return err
 	}
@@ -65,7 +69,11 @@ func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 }
 
 func (cmd *ServeCommand) Execute() error {
-	fmt.Println("************** Execute serve on port:", cmd.port, " **************")
+	if cmd.doUpdate {
+		fmt.Println("************** Execute serve on port:", cmd.port, " with Update ON **************")
+	} else {
+		fmt.Println("************** Execute serve on port:", cmd.port, " with Update OFF **************")
+	}
 
 	return nil
 }

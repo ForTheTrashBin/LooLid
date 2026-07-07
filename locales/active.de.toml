@@ -68,7 +68,7 @@ Beispiel:
 #------------------------------------------------------------------------------
 
 [flag.unknownSubCommand]
-other = "\n\x1b[31mFehler:\x1b[0m {{.pureAppName}}: unbekanntes Kommando '{{.commandName}}'\n"
+other = "\n\x1b[31mFehler:\x1b[0m Unbekanntes Kommando '{{.value1}}'"
 
 [flag.flag_provided_but_not_defined]
 other = "\n\x1b[31mFehler:\x1b[0m Der angegebene Schalter ist nicht definiert: {{.value1}}"
@@ -83,93 +83,120 @@ other = "\n\x1b[31mFehler:\x1b[0m Ungültiger boolscher Wert {{.value1}} für {{
 other = "\n\x1b[31mFehler:\x1b[0m Ungültiger boolscher Schalter {{.value1}}: {{.value2}}"
 
 [flag.flag_needs_an_argument]
-other = "\n\x1b[31mFehler:\x1b[0m Der Schalter brauch ein Argumant: {{.value1}}"
+other = "\n\x1b[31mFehler:\x1b[0m Der Schalter braucht ein Argumant: {{.value1}}"
 
 [flag.invalid_value]
 other = "\n\x1b[31mFehler:\x1b[0m Ungültiger Wert {{.value1}} für Schalter {{.value2}}"
 
 [flag.invalid_number_of_commands]
-other = "\n\x1b[31mError:\x1b[0m Ungültige Anzahl von Kommandos"
+other = "\n\x1b[31mFehler:\x1b[0m Ungültige Anzahl von Kommandos"
 
 #------------------------------------------------------------------------------
 
 [check.no_fileinfo]
-other = "\x1b[31mError:\x1b[0m Das angegebene Eingabeverzeichnis wurde nicht gefunden: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Das angegebene Eingabeverzeichnis wurde nicht gefunden: {{.value1}}"
 
 [check.no_directory]
-other = "\x1b[31mError:\x1b[0m Das gegebene Eingangsverzeichnis ist kein Verzeichnis: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Das gegebene Eingangsverzeichnis ist kein Verzeichnis: {{.value1}}"
 
 [check.dot_hidden_directory]
-other = "\x1b[31mError:\x1b[0m Der angegebene Verzeichnisname beginnt mit einem Punkt und ist verborgen: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Der angegebene Verzeichnisname beginnt mit einem Punkt und ist verborgen: {{.value1}}"
 
 [check.directory_hidden_or_system]
-other = "\x1b[31mError:\x1b[0m Die Attribute des angegebenen Eingabeverzeichnisses sind „versteckt“ und/oder „System“: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Die Attribute des angegebenen Eingabeverzeichnisses sind „versteckt“ und/oder „System“: {{.value1}}"
 
 [check.directory_confusion]
-other = "\x1b[31mError:\x1b[0m Der gegebene Verzeichnisname kann mit der Konfigurationsdatei verwechselt werden: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Der gegebene Verzeichnisname kann mit der Konfigurationsdatei verwechselt werden: {{.value1}}"
 
 [check.directory_no_permission]
-other = "\x1b[31mError:\x1b[0m Keine Berechtigungen zum Lesen des angegebenen Eingabeverzeichnisses: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Keine Berechtigungen zum Lesen des angegebenen Eingabeverzeichnisses: {{.value1}}"
 
 [check.directory_not_readable]
-other = "\x1b[31mError:\x1b[0m Das angebene Eingangsverzeichnis kann nicht gelesen werden: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Das angebene Eingangsverzeichnis kann nicht gelesen werden: {{.value1}}"
 
 [check.no_pathabs]
-other = "\x1b[31mError:\x1b[0m Der absolute Pfad des angegebenen Eingabeverzeichnisses kann nicht bestimmt werden: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Der absolute Pfad des angegebenen Eingabeverzeichnisses kann nicht bestimmt werden: {{.value1}}"
 
 [check.no_symlinks]
-other = "\x1b[31mError:\x1b[0m Das angegebenen Eingabeverzeichnis ist eine symbolische Verknüpfung: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Das angegebenen Eingabeverzeichnis ist eine symbolische Verknüpfung: {{.value1}}"
 
 [check.no_workingdir]
-other = "\x1b[31mError:\x1b[0m Das aktuelle Arbeitsverzeichnis kann nicht bestimmt werden.\n"
+other = "\x1b[31mFehler:\x1b[0m Das aktuelle Arbeitsverzeichnis kann nicht bestimmt werden."
 
 [check.no_pathrel]
-other = "\x1b[31mError:\x1b[0m Der relative Pfad zum angegebenen Eingangsverzeichnis kann nicht bestimmt werden: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Der relative Pfad zum angegebenen Eingangsverzeichnis kann nicht bestimmt werden: {{.value1}}"
 
 [check.workingdir_in_input]
-other = "\x1b[31mError:\x1b[0m Das Arbeitsverzeichnis ist Teil des Eingangsverzeichnisses: {{.value1}}\n"
+other = "\x1b[31mFehler:\x1b[0m Das Arbeitsverzeichnis ist Teil des Eingangsverzeichnisses: {{.value1}}"
+
+#------------------------------------------------------------------------------
+
+[check.header.inputfolder_incorrect]
+other = "Bei der Überprüfung des Eingangsverzeichnisses sind Fehler aufgetreten:" 
+
+[check.header.bulkdata_incorrect]
+other = "Bei der Überprüfung des Eingangsverzeichnisses sind Fehler aufgetreten:" 
+
+[check.header.aborted_by_user]
+other = "Vom Benutzer abgebrochen"
 
 #------------------------------------------------------------------------------
 
 [check.header.directory_siblings_found]
-one = "\x1b[31mError:\x1b[0m The input folder has a siblings with ambiguous name:\n"
-other = "\x1b[31mError:\x1b[0m The input folder has {{.count}} siblings with ambiguous name:\n"
+one = "\x1b[31mFehler:\x1b[0m Das Eingangsverzeichnis hat einen Nachbarn mit mehrdeutigen Namen:\n"
+other = "\x1b[31mFehler:\x1b[0m Das Eingangsverzeichnis hat {{.count}} Nachbarn mit mehrdeutigen Namen:\n"
 
 [check.header.invalid_windows_chars]
-one = "\x1b[31mError:\x1b[0m Es wurde ein Datei- oder Verzeichnisname gefunden, der für Windows ungültige Zeichen enthält:\n"
-other = "\x1b[31mError:\x1b[0m Es wurden insgesamt {{.count}} Datei- oder Verzeichnisnamen gefunden, die für Windows ungültige Zeichen enthalten:\n"
+one = "\x1b[31mFehler:\x1b[0m Es wurde ein Datei- oder Verzeichnisname gefunden, der für Windows ungültige Zeichen enthält:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} Datei- oder Verzeichnisnamen gefunden, die für Windows ungültige Zeichen enthalten:\n"
 
 [check.header.trailing_dot_or_space]
-one = "\x1b[31mError:\x1b[0m A file or directory name has been found that ends with a dot/space and is not valid on windows:\n"
-other = "\x1b[31mError:\x1b[0m A total of {{.count}} file or directory names were found that ends with a dot/space and are not valid on windows:\n"
+one = "\x1b[31mFehler:\x1b[0m Ein Datei- oder Verzeichnisname, der mit Punkt oder Leerzeichen endet, wurde gefunden:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} Datei- oder Verzeichnisnamen gefunden, die mit Punkt oder Leerzeichen enden:\n"
 
 [check.header.reserved_windows_name]
-one = "\x1b[31mError:\x1b[0m A file or directory name has been found that uses a reserved windows filename:\n"
-other = "\x1b[31mError:\x1b[0m A total of {{.count}} file or directory names were found that uses a reserved windows filename:\n"
+one = "\x1b[31mFehler:\x1b[0m Ein Datei- oder Verzeichnisname wurde gefunden, der reservierte Schlüsselwörter enthält:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} Datei- oder Verzeichnisnamen gefunden, die reservierte Schlüsselwörter enthalten:\n"
 
 [check.header.filename_too_long]
-one = "\x1b[31mError:\x1b[0m A path name has been found that is longer than 255 utf-16 units :\n"
-other = "\x1b[31mError:\x1b[0m A total of {{.count}} file names were found that are longer than 255 utf-16 units :\n"
+one = "\x1b[31mFehler:\x1b[0m Es wurde ein Dateiname gefunden, der länger als 255 utf-16 Einheiten ist:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} Dateinamen gefunden, die länger als 255 utf-16 Einheiten sind:\n"
 
 [check.header.pathname_too_long]
-one = "\x1b[31mError:\x1b[0m A path name has been found that is longer than 240 utf-16 units :\n"
-other = "\x1b[31mError:\x1b[0m A total of {{.count}} path names were found that are longer than 240 utf-16 units :\n"
+one = "\x1b[31mFehler:\x1b[0m Es wurde ein Pfadname gefunden, der länger als 240 utf-16 Einheiten ist:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} Pfadnamen gefunden, die länger als 240 utf-16 Einheiten sind:\n"
 
 [check.header.unicode_collision]
-one = "\x1b[31mError:\x1b[0m A path name has been found that conflicts with the UTF16-normalisation on MacOs :\n"
-other = "\x1b[31mError:\x1b[0m A total of {{.count}} path names were found that conflict with UTF-16 normalisation on macOS :\n"
+one = "\x1b[31mFehler:\x1b[0m Es wurde ein Pfadname gefunden, der mit der UTF-16-Normalisierung unter macOS in Konflikt steht:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} Pfadnamen gefunden, mit der UTF-16-Normalisierung unter macOS in Konflikt stehen:\n"
 
 [check.header.symbolic_link]
-one = "\x1b[31mError:\x1b[0m A path name has been found that is a symbolic link :\n"
-other = "\x1b[31mError:\x1b[0m A total of {{.count}} file names were found that are symbolic links :\n"
+one = "\x1b[31mFehler:\x1b[0m Es wurde eine Dateiname gefunden, der eine symbolische Verknüpfung ist:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} Dateinamen gefunden, die symbolische Verknüpfungen sind:\n"
 
 [check.header.config_file]
-one = "\x1b[31mError:\x1b[0m An ambiguous configuration-entry has been found: \n"
-other = "\x1b[31mError:\x1b[0m A total of {{.count}} ambiguous configuration-entries were found \n"
+one = "\x1b[31mFehler:\x1b[0m Es wurde mehrdeutiger Konfigurationseintrag gefunden:\n"
+other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} mehrdeutige Konfigurationseinträge gefunden:\n"
 
 [check.header.duplicate_entries]
-one = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a folder:\n"
-other = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a total of {{.count}} folders:\n"
+one = "\x1b[31mFehler:\x1b[0m In einem Verzeichnis wurden doppelte oder mehrdeutige Einträge gefunden:\n"
+other = "\x1b[31mFehler:\x1b[0m Doppelte oder mehrdeutige Einträge gefunden in insgesamt {{.count}} Verzeichnissen gefunden:\n"
+
+#------------------------------------------------------------------------------
+
+[check.spinner.suffix_inputfolder]
+other = "Überprüfung des Eingangsverzeichnisses"
+
+[check.spinner.suffix_xxxxx]
+other = "xxxxx"
+
+[check.spinner.suffix_yyyyy]
+other = "yyyyy"
+
+[check.spinner.stopmessage]
+other = "Fertig"
+
+#------------------------------------------------------------------------------
 
 [check.content.folder]
 other = "Verzeichnis"

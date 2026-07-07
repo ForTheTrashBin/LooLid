@@ -68,7 +68,7 @@ Example:
 #------------------------------------------------------------------------------
 
 [flag.unknownSubCommand]
-other = "\n\x1b[31mError:\x1b[0m {{.pureAppName}}: unknown command '{{.commandName}}'\n"
+other = "\n\x1b[31mError:\x1b[0m Unknown command '{{.value1}}'"
 
 [flag.flag_provided_but_not_defined]
 other = "\n\x1b[31mError:\x1b[0m Flag provided but not defined: {{.value1}}"
@@ -94,40 +94,51 @@ other = "\n\x1b[31mError:\x1b[0m Invalid number of commands"
 #------------------------------------------------------------------------------
 
 [check.no_fileinfo]
-other = "\x1b[31mError:\x1b[0m The specified input directory was not found: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory was not found: {{.value1}}"
 
 [check.no_directory]
-other = "\x1b[31mError:\x1b[0m The specified input directory is not a directory: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory is not a directory: {{.value1}}"
 
 [check.dot_hidden_directory]
-other = "\x1b[31mError:\x1b[0m The specified directory name begins with a dot and is hidden: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified directory name begins with a dot and is hidden: {{.value1}}"
 
 [check.directory_hidden_or_system]
-other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' and/or 'system': {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The attributes of the given folder are 'hidden' and/or 'system': {{.value1}}"
 
 [check.directory_confusion]
-other = "\x1b[31mError:\x1b[0m The specified directory name may be confused with the configuration file: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified directory name may be confused with the configuration file: {{.value1}}"
 
 [check.directory_no_permission]
-other = "\x1b[31mError:\x1b[0m No permission to read the specified input directory: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m No permission to read the specified input directory: {{.value1}}"
 
 [check.directory_not_readable]
-other = "\x1b[31mError:\x1b[0m The specified input directory cannot be read: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory cannot be read: {{.value1}}"
 
 [check.no_pathabs]
-other = "\x1b[31mError:\x1b[0m The absolute path of the specified input directory cannot be determined.: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The absolute path of the specified input directory cannot be determined.: {{.value1}}"
 
 [check.no_symlinks]
-other = "\x1b[31mError:\x1b[0m The specified input directory is a symbolic link: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The specified input directory is a symbolic link: {{.value1}}"
 
 [check.no_workingdir]
-other = "\x1b[31mError:\x1b[0m The current working directory cannot be determined.\n"
+other = "\x1b[31mError:\x1b[0m The current working directory cannot be determined."
 
 [check.no_pathrel]
-other = "\x1b[31mError:\x1b[0m The relative path to the specified input directory cannot be determined: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The relative path to the specified input directory cannot be determined: {{.value1}}"
 
 [check.workingdir_in_input]
-other = "\x1b[31mError:\x1b[0m The working directory is part of the input-folder: {{.value1}}\n"
+other = "\x1b[31mError:\x1b[0m The working directory is part of the input-folder: {{.value1}}"
+
+#------------------------------------------------------------------------------
+
+[check.header.inputfolder_incorrect]
+other = "Errors occurred while checking the input directory:" 
+
+[check.header.bulkdata_incorrect]
+other = "Errors occurred while checking the input directory:" 
+
+[check.header.aborted_by_user]
+other = "Aborted by user"
 
 #------------------------------------------------------------------------------
 
@@ -170,6 +181,22 @@ other = "\x1b[31mError:\x1b[0m A total of {{.count}} ambiguous configuration-ent
 [check.header.duplicate_entries]
 one = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a folder:\n"
 other = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a total of {{.count}} folders:\n"
+
+#------------------------------------------------------------------------------
+
+[check.spinner.suffix_inputfolder]
+other = "Checking the input directory"
+
+[check.spinner.suffix_xxxxx]
+other = "xxxxx"
+
+[check.spinner.suffix_yyyyy]
+other = "yyyyy"
+
+[check.spinner.stopmessage]
+other = "Done"
+
+#------------------------------------------------------------------------------
 
 [check.content.folder]
 other = "Folder"
