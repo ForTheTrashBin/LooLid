@@ -14,7 +14,7 @@ The program offers very few options for direct configuration. Almost all setting
 - The name of the destination directory is 'target'
 - The program is shipped under the name "LooLid" or "LooLid.exe" (on Windows)
 - Possible configuration files are named 'LooLid.config'
-- The user can rename the program file; the names of the configuration files are automatically adjusted accordingly
+- The user can rename the program file; names of configuration files are adjusted accordingly
     - Example 1: LooLid(.exe) renamed to Donald.(exe). The configuration files must be named Donald.config
     - Example 2: LooLid(.exe) renamed to DAISY.(exe). The configuration files must be named DAISY.config
     
