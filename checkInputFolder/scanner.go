@@ -2,10 +2,10 @@ package checkInputFolder
 
 import (
 	"LooLid/helper"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 
 	"golang.org/x/text/unicode/norm"
@@ -15,7 +15,7 @@ func (chk *checker) scanDirectories() error {
 
 	var entries []Entry
 
-	if err := helper.WalkDir(chk.inputFolder, func(depth int, path string, dirEntry os.DirEntry, err error) error {
+	if err := filepath.WalkDir(chk.inputFolder, func(path string, dirEntry os.DirEntry, err error) error {
 
 		//---------------------------------------------------------------------
 		// This error will abort the 'WalkDir-function
@@ -40,6 +40,7 @@ func (chk *checker) scanDirectories() error {
 		relativePath, err := filepath.Rel(chk.inputFolder, path)
 
 		if err != nil {
+
 			return err
 		}
 
@@ -60,7 +61,6 @@ func (chk *checker) scanDirectories() error {
 		//---------------------------------------------------------------------
 
 		entry := Entry{
-			depth:        depth,
 			relativePath: relativePath,
 			entryName:    dirEntry.Name(),
 			isDir:        fileInfo.IsDir(),
@@ -74,38 +74,25 @@ func (chk *checker) scanDirectories() error {
 		//---------------------------------------------------------------------
 
 		if entry.isDir {
+
 			_, err = os.ReadDir(chk.inputFolder + string(filepath.Separator) + entry.relativePath)
 
 			if err != nil {
+
 				if os.IsPermission(err) {
+
 					return filepath.SkipDir
 				}
 			}
 
 			if isHiddenOrSystemOnWindows(chk.inputFolder + string(filepath.Separator) + entry.relativePath) {
+
 				return filepath.SkipDir
 			}
 		}
 
 		return nil
-	},
-	); err == nil {
-
-		//---------------------------------------------------------------------
-		// Sort eintries by depth of the directory structure and file/directory name
-		//---------------------------------------------------------------------
-
-		sort.Slice(entries, func(i, j int) bool {
-			if entries[i].depth < entries[j].depth {
-				return true
-			} else {
-				if entries[i].depth == entries[j].depth {
-					return entries[i].relativePath < entries[j].relativePath
-				}
-			}
-
-			return false
-		})
+	}); err == nil {
 
 		//---------------------------------------------------------------------
 		// Run checks on individual files
@@ -114,64 +101,46 @@ func (chk *checker) scanDirectories() error {
 		chk.validateEntries(entries)
 
 		//---------------------------------------------------------------------
-		// Group entries by level an directory
+		// Enter all folders and files into a 2D-map representing a folder tree
 		//---------------------------------------------------------------------
 
-		var groupIndex int = -1
-		var groupDepth int
-		var groupDirPath string
+		folders := make(map[string]map[string]bool)
 
-		for index, entry := range entries {
+		for _, entry := range entries {
 
-			if groupIndex < 0 {
+			folderName := filepath.Dir(entry.relativePath)
 
-				groupIndex = index
-				groupDepth = entry.depth
-				groupDirPath = filepath.Dir(entry.relativePath)
-			} else {
+			folder, foundFolder := folders[folderName]
 
-				if (groupDepth != entry.depth) || (groupDirPath != filepath.Dir(entry.relativePath)) {
+			if !foundFolder {
 
-					if (index - groupIndex) > 0 {
+				folder = make(map[string]bool)
 
-						duplicateGroup := DuplicateGroup{
-							groupName: groupDirPath,
-						}
-
-						for looper := groupIndex; looper < index; looper++ {
-							duplicateGroup.items = append(
-								duplicateGroup.items,
-								DuplicateItem{
-									itemName: entries[looper].entryName,
-									isDir:    entries[looper].isDir,
-								})
-						}
-
-						chk.duplicateGroups = append(chk.duplicateGroups, duplicateGroup)
-					}
-
-					groupIndex = index
-					groupDepth = entry.depth
-					groupDirPath = filepath.Dir(entry.relativePath)
-				}
+				folders[folderName] = folder
 			}
+
+			folder[entry.entryName] = entry.isDir
 		}
 
-		if (len(entries) - groupIndex) > 0 {
-			duplicateGroup := DuplicateGroup{
-				groupName: groupDirPath,
-			}
+		//---------------------------------------------------------------------
 
-			for looper := groupIndex; looper < len(entries); looper++ {
-				duplicateGroup.items = append(
-					duplicateGroup.items,
-					DuplicateItem{
-						itemName: entries[looper].entryName,
-						isDir:    entries[looper].isDir,
-					})
-			}
+		if false {
 
-			chk.duplicateGroups = append(chk.duplicateGroups, duplicateGroup)
+			for keyFolder, folder := range folders {
+
+				fmt.Println("Folder:", keyFolder)
+
+				for keyFolderEntry, isDir := range folder {
+
+					if isDir {
+
+						fmt.Println("   Folder Entry DIR:", keyFolderEntry)
+					} else {
+
+						fmt.Println("   Folder Entry FIL:", keyFolderEntry)
+					}
+				}
+			}
 		}
 
 		//---------------------------------------------------------------------
@@ -182,32 +151,32 @@ func (chk *checker) scanDirectories() error {
 
 		configFileNameLower := strings.ToLower(configFileName)
 
-		for _, duplicateGroup := range chk.duplicateGroups {
+		for keyFolder, folder := range folders {
 
-			for _, duplicateItem := range duplicateGroup.items {
+			for keyFolderEntry, isDir := range folder { // entry.entryName, entry.isDir
 
-				itemName, _ := strings.CutPrefix(strings.ToLower(duplicateItem.itemName), ".")
+				testEntryName, _ := strings.CutPrefix(strings.ToLower(keyFolderEntry), ".")
 
-				if duplicateItem.isDir {
+				if isDir {
 
-					if itemName == configFileNameLower {
+					if testEntryName == configFileNameLower {
 
 						chk.issuesConfigFile = append(
 							chk.issuesConfigFile, Issue{
-								isDir: duplicateItem.isDir,
-								path:  duplicateGroup.groupName + string(filepath.Separator) + duplicateItem.itemName,
+								isDir: isDir,
+								path:  keyFolder + string(filepath.Separator) + keyFolderEntry,
 							})
 					}
 				} else {
 
-					if duplicateItem.itemName != configFileName {
+					if keyFolderEntry != configFileName {
 
-						if itemName == configFileNameLower {
+						if testEntryName == configFileNameLower {
 
 							chk.issuesConfigFile = append(
 								chk.issuesConfigFile, Issue{
-									isDir: duplicateItem.isDir,
-									path:  duplicateGroup.groupName + string(filepath.Separator) + duplicateItem.itemName,
+									isDir: isDir,
+									path:  keyFolder + string(filepath.Separator) + keyFolderEntry,
 								})
 						}
 					}
@@ -219,11 +188,36 @@ func (chk *checker) scanDirectories() error {
 		// Compare 'DuplicateItems' in each 'DuplicateGroup' and delete non duplicates
 		//---------------------------------------------------------------------
 
+		for keyFolder, folder := range folders {
+
+			if len(folder) >= 2 {
+
+				duplicateGroup := DuplicateGroup{
+					groupName: keyFolder,
+				}
+
+				for keyFolderItem, isDir := range folder { // entry.entryName, entry.isDir
+
+					duplicateGroup.items = append(
+						duplicateGroup.items,
+						DuplicateItem{
+							itemName: keyFolderItem,
+							isDir:    isDir,
+						})
+				}
+
+				chk.duplicateGroups = append(chk.duplicateGroups, duplicateGroup)
+			}
+		}
+
+		//---------------------------------------------------------------------
+
 		for looperGroups := len(chk.duplicateGroups) - 1; looperGroups >= 0; looperGroups-- {
 
 			duplicateGroup := &chk.duplicateGroups[looperGroups]
 
 			for looperMember := len(duplicateGroup.items) - 1; looperMember >= 0; looperMember-- {
+
 				groupMember, _ := strings.CutPrefix(strings.ToLower(duplicateGroup.items[looperMember].itemName), ".")
 
 				var siblingsFound bool = false
@@ -231,12 +225,16 @@ func (chk *checker) scanDirectories() error {
 				for looperTest := 0; !siblingsFound && (looperTest < len(duplicateGroup.items)); looperTest++ {
 
 					if looperMember != looperTest {
+
 						groupMemberTest, _ := strings.CutPrefix(strings.ToLower(duplicateGroup.items[looperTest].itemName), ".")
 
 						if groupMember == groupMemberTest {
+
 							siblingsFound = true
 						} else {
+
 							if norm.NFC.String(groupMember) == norm.NFC.String(groupMemberTest) {
+
 								siblingsFound = true
 							}
 						}
@@ -244,6 +242,7 @@ func (chk *checker) scanDirectories() error {
 				}
 
 				if !siblingsFound {
+
 					duplicateGroup.items = slices.Delete(duplicateGroup.items, looperMember, looperMember+1)
 				}
 			}
@@ -262,6 +261,7 @@ func (chk *checker) scanDirectories() error {
 		return err
 
 	} else {
+
 		return err
 	}
 }

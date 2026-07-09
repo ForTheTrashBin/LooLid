@@ -3,7 +3,6 @@ package checkInputFolder
 //-----------------------------------------------------------------------------
 
 type Entry struct {
-	depth        int
 	relativePath string
 	entryName    string
 	isDir        bool
