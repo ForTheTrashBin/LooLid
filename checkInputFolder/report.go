@@ -1,11 +1,11 @@
 package checkInputFolder
 
 import (
-	"LooLid/helper"
 	"fmt"
 	"os"
 	"sort"
 
+	"github.com/ForTheTrashBin/LooLid/helper"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 

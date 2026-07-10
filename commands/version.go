@@ -1,12 +1,12 @@
 package commands
 
 import (
-	"LooLid/helper"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/ForTheTrashBin/LooLid/helper"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 

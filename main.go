@@ -1,9 +1,6 @@
 package main
 
 import (
-	"LooLid/commands"
-	"LooLid/helper"
-	"LooLid/helper/locales"
 	"embed"
 	"flag"
 	"fmt"
@@ -14,9 +11,12 @@ import (
 	"strconv"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ForTheTrashBin/LooLid/commands"
+	"github.com/ForTheTrashBin/LooLid/helper"
+	"github.com/ForTheTrashBin/LooLid/helper/locales"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/text/language"
-	"gopkg.in/yaml.v3"
 )
 
 //-----------------------------------------------------------------------------

@@ -1,14 +1,14 @@
 package checkInputFolder
 
 import (
-	"LooLid/helper"
-	"LooLid/helper/constants"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/ForTheTrashBin/LooLid/helper"
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/theckman/yacspin"
 )

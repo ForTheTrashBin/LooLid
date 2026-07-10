@@ -1,9 +1,6 @@
 package commands
 
 import (
-	"LooLid/checkInputFolder"
-	"LooLid/helper"
-	"LooLid/helper/constants"
 	"errors"
 	"flag"
 	"fmt"
@@ -13,6 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ForTheTrashBin/LooLid/checkInputFolder"
+	"github.com/ForTheTrashBin/LooLid/helper"
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/theckman/yacspin"
 )

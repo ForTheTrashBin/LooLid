@@ -1,11 +1,12 @@
 package helper
 
 import (
-	"LooLid/helper/constants"
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
 )
 
 //-----------------------------------------------------------------------------

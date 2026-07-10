@@ -1,13 +1,13 @@
 package checkInputFolder
 
 import (
-	"LooLid/helper"
 	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
+	"github.com/ForTheTrashBin/LooLid/helper"
 	"golang.org/x/text/unicode/norm"
 )
 
