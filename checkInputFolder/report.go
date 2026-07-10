@@ -26,7 +26,7 @@ func (chk *checker) printIssues(errorType ErrorType, issues []Issue) {
 		//---------------------------------------------------------------------
 
 		sort.Slice(issues, func(i, j int) bool {
-			return issues[i].path < issues[j].path
+			return issues[i].filePath < issues[j].filePath
 		})
 
 		//---------------------------------------------------------------------
@@ -56,7 +56,7 @@ func (chk *checker) printIssues(errorType ErrorType, issues []Issue) {
 				fmt.Fprintf(os.Stderr, lineFormat, strFile+":")
 			}
 
-			fmt.Fprintf(os.Stderr, "%s\n", issue.path)
+			fmt.Fprintf(os.Stderr, "%s\n", issue.filePath)
 		}
 	}
 }

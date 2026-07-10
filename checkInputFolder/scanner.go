@@ -37,14 +37,14 @@ func (chk *checker) scanDirectories() error {
 		// Get the relative path (to root) of this entry
 		//---------------------------------------------------------------------
 
-		relativePath, err := filepath.Rel(chk.inputFolder, path)
+		xrelativePath, err := filepath.Rel(chk.inputFolder, path)
 
 		if err != nil {
 
 			return err
 		}
 
-		relativePath = filepath.ToSlash(relativePath)
+		xrelativePath = filepath.ToSlash(xrelativePath)
 
 		//---------------------------------------------------------------------
 		// Get fileInfo of this entry
@@ -61,10 +61,10 @@ func (chk *checker) scanDirectories() error {
 		//---------------------------------------------------------------------
 
 		entry := Entry{
-			relativePath: relativePath,
-			entryName:    dirEntry.Name(),
-			isDir:        fileInfo.IsDir(),
-			isSymlink:    fileInfo.Mode()&os.ModeSymlink != 0,
+			filePath:  path,
+			entryName: dirEntry.Name(),
+			isDir:     fileInfo.IsDir(),
+			isSymlink: fileInfo.Mode()&os.ModeSymlink != 0,
 		}
 
 		entries = append(entries, entry)
@@ -75,7 +75,7 @@ func (chk *checker) scanDirectories() error {
 
 		if entry.isDir {
 
-			_, err = os.ReadDir(chk.inputFolder + string(filepath.Separator) + entry.relativePath)
+			_, err = os.ReadDir(chk.inputFolder + string(filepath.Separator) + entry.filePath)
 
 			if err != nil {
 
@@ -85,7 +85,7 @@ func (chk *checker) scanDirectories() error {
 				}
 			}
 
-			if isHiddenOrSystemOnWindows(chk.inputFolder + string(filepath.Separator) + entry.relativePath) {
+			if isHiddenOrSystemOnWindows(chk.inputFolder + string(filepath.Separator) + entry.filePath) {
 
 				return filepath.SkipDir
 			}
@@ -108,7 +108,7 @@ func (chk *checker) scanDirectories() error {
 
 		for _, entry := range entries {
 
-			folderName := filepath.Dir(entry.relativePath)
+			folderName := filepath.Dir(entry.filePath)
 
 			folder, foundFolder := folders[folderName]
 
@@ -163,8 +163,8 @@ func (chk *checker) scanDirectories() error {
 
 						chk.issuesConfigFile = append(
 							chk.issuesConfigFile, Issue{
-								isDir: isDir,
-								path:  keyFolder + string(filepath.Separator) + keyFolderEntry,
+								isDir:    isDir,
+								filePath: keyFolder + string(filepath.Separator) + keyFolderEntry,
 							})
 					}
 				} else {
@@ -175,8 +175,8 @@ func (chk *checker) scanDirectories() error {
 
 							chk.issuesConfigFile = append(
 								chk.issuesConfigFile, Issue{
-									isDir: isDir,
-									path:  keyFolder + string(filepath.Separator) + keyFolderEntry,
+									isDir:    isDir,
+									filePath: keyFolder + string(filepath.Separator) + keyFolderEntry,
 								})
 						}
 					}

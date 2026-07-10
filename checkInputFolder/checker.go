@@ -263,9 +263,9 @@ func (chk *checker) checkInputFolder() error {
 					chk.issuesInputDirectorySiblings = append(
 						chk.issuesInputDirectorySiblings,
 						Issue{
-							isDir: dirEntry.IsDir(),
-							path:  dirEntry.Name(),
-							info:  chk.inputFolder,
+							isDir:    dirEntry.IsDir(),
+							filePath: dirEntry.Name(),
+							info:     chk.inputFolder,
 						},
 					)
 

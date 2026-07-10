@@ -23,9 +23,9 @@ func (chk *checker) checkInvalidWindowsChar(entry Entry) {
 
 				chk.issuesInvalidWindowsChar = append(
 					chk.issuesInvalidWindowsChar, Issue{
-						isDir: entry.isDir,
-						path:  entry.relativePath,
-						info:  string(character),
+						isDir:    entry.isDir,
+						filePath: entry.filePath,
+						info:     string(character),
 					})
 			}
 		}
@@ -46,8 +46,8 @@ func (chk *checker) checkTrailingDotSpace(entry Entry) {
 
 			chk.issuesTrailingDotSpace = append(
 				chk.issuesTrailingDotSpace, Issue{
-					isDir: entry.isDir,
-					path:  entry.relativePath,
+					isDir:    entry.isDir,
+					filePath: entry.filePath,
 				})
 		}
 	}
@@ -99,8 +99,8 @@ func (chk *checker) checkReservedWindowsName(entry Entry) {
 
 		chk.issuesReservedWindowsName = append(
 			chk.issuesReservedWindowsName, Issue{
-				isDir: entry.isDir,
-				path:  entry.relativePath,
+				isDir:    entry.isDir,
+				filePath: entry.filePath,
 			})
 	}
 }
@@ -128,19 +128,19 @@ func (chk *checker) checkFileNameAndPathNameLength(entry Entry) {
 		chk.issuesFileNameLength = append(
 			chk.issuesFileNameLength,
 			Issue{
-				isDir: entry.isDir,
-				path:  entry.entryName,
+				isDir:    entry.isDir,
+				filePath: entry.entryName,
 			},
 		)
 	}
 
-	if utf16Length(entry.relativePath) > 240 {
+	if utf16Length(entry.filePath) > 240 {
 
 		chk.issuesPathNameLength = append(
 			chk.issuesPathNameLength,
 			Issue{
-				isDir: entry.isDir,
-				path:  entry.relativePath,
+				isDir:    entry.isDir,
+				filePath: entry.filePath,
 			},
 		)
 	}
@@ -152,13 +152,13 @@ func (chk *checker) checkFileNameAndPathNameLength(entry Entry) {
 
 func (chk *checker) checkUnicodeNormalization(entry Entry) {
 
-	if norm.NFC.String(entry.relativePath) != entry.relativePath {
+	if norm.NFC.String(entry.filePath) != entry.filePath {
 
 		chk.issuesUnicodeNormalization = append(
 			chk.issuesUnicodeNormalization,
 			Issue{
-				isDir: entry.isDir,
-				path:  entry.relativePath,
+				isDir:    entry.isDir,
+				filePath: entry.filePath,
 			},
 		)
 	}
@@ -174,8 +174,8 @@ func (chk *checker) checkSymLink(entry Entry) {
 		chk.issuesSymLink = append(
 			chk.issuesSymLink,
 			Issue{
-				isDir: entry.isDir,
-				path:  entry.relativePath,
+				isDir:    entry.isDir,
+				filePath: entry.filePath,
 			},
 		)
 	}

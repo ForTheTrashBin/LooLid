@@ -3,10 +3,10 @@ package checkInputFolder
 //-----------------------------------------------------------------------------
 
 type Entry struct {
-	relativePath string
-	entryName    string
-	isDir        bool
-	isSymlink    bool
+	filePath  string
+	entryName string
+	isDir     bool
+	isSymlink bool
 }
 
 //-----------------------------------------------------------------------------
@@ -24,9 +24,9 @@ type DuplicateGroup struct {
 //-----------------------------------------------------------------------------
 
 type Issue struct {
-	isDir bool
-	path  string
-	info  string
+	isDir    bool
+	filePath string
+	info     string
 }
 
 //-----------------------------------------------------------------------------
