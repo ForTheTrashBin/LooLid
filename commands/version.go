@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ForTheTrashBin/LooLid/helper"
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -52,7 +52,7 @@ func (cmd *VersionCommand) Parse(localizer *i18n.Localizer, pureAppName string, 
 	if flagSet.NArg() > 0 {
 		printVersionUsageMessage()
 
-		return helper.ErrInvalidNumberOfCommands
+		return nutsandbolts.ErrInvalidNumberOfCommands
 	}
 
 	return nil

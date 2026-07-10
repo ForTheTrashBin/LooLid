@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ForTheTrashBin/LooLid/helper"
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -147,7 +147,7 @@ func (chk *checker) scanDirectories() error {
 		// Check for ambiguous filename of configuration-files
 		//---------------------------------------------------------------------
 
-		configFileName := helper.GetConfigFileName()
+		configFileName := nutsandbolts.GetConfigFileName()
 
 		configFileNameLower := strings.ToLower(configFileName)
 

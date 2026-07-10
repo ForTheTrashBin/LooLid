@@ -5,7 +5,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/ForTheTrashBin/LooLid/helper"
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -19,7 +19,7 @@ func (chk *checker) printIssues(errorType ErrorType, issues []Issue) {
 
 	if issueLen > 0 {
 
-		helper.PrintLocalizedListHeader(chk.localizer, string(errorType), issueLen)
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, string(errorType), issueLen)
 
 		//---------------------------------------------------------------------
 		// Sorting for a better customer-experience
@@ -71,7 +71,7 @@ func (chk *checker) printDuplicates() {
 
 	if numDuplicateGroups > 0 {
 
-		helper.PrintLocalizedListHeader(chk.localizer, string(CheckError_DuplicateEntries), numDuplicateGroups)
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, string(CheckError_DuplicateEntries), numDuplicateGroups)
 
 		//---------------------------------------------------------------------
 		// Sorting for a better customer-experience

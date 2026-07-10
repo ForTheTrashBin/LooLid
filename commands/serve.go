@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ForTheTrashBin/LooLid/helper"
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -62,7 +62,7 @@ func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	if flagSet.NArg() > 0 {
 		printServeUsageMessage()
 
-		return helper.ErrInvalidNumberOfCommands
+		return nutsandbolts.ErrInvalidNumberOfCommands
 	}
 
 	return nil

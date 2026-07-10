@@ -12,8 +12,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/ForTheTrashBin/LooLid/commands"
-	"github.com/ForTheTrashBin/LooLid/helper"
 	"github.com/ForTheTrashBin/LooLid/helper/locales"
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"go.yaml.in/yaml/v3"
 	"golang.org/x/text/language"
@@ -39,7 +39,7 @@ func printMainUsageMessage() {
 
 func printLocalizedFlagMessage(localizer *i18n.Localizer, err error) {
 
-	messageId, varItems := helper.GetFlagMessage(err)
+	messageId, varItems := nutsandbolts.GetFlagMessage(err)
 
 	templateData := make(map[string]string)
 
@@ -71,7 +71,7 @@ type commandItem interface {
 
 func testableMain(args []string) int {
 
-	pureAppName := helper.GetPureAppName()
+	pureAppName := nutsandbolts.GetPureAppName()
 
 	//-------------------------------------------------------------------------
 	// Initialize i18n-bundle to use for the lifetime of the application
@@ -89,8 +89,8 @@ func testableMain(args []string) int {
 	// Enbed message-files direct into the app, so NO externel files are needed
 	//-------------------------------------------------------------------------
 
-	helper.Must(bundle.LoadMessageFileFS(LocalFS, "locales/active.en.toml"))
-	helper.Must(bundle.LoadMessageFileFS(LocalFS, "locales/active.de.toml"))
+	nutsandbolts.Must(bundle.LoadMessageFileFS(LocalFS, "locales/active.en.toml"))
+	nutsandbolts.Must(bundle.LoadMessageFileFS(LocalFS, "locales/active.de.toml"))
 
 	//-------------------------------------------------------------------------
 	// read and prepare 'mainUsageMessage'

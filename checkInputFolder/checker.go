@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ForTheTrashBin/LooLid/helper"
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/theckman/yacspin"
 )
@@ -160,7 +160,7 @@ func (chk *checker) checkInputFolder() error {
 	// Check whether the directory name could be confused with the configuration file
 	//-------------------------------------------------------------------------
 
-	if strings.ToLower(baseName) == strings.ToLower(helper.GetConfigFileName()) {
+	if strings.ToLower(baseName) == strings.ToLower(nutsandbolts.GetConfigFileName()) {
 
 		return fmt.Errorf(chk.getLocalizedMessage(CheckError_Confusion, chk.inputFolder, ""))
 	}

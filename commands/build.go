@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/checkInputFolder"
-	"github.com/ForTheTrashBin/LooLid/helper"
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/theckman/yacspin"
 )
@@ -61,7 +61,7 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 	if flagSet.NArg() > 0 {
 		printBuildUsageMessage()
 
-		return helper.ErrInvalidNumberOfCommands
+		return nutsandbolts.ErrInvalidNumberOfCommands
 	}
 
 	return nil
