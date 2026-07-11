@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
+	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -85,7 +86,7 @@ func (chk *checker) scanDirectories() error {
 				}
 			}
 
-			if isHiddenOrSystemOnWindows(chk.inputFolder + string(filepath.Separator) + entry.filePath) {
+			if osspecific.IsHiddenOrSystemOnWindows(chk.inputFolder + string(filepath.Separator) + entry.filePath) {
 
 				return filepath.SkipDir
 			}

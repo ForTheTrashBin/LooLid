@@ -1,10 +1,10 @@
 //go:build windows
 
-package checkInputFolder
+package osspecific
 
 import "syscall"
 
-func isHiddenOrSystemOnWindows(path string) bool {
+func IsHiddenOrSystemOnWindows(path string) bool {
 
 	ptr, err := syscall.UTF16PtrFromString(path)
 	if err != nil {
