@@ -9,6 +9,7 @@ import (
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
+	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/theckman/yacspin"
 )
@@ -151,7 +152,7 @@ func (chk *checker) checkInputFolder() error {
 	// On windows directory must not be hidden or system
 	//-------------------------------------------------------------------------
 
-	if isHiddenOrSystemOnWindows(chk.inputFolder) {
+	if osspecific.IsHiddenOrSystemOnWindows(chk.inputFolder) {
 
 		return fmt.Errorf(chk.getLocalizedMessage(CheckError_DirectoryHiddenOrSystem, chk.inputFolder, ""))
 	}
