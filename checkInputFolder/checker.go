@@ -152,7 +152,7 @@ func (chk *checker) checkInputFolder() error {
 	// On windows directory must not be hidden or system
 	//-------------------------------------------------------------------------
 
-	if osspecific.IsHiddenOrSystemOnWindows(chk.inputFolder) {
+	if osspecific.IsHiddenOrSystem(chk.inputFolder) {
 
 		return fmt.Errorf(chk.getLocalizedMessage(CheckError_DirectoryHiddenOrSystem, chk.inputFolder, ""))
 	}
@@ -326,8 +326,8 @@ func CheckInputFolderAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 	checker := newChecker(localizer, inputfolder, pureAppName)
 
-	spinnerSuffix := checker.getLocalizedMessage(CheckError_SpinnerSuffixInputfolder, "", "")
-	spinnerStopMessage := checker.getLocalizedMessage(CheckError_SpinnerStopMessage, "", "")
+	spinnerSuffix := checker.getLocalizedMessage(SpinnerSuffixCheckInputfolder, "", "")
+	spinnerStopMessage := checker.getLocalizedMessage(SpinnerStopMessage, "", "")
 
 	spinnerConfig := yacspin.Config{
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,

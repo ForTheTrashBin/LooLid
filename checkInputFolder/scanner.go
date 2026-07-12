@@ -86,7 +86,7 @@ func (chk *checker) scanDirectories() error {
 				}
 			}
 
-			if osspecific.IsHiddenOrSystemOnWindows(chk.inputFolder + string(filepath.Separator) + entry.filePath) {
+			if osspecific.IsHiddenOrSystem(chk.inputFolder + string(filepath.Separator) + entry.filePath) {
 
 				return filepath.SkipDir
 			}

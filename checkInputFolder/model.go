@@ -61,11 +61,13 @@ const (
 	CheckError_BulkdataIncorrect      ErrorType = "check.header.bulkdata_incorrect"
 	CheckError_AbortedByUser          ErrorType = "check.header.aborted_by_user"
 
-	CheckError_SpinnerSuffixInputfolder ErrorType = "check.spinner.suffix_inputfolder"
-	CheckError_SpinnerSuffixXxxxx       ErrorType = "check.spinner.suffix_xxxxx"
-	CheckError_SpinnerSuffixYyyyy       ErrorType = "check.spinner.suffix_yyyyy"
-	CheckError_SpinnerStopMessage       ErrorType = "check.spinner.stopmessage"
+	SpinnerSuffixCheckInputfolder ErrorType = "spinner.suffix.check_inputfolder"
+	SpinnerSuffixReadInputFolder  ErrorType = "spinner.suffix.read_inputfolder"
+	SpinnerSuffixXxxxx            ErrorType = "spinner.suffix.xxxxx"
+	SpinnerSuffixYyyyy            ErrorType = "spinner.suffix.yyyyy"
+	SpinnerSuffixZzzzz            ErrorType = "spinner.suffix.zzzzz"
+	SpinnerStopMessage            ErrorType = "spinner.stopmessage"
 
-	CheckError_DuplicateEntries_Folder ErrorType = "check.content.folder"
-	CheckError_DuplicateEntries_File   ErrorType = "check.content.file"
+	Label_Folder ErrorType = "label.folder"
+	Label_File   ErrorType = "label.file"
 )

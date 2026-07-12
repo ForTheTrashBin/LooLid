@@ -184,22 +184,28 @@ other = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a to
 
 #------------------------------------------------------------------------------
 
-[check.spinner.suffix_inputfolder]
+[spinner.suffix.check_inputfolder]
 other = "Checking the input directory"
 
-[check.spinner.suffix_xxxxx]
+[spinner.suffix.read_inputfolder]
+other = "Reading the input directory"
+
+[spinner.suffix_xxxxx]
 other = "xxxxx"
 
-[check.spinner.suffix_yyyyy]
+[spinner.suffix_yyyyy]
 other = "yyyyy"
 
-[check.spinner.stopmessage]
+[spinner.suffix_zzzzz]
+other = "zzzzz"
+
+[spinner.stopmessage]
 other = "Done"
 
 #------------------------------------------------------------------------------
 
-[check.content.folder]
+[label.folder]
 other = "Folder"
 
-[check.content.file]
+[label.file]
 other = "File"

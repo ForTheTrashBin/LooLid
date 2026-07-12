@@ -31,8 +31,8 @@ func (chk *checker) printIssues(errorType ErrorType, issues []Issue) {
 
 		//---------------------------------------------------------------------
 
-		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_Folder)})
-		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_File)})
+		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_Folder)})
+		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_File)})
 
 		lenFolder := len(strFolder)
 		lenFile := len(strFile)
@@ -91,8 +91,8 @@ func (chk *checker) printDuplicates() {
 
 		//---------------------------------------------------------------------
 
-		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_Folder)})
-		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(CheckError_DuplicateEntries_File)})
+		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_Folder)})
+		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_File)})
 
 		lenFolder := len(strFolder)
 		lenFile := len(strFile)

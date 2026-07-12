@@ -1,4 +1,4 @@
-//go:build !windows && !darwin
+//go:build darwin
 
 package osspecific
 
@@ -15,14 +15,14 @@ import (
 
 func fileInfoStat(v interface{}) *syscall.Stat_t {
 
-	syscall, ok := v.(*syscall.Stat_t)
+	s, ok := v.(*syscall.Stat_t)
 
 	if !ok {
 
-		panic(errors.New("OtherCast: not a *syscall.Stat_t"))
+		panic(errors.New("DarwinCast: not a *syscall.Stat_t"))
 	}
 
-	return syscall
+	return s
 }
 
 //-----------------------------------------------------------------------------
@@ -64,8 +64,8 @@ func GetTimeSpec(info os.FileInfo) TimeSpec {
 	return TimeSpec{
 
 		TimeModify: info.ModTime(),
-		TimeAccess: time.Unix(int64(stat.Atim.Sec), int64(stat.Atim.Nsec)),
-		TimeCreate: time.Unix(int64(stat.Ctim.Sec), int64(stat.Ctim.Nsec)),
+		TimeAccess: time.Unix(stat.Atimespec.Sec, stat.Atimespec.Nsec),
+		TimeCreate: time.Unix(stat.Ctimespec.Sec, stat.Ctimespec.Nsec),
 	}
 }
 
