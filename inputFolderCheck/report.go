@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
@@ -13,13 +14,13 @@ import (
 // Print formatted list of 'issues' with header
 //-----------------------------------------------------------------------------
 
-func (chk *checker) printIssues(errorType ErrorType, issues []Issue) {
+func (chk *checker) printIssues(MessageID string, issues []Issue) {
 
 	issueLen := len(issues)
 
 	if issueLen > 0 {
 
-		nutsandbolts.PrintLocalizedListHeader(chk.localizer, string(errorType), issueLen)
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, MessageID, issueLen)
 
 		//---------------------------------------------------------------------
 		// Sorting for a better customer-experience
@@ -31,8 +32,8 @@ func (chk *checker) printIssues(errorType ErrorType, issues []Issue) {
 
 		//---------------------------------------------------------------------
 
-		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_Folder)})
-		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_File)})
+		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_Folder})
+		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_File})
 
 		lenFolder := len(strFolder)
 		lenFile := len(strFile)
@@ -71,7 +72,7 @@ func (chk *checker) printDuplicates() {
 
 	if numDuplicateGroups > 0 {
 
-		nutsandbolts.PrintLocalizedListHeader(chk.localizer, string(CheckError_DuplicateEntries), numDuplicateGroups)
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_DuplicateEntries, numDuplicateGroups)
 
 		//---------------------------------------------------------------------
 		// Sorting for a better customer-experience
@@ -91,8 +92,8 @@ func (chk *checker) printDuplicates() {
 
 		//---------------------------------------------------------------------
 
-		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_Folder)})
-		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: string(Label_File)})
+		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_Folder})
+		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_File})
 
 		lenFolder := len(strFolder)
 		lenFile := len(strFile)
@@ -135,19 +136,19 @@ func (chk *checker) printDuplicates() {
 
 func (chk *checker) reportInputFolderErrors() {
 
-	chk.printIssues(CheckError_DirectorySiblingsFound, chk.issuesInputDirectorySiblings)
+	chk.printIssues(constants.CheckError_DirectorySiblingsFound, chk.issuesInputDirectorySiblings)
 }
 
 func (chk *checker) reportBulkDataErrors() {
 
-	chk.printIssues(CheckError_InvalidWindowsChar, chk.issuesInvalidWindowsChar)
-	chk.printIssues(CheckError_TrailingDotSpace, chk.issuesTrailingDotSpace)
-	chk.printIssues(CheckError_ReservedWindowsName, chk.issuesReservedWindowsName)
-	chk.printIssues(CheckError_FileNameTooLong, chk.issuesFileNameLength)
-	chk.printIssues(CheckError_PathNameTooLong, chk.issuesPathNameLength)
-	chk.printIssues(CheckError_UnicodeCollision, chk.issuesUnicodeNormalization)
-	chk.printIssues(CheckError_SymbolicLinkDetected, chk.issuesSymLink)
-	chk.printIssues(CheckError_ConfigFile, chk.issuesConfigFile)
+	chk.printIssues(constants.CheckError_InvalidWindowsChar, chk.issuesInvalidWindowsChar)
+	chk.printIssues(constants.CheckError_TrailingDotSpace, chk.issuesTrailingDotSpace)
+	chk.printIssues(constants.CheckError_ReservedWindowsName, chk.issuesReservedWindowsName)
+	chk.printIssues(constants.CheckError_FileNameTooLong, chk.issuesFileNameLength)
+	chk.printIssues(constants.CheckError_PathNameTooLong, chk.issuesPathNameLength)
+	chk.printIssues(constants.CheckError_UnicodeCollision, chk.issuesUnicodeNormalization)
+	chk.printIssues(constants.CheckError_SymbolicLinkDetected, chk.issuesSymLink)
+	chk.printIssues(constants.CheckError_ConfigFile, chk.issuesConfigFile)
 
 	chk.printDuplicates()
 }

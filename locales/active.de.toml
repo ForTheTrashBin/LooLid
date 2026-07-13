@@ -184,10 +184,10 @@ other = "\x1b[31mFehler:\x1b[0m Doppelte oder mehrdeutige Einträge gefunden in 
 
 #------------------------------------------------------------------------------
 
-[spinner.suffix.check_inputfolder]
+[spinner.suffix.inputfolder_check]
 other = "Überprüfung des Eingangsverzeichnisses"
 
-[spinner.suffix.read_inputfolder]
+[spinner.suffix.inputfolder_read]
 other = "Einlesen des Eingangsverzeichnisses"
 
 [spinner.suffix_xxxxx]

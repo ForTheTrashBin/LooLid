@@ -98,11 +98,11 @@ func (chk *checker) isBulkDataCorrect() bool {
 	return result
 }
 
-func (chk *checker) getLocalizedMessage(errorType ErrorType, value1 string, value2 string) string {
+func (chk *checker) getLocalizedMessage(MessageId string, value1 string, value2 string) string {
 
 	return chk.localizer.MustLocalize(
 		&i18n.LocalizeConfig{
-			MessageID: string(errorType),
+			MessageID: MessageId,
 			TemplateData: map[string]string{
 				"value1": value1,
 				"value2": value2,
@@ -120,7 +120,7 @@ func (chk *checker) checkInputFolder() error {
 
 	if err != nil {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_NoFileInfo, chk.inputFolder, err.Error()))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_NoFileInfo, chk.inputFolder, err.Error()))
 	}
 
 	//-------------------------------------------------------------------------
@@ -129,7 +129,7 @@ func (chk *checker) checkInputFolder() error {
 
 	if !fileInfo.IsDir() {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_NoDirectory, chk.inputFolder, ""))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_NoDirectory, chk.inputFolder, ""))
 	}
 
 	//-------------------------------------------------------------------------
@@ -144,7 +144,7 @@ func (chk *checker) checkInputFolder() error {
 
 		if strings.HasPrefix(baseName, ".") {
 
-			return fmt.Errorf(chk.getLocalizedMessage(CheckError_DotHiddenDirectory, chk.inputFolder, ""))
+			return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_DotHiddenDirectory, chk.inputFolder, ""))
 		}
 	}
 
@@ -154,7 +154,7 @@ func (chk *checker) checkInputFolder() error {
 
 	if osspecific.IsHiddenOrSystem(chk.inputFolder) {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_DirectoryHiddenOrSystem, chk.inputFolder, ""))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_DirectoryHiddenOrSystem, chk.inputFolder, ""))
 	}
 
 	//-------------------------------------------------------------------------
@@ -163,7 +163,7 @@ func (chk *checker) checkInputFolder() error {
 
 	if strings.ToLower(baseName) == strings.ToLower(nutsandbolts.GetConfigFileName()) {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_Confusion, chk.inputFolder, ""))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_Confusion, chk.inputFolder, ""))
 	}
 
 	//-------------------------------------------------------------------------
@@ -175,10 +175,10 @@ func (chk *checker) checkInputFolder() error {
 	if err != nil {
 		if os.IsPermission(err) {
 
-			return fmt.Errorf(chk.getLocalizedMessage(CheckError_DirectoryNoPermission, chk.inputFolder, ""))
+			return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_DirectoryNoPermission, chk.inputFolder, ""))
 		} else {
 
-			return fmt.Errorf(chk.getLocalizedMessage(CheckError_DirectoryNotReadable, chk.inputFolder, err.Error()))
+			return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_DirectoryNotReadable, chk.inputFolder, err.Error()))
 		}
 	}
 
@@ -190,14 +190,14 @@ func (chk *checker) checkInputFolder() error {
 
 	if err != nil {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_NoPathAbs, chk.inputFolder, err.Error()))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_NoPathAbs, chk.inputFolder, err.Error()))
 	}
 
 	inputPathAbs, err = filepath.EvalSymlinks(inputPathAbs)
 
 	if err != nil {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_NoSymLinks, inputPathAbs, err.Error()))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_NoSymLinks, inputPathAbs, err.Error()))
 	}
 
 	//-------------------------------------------------------------------------
@@ -208,14 +208,14 @@ func (chk *checker) checkInputFolder() error {
 
 	if err != nil {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_NoWorkingDir, "", err.Error()))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_NoWorkingDir, "", err.Error()))
 	}
 
 	workingDirAbs, err = filepath.EvalSymlinks(workingDirAbs)
 
 	if err != nil {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_NoSymLinks, workingDirAbs, err.Error()))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_NoSymLinks, workingDirAbs, err.Error()))
 	}
 
 	//-------------------------------------------------------------------------
@@ -228,12 +228,12 @@ func (chk *checker) checkInputFolder() error {
 
 		if err != nil {
 
-			return fmt.Errorf(chk.getLocalizedMessage(CheckError_NoPathRel, inputPathAbs, err.Error()))
+			return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_NoPathRel, inputPathAbs, err.Error()))
 		}
 
 		if (relativePath != "..") && ((len(relativePath) < 3) || (relativePath[:3] != ".."+string(filepath.Separator))) {
 
-			return fmt.Errorf(chk.getLocalizedMessage(CheckError_WorkingDirInInput, inputPathAbs, ""))
+			return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_WorkingDirInInput, inputPathAbs, ""))
 		}
 	}
 
@@ -247,7 +247,7 @@ func (chk *checker) checkInputFolder() error {
 
 	if err != nil {
 
-		return fmt.Errorf(chk.getLocalizedMessage(CheckError_DirectoryNotReadable, parentPath, err.Error()))
+		return fmt.Errorf(chk.getLocalizedMessage(constants.CheckError_DirectoryNotReadable, parentPath, err.Error()))
 	}
 
 	for _, dirEntry := range dirEntries {
@@ -326,8 +326,8 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 	checker := newChecker(localizer, inputfolder, pureAppName)
 
-	spinnerSuffix := checker.getLocalizedMessage(SpinnerSuffixCheckInputfolder, "", "")
-	spinnerStopMessage := checker.getLocalizedMessage(SpinnerStopMessage, "", "")
+	spinnerSuffix := checker.getLocalizedMessage(constants.SpinnerSuffixInputfolderCheck, "", "")
+	spinnerStopMessage := checker.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
 
 	spinnerConfig := yacspin.Config{
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
@@ -376,7 +376,7 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 	case <-sigCh:
 
-		stopFailMessage := checker.getLocalizedMessage(CheckError_AbortedByUser, "", "")
+		stopFailMessage := checker.getLocalizedMessage(constants.CheckError_AbortedByUser, "", "")
 
 		spinner.StopFailMessage(stopFailMessage)
 
@@ -390,7 +390,7 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 			if err == constants.ErrInputFolderNotCorrect {
 
-				stopFailMessage := checker.getLocalizedMessage(CheckError_InputfolderIncorrect, "", "")
+				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
 
 				spinner.StopFailMessage(stopFailMessage)
 
@@ -403,7 +403,7 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 			if err == constants.ErrBulkDataNotCorrect {
 
-				stopFailMessage := checker.getLocalizedMessage(CheckError_BulkdataIncorrect, "", "")
+				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
 
 				spinner.StopFailMessage(stopFailMessage)
 
