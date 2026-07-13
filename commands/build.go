@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/ForTheTrashBin/LooLid/inputFolderCheck"
 	"github.com/ForTheTrashBin/LooLid/inputFolderProccess"
@@ -70,8 +71,8 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 func (cmd *BuildCommand) Execute() error {
 
 	// inputFolder := "/home/u32800"
-	// inputFolder := constants.AppConfig_DefaultInputDirectory
-	inputFolder := "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
+	inputFolder := constants.AppConfig_DefaultInputDirectory
+	// inputFolder := "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
 
 	//-------------------------------------------------------------------------
 
