@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ForTheTrashBin/LooLid/checkInputFolder"
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
+	"github.com/ForTheTrashBin/LooLid/inputFolderCheck"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/theckman/yacspin"
 )
@@ -157,7 +157,7 @@ func (cmd *BuildCommand) Execute() error {
 
 	//-------------------------------------------------------------------------
 
-	if err := checkInputFolder.CheckInputFolderAsync(cmd.localizer, inputFolder, cmd.pureAppName, sigCh); err != nil {
+	if err := inputFolderCheck.InputFolderCheckAsync(cmd.localizer, inputFolder, cmd.pureAppName, sigCh); err != nil {
 		return nil
 	}
 

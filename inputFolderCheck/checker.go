@@ -1,4 +1,4 @@
-package checkInputFolder
+package inputFolderCheck
 
 import (
 	"fmt"
@@ -298,7 +298,7 @@ func (chk *checker) checkBulkData() error {
 // Check the input-directory and it's content AND print error messages
 //-----------------------------------------------------------------------------
 
-func CheckInputFolder(localizer *i18n.Localizer, inputfolder string, pureAppName string) error {
+func InputFolderCheck(localizer *i18n.Localizer, inputfolder string, pureAppName string) error {
 
 	var err error
 
@@ -322,7 +322,7 @@ func CheckInputFolder(localizer *i18n.Localizer, inputfolder string, pureAppName
 // Check the input-directory and it's content AND print error messages asynchronous
 //-----------------------------------------------------------------------------
 
-func CheckInputFolderAsync(localizer *i18n.Localizer, inputfolder string, pureAppName string, sigCh chan os.Signal) error {
+func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, pureAppName string, sigCh chan os.Signal) error {
 
 	checker := newChecker(localizer, inputfolder, pureAppName)
 
