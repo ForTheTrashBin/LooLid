@@ -49,12 +49,12 @@ const (
 	CheckError_BulkdataIncorrect      = "check.header.bulkdata_incorrect"
 	CheckError_AbortedByUser          = "check.header.aborted_by_user"
 
-	SpinnerSuffixInputfolderCheck = "spinner.suffix.inputfolder_check"
-	SpinnerSuffixInputFolderRead  = "spinner.suffix.inputfolder_read"
-	SpinnerSuffixXxxxx            = "spinner.suffix.xxxxx"
-	SpinnerSuffixYyyyy            = "spinner.suffix.yyyyy"
-	SpinnerSuffixZzzzz            = "spinner.suffix.zzzzz"
-	SpinnerStopMessage            = "spinner.stopmessage"
+	SpinnerSuffixInputfolderCheck    = "spinner.suffix.inputfolder_check"
+	SpinnerSuffixInputFolderRead     = "spinner.suffix.inputfolder_read"
+	SpinnerSuffixInputFolderProccess = "spinner.suffix.inputfolder_proccess"
+	SpinnerSuffixInputFolderWrite    = "spinner.suffix.inputfolder_write"
+	SpinnerSuffixZzzzz               = "spinner.suffix.zzzzz"
+	SpinnerStopMessage               = "spinner.stopmessage"
 
 	Label_Folder = "label.folder"
 	Label_File   = "label.file"

@@ -1,0 +1,155 @@
+package inputFolderProccess
+
+import (
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/spf13/afero"
+	"github.com/theckman/yacspin"
+)
+
+type proccess struct {
+	localizer   *i18n.Localizer
+	inputFolder string
+	pureAppName string
+	memFs       *afero.Fs
+}
+
+func newProccess(localizer *i18n.Localizer, inputFolder string, pureAppName string, memFs *afero.Fs) *proccess {
+
+	prc := &proccess{
+
+		localizer:   localizer,
+		inputFolder: inputFolder,
+		pureAppName: pureAppName,
+		memFs:       memFs,
+	}
+
+	return prc
+}
+
+func (prc *proccess) getLocalizedMessage(MessageID string, value1 string, value2 string) string {
+
+	return prc.localizer.MustLocalize(
+		&i18n.LocalizeConfig{
+			MessageID: MessageID,
+			TemplateData: map[string]string{
+				"value1": value1,
+				"value2": value2,
+			},
+		})
+}
+
+func (prc *proccess) Proccess() error {
+
+	time.Sleep(2 * time.Second)
+
+	return nil
+}
+
+func InputFolderProccess(localizer *i18n.Localizer, inputfolder string, pureAppName string, memFs *afero.MemMapFs) error {
+
+	return nil // TODO:
+}
+
+func InputFolderProccessAsync(localizer *i18n.Localizer, inputfolder string, pureAppName string, memFs *afero.Fs, sigCh chan os.Signal) error {
+
+	proccess := newProccess(localizer, inputfolder, pureAppName, memFs)
+
+	spinnerSuffix := proccess.getLocalizedMessage(constants.SpinnerSuffixInputFolderProccess, "", "")
+	spinnerStopMessage := proccess.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
+
+	spinnerConfig := yacspin.Config{
+		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
+		CharSet:           yacspin.CharSets[constants.Spinner_CharSet],
+		Suffix:            " " + spinnerSuffix,
+		SuffixAutoColon:   true,
+		StopCharacter:     constants.Spinner_StopCharacter,
+		StopColors:        []string{constants.Spinner_StopColor},
+		StopFailCharacter: constants.Spinner_StopFailCharacter,
+		StopFailColors:    []string{constants.Spinner_StopFailColor},
+		StopMessage:       spinnerStopMessage,
+	}
+
+	spinner, err := yacspin.New(spinnerConfig)
+
+	if err != nil {
+		panic(fmt.Errorf("spinner init failed: %w", err))
+	}
+
+	spinner.Reverse()
+
+	if err := spinner.Start(); err != nil {
+		panic(fmt.Errorf("spinner start failed: %w", err))
+	}
+
+	defer spinner.Stop()
+
+	//-------------------------------------------------------------------------
+
+	doneChannel := make(chan error, 1)
+
+	go func() {
+
+		doneChannel <- proccess.Proccess()
+	}()
+
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-sigCh:
+
+		stopFailMessage := proccess.getLocalizedMessage(constants.CheckError_AbortedByUser, "", "")
+
+		spinner.StopFailMessage(stopFailMessage)
+
+		spinner.StopFail()
+
+		return constants.ErrInterrupted
+
+	case err := <-doneChannel:
+
+		if err != nil {
+
+			if err == constants.ErrInputFolderNotCorrect {
+
+				stopFailMessage := proccess.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
+
+				spinner.StopFailMessage(stopFailMessage)
+
+				spinner.StopFail()
+
+				// batzen.reportInputFolderErrors()
+
+				return err
+			}
+
+			if err == constants.ErrBulkDataNotCorrect {
+
+				stopFailMessage := proccess.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
+
+				spinner.StopFailMessage(stopFailMessage)
+
+				spinner.StopFail()
+
+				// batzen.reportBulkDataErrors()
+
+				return err
+			}
+
+			spinner.StopFailMessage(err.Error())
+
+			spinner.StopFail()
+
+			// batzen.reportBulkDataErrors()
+
+			return err
+		}
+
+		return err
+	}
+}

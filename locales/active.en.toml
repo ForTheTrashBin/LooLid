@@ -190,11 +190,11 @@ other = "Checking the input directory"
 [spinner.suffix.inputfolder_read]
 other = "Reading the input directory"
 
-[spinner.suffix_xxxxx]
-other = "xxxxx"
+[spinner.suffix.inputfolder_proccess]
+other = "Proccessing directory tree"
 
-[spinner.suffix_yyyyy]
-other = "yyyyy"
+[spinner.suffix.inputfolder_write]
+other = "Writing the target directory"
 
 [spinner.suffix_zzzzz]
 other = "zzzzz"

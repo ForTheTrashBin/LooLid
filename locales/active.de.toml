@@ -190,11 +190,11 @@ other = "Überprüfung des Eingangsverzeichnisses"
 [spinner.suffix.inputfolder_read]
 other = "Einlesen des Eingangsverzeichnisses"
 
-[spinner.suffix_xxxxx]
-other = "xxxxx"
+[spinner.suffix.inputfolder_proccess]
+other = "Bearbeitung des Verzeichnisbaums"
 
-[spinner.suffix_yyyyy]
-other = "yyyyy"
+[spinner.suffix.inputfolder_write]
+other = "Schreiben in das Zielverzeichnis"
 
 [spinner.suffix_zzzzz]
 other = "zzzzz"
