@@ -1,0 +1,81 @@
+# ============================================================
+# Examples
+#
+# Defaultvalues:
+#   inherit = true
+#   scope   = both
+#   matcher = glob
+#
+# ============================================================
+
+# ------------------------------------------------------------
+# BLACKLIST
+# ------------------------------------------------------------
+
+[blacklist]
+
+[[blacklist.rule]]
+pattern = "*.tmp"
+
+[[blacklist.rule]]
+pattern = "*.bak"
+scope = "file"
+
+[[blacklist.rule]]
+pattern = "*.o"
+scope = "file"
+
+[[blacklist.rule]]
+pattern = "build"
+scope = "dir"
+
+[[blacklist.rule]]
+pattern = "prefix:.cache"
+scope = "dir"
+
+[[blacklist.rule]]
+pattern = "node_modules"
+scope = "dir"
+
+[[blacklist.rule]]
+pattern = "regex:^__pycache__$"
+scope = "dir"
+
+[[blacklist.rule]]
+pattern = "regex:^generated_[0-9]+\\.c$"
+scope = "file"
+
+# ------------------------------------------------------------
+# WHITELIST
+# ------------------------------------------------------------
+
+[whitelist]
+inherit = false
+
+[[whitelist.rule]]
+pattern = "regex:^README(\\..*)?$"
+scope = "file"
+
+[[whitelist.rule]]
+pattern = "LICENSE"
+scope = "file"
+
+[[whitelist.rule]]
+pattern = "exact:.env.example"
+scope = "file"
+
+[[whitelist.rule]]
+pattern = "docs"
+scope = "dir"
+
+[[whitelist.rule]]
+pattern = "*.md"
+scope = "file"
+
+[[whitelist.rule]]
+pattern = "prefix:public_"
+scope = "file"
+
+[[whitelist.rule]]
+pattern = "suffix:.sample"
+scope = "file"
