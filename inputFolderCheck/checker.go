@@ -17,7 +17,6 @@ import (
 type checker struct {
 	localizer   *i18n.Localizer
 	inputFolder string
-	pureAppName string
 
 	issuesInputDirectorySiblings []Issue // checker.go
 	issuesInvalidWindowsChar     []Issue // rules.go
@@ -32,13 +31,12 @@ type checker struct {
 	duplicateGroups []DuplicateGroup
 }
 
-func newChecker(localizer *i18n.Localizer, inputFolder string, pureAppName string) *checker {
+func newChecker(localizer *i18n.Localizer, inputFolder string) *checker {
 
 	chk := &checker{
 
 		localizer:   localizer,
 		inputFolder: inputFolder,
-		pureAppName: pureAppName,
 	}
 
 	return chk
@@ -298,11 +296,11 @@ func (chk *checker) checkBulkData() error {
 // Check the input-directory and it's content AND print error messages
 //-----------------------------------------------------------------------------
 
-func InputFolderCheck(localizer *i18n.Localizer, inputfolder string, pureAppName string) error {
+func InputFolderCheck(localizer *i18n.Localizer, inputfolder string) error {
 
 	var err error
 
-	checker := newChecker(localizer, inputfolder, pureAppName)
+	checker := newChecker(localizer, inputfolder)
 
 	if err = checker.checkInputFolder(); err == nil {
 
@@ -322,9 +320,9 @@ func InputFolderCheck(localizer *i18n.Localizer, inputfolder string, pureAppName
 // Check the input-directory and it's content AND print error messages asynchronous
 //-----------------------------------------------------------------------------
 
-func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, pureAppName string, sigCh chan os.Signal) error {
+func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh chan os.Signal) error {
 
-	checker := newChecker(localizer, inputfolder, pureAppName)
+	checker := newChecker(localizer, inputfolder)
 
 	spinnerSuffix := checker.getLocalizedMessage(constants.SpinnerSuffixInputfolderCheck, "", "")
 	spinnerStopMessage := checker.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
@@ -361,7 +359,7 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 	go func() {
 
-		if err = checker.checkInputFolder(); err == nil {
+		if err := checker.checkInputFolder(); err == nil {
 
 			doneChannel <- checker.checkBulkData()
 		} else {

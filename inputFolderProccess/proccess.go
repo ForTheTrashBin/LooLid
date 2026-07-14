@@ -12,20 +12,16 @@ import (
 )
 
 type proccess struct {
-	localizer   *i18n.Localizer
-	inputFolder string
-	pureAppName string
-	memFs       *afero.Fs
+	localizer *i18n.Localizer
+	memFs     *afero.Fs
 }
 
-func newProccess(localizer *i18n.Localizer, inputFolder string, pureAppName string, memFs *afero.Fs) *proccess {
+func newProccess(localizer *i18n.Localizer, memFs *afero.Fs) *proccess {
 
 	prc := &proccess{
 
-		localizer:   localizer,
-		inputFolder: inputFolder,
-		pureAppName: pureAppName,
-		memFs:       memFs,
+		localizer: localizer,
+		memFs:     memFs,
 	}
 
 	return prc
@@ -43,21 +39,21 @@ func (prc *proccess) getLocalizedMessage(MessageID string, value1 string, value2
 		})
 }
 
-func (prc *proccess) Proccess() error {
+func (prc *proccess) proccessInputFolder() error {
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 
 	return nil
 }
 
-func InputFolderProccess(localizer *i18n.Localizer, inputfolder string, pureAppName string, memFs *afero.MemMapFs) error {
+func InputFolderProccess(localizer *i18n.Localizer, memFs *afero.MemMapFs) error {
 
 	return nil // TODO:
 }
 
-func InputFolderProccessAsync(localizer *i18n.Localizer, inputfolder string, pureAppName string, memFs *afero.Fs, sigCh chan os.Signal) error {
+func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh chan os.Signal) error {
 
-	proccess := newProccess(localizer, inputfolder, pureAppName, memFs)
+	proccess := newProccess(localizer, memFs)
 
 	spinnerSuffix := proccess.getLocalizedMessage(constants.SpinnerSuffixInputFolderProccess, "", "")
 	spinnerStopMessage := proccess.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
@@ -94,7 +90,7 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, inputfolder string, pur
 
 	go func() {
 
-		doneChannel <- proccess.Proccess()
+		doneChannel <- proccess.proccessInputFolder()
 	}()
 
 	//-------------------------------------------------------------------------
@@ -123,8 +119,6 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, inputfolder string, pur
 
 				spinner.StopFail()
 
-				// batzen.reportInputFolderErrors()
-
 				return err
 			}
 
@@ -136,16 +130,12 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, inputfolder string, pur
 
 				spinner.StopFail()
 
-				// batzen.reportBulkDataErrors()
-
 				return err
 			}
 
 			spinner.StopFailMessage(err.Error())
 
 			spinner.StopFail()
-
-			// batzen.reportBulkDataErrors()
 
 			return err
 		}

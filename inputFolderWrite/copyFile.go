@@ -1,4 +1,4 @@
-package inputFolderRead
+package inputFolderWrite
 
 import (
 	"fmt"
@@ -129,11 +129,6 @@ func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName st
 	//-------------------------------------------------------------------------
 
 	if err = osspecific.PreserveOwner(sourceFs, sourceName, destFs, destName, sourceFileInfo); err != nil {
-
-		return err
-	}
-
-	if err = PreserveTimes(sourceFileInfo, destFs, destName); err != nil {
 
 		return err
 	}

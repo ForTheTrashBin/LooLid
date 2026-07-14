@@ -31,8 +31,7 @@ func printBuildUsageMessage() {
 //-----------------------------------------------------------------------------
 
 type BuildCommand struct {
-	localizer   *i18n.Localizer
-	pureAppName string
+	localizer *i18n.Localizer
 }
 
 func (cmd *BuildCommand) GetName() string {
@@ -42,7 +41,6 @@ func (cmd *BuildCommand) GetName() string {
 func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, args []string) error {
 
 	cmd.localizer = localizer
-	cmd.pureAppName = pureAppName
 
 	buildUsageMessage = localizer.MustLocalize(&i18n.LocalizeConfig{
 		MessageID:    "flag." + cmd.GetName() + "UsageMessage",
@@ -70,9 +68,8 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, ar
 
 func (cmd *BuildCommand) Execute() error {
 
-	// inputFolder := "/home/u32800"
-	inputFolder := constants.AppConfig_DefaultInputDirectory
-	// inputFolder := "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
+	inputFolder := constants.AppConfig_DefaultInputFolder
+	outputFolder := constants.AppConfig_DefaultOutputFolder
 
 	//-------------------------------------------------------------------------
 
@@ -84,21 +81,25 @@ func (cmd *BuildCommand) Execute() error {
 
 	//-------------------------------------------------------------------------
 
-	if err := inputFolderCheck.InputFolderCheckAsync(cmd.localizer, inputFolder, cmd.pureAppName, sigCh); err != nil {
+	if err := inputFolderCheck.InputFolderCheckAsync(cmd.localizer, inputFolder, sigCh); err != nil {
+
 		return nil
 	}
 
 	memFs := afero.NewMemMapFs()
 
-	if err := inputFolderRead.InputFolderReadAsync(cmd.localizer, inputFolder, cmd.pureAppName, &memFs, sigCh); err != nil {
+	if err := inputFolderRead.InputFolderReadAsync(cmd.localizer, inputFolder, &memFs, sigCh); err != nil {
+
 		return nil
 	}
 
-	if err := inputFolderProccess.InputFolderProccessAsync(cmd.localizer, inputFolder, cmd.pureAppName, &memFs, sigCh); err != nil {
+	if err := inputFolderProccess.InputFolderProccessAsync(cmd.localizer, &memFs, sigCh); err != nil {
+
 		return nil
 	}
 
-	if err := inputFolderWrite.InputFolderWriteAsync(cmd.localizer, inputFolder, cmd.pureAppName, &memFs, sigCh); err != nil {
+	if err := inputFolderWrite.InputFolderWriteAsync(cmd.localizer, outputFolder, &memFs, sigCh); err != nil {
+
 		return nil
 	}
 

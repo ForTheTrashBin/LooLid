@@ -6,8 +6,11 @@ import "errors"
 //-----------------------------------------------------------------------------
 
 const (
-	AppConfig_ConfigFileExtension   = ".config"
-	AppConfig_DefaultInputDirectory = "content"
+	AppConfig_ConfigFileExtension = ".config"
+	// AppConfig_DefaultInputFolder = "/home/u32800"
+	AppConfig_DefaultInputFolder = "content"
+	// AppConfig_DefaultInputFolder  = "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
+	AppConfig_DefaultOutputFolder = "target"
 
 	Spinner_FrequencyMS       = 125
 	Spinner_CharSet           = 11

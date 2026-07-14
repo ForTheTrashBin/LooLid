@@ -1,12 +1,8 @@
 package inputFolderWrite
 
 import (
-	"crypto/md5"
 	"fmt"
-	"io"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
@@ -17,20 +13,18 @@ import (
 )
 
 type writer struct {
-	localizer   *i18n.Localizer
-	inputFolder string
-	pureAppName string
-	memFs       *afero.Fs
+	localizer    *i18n.Localizer
+	outputFolder string
+	memFs        *afero.Fs
 }
 
-func newWriter(localizer *i18n.Localizer, inputFolder string, pureAppName string, memFs *afero.Fs) *writer {
+func newWriter(localizer *i18n.Localizer, outputFolder string, memFs *afero.Fs, x int) *writer {
 
 	wrt := &writer{
 
-		localizer:   localizer,
-		inputFolder: inputFolder,
-		pureAppName: pureAppName,
-		memFs:       memFs,
+		localizer:    localizer,
+		outputFolder: outputFolder,
+		memFs:        memFs,
 	}
 
 	return wrt
@@ -48,7 +42,7 @@ func (wrt *writer) getLocalizedMessage(MessageID string, value1 string, value2 s
 		})
 }
 
-func stat(fs afero.Fs, path string) (os.FileInfo, error) {
+func xxxstat(fs afero.Fs, path string) (os.FileInfo, error) {
 
 	if fs, ok := fs.(afero.Lstater); ok {
 
@@ -60,14 +54,14 @@ func stat(fs afero.Fs, path string) (os.FileInfo, error) {
 	return fs.Stat(path)
 }
 
-func PreserveTimes(sourceInfo os.FileInfo, destFs afero.Fs, dest string) error {
+func XXXPreserveTimes(sourceInfo os.FileInfo, destFs afero.Fs, dest string) error {
 
 	timeSpec := osspecific.GetTimeSpec(sourceInfo)
 
 	return destFs.Chtimes(dest, timeSpec.TimeAccess, timeSpec.TimeModify)
 }
 
-func chmod(fs afero.Fs, dir string, mode os.FileMode, reported *error) {
+func xxxchmod(fs afero.Fs, dir string, mode os.FileMode, reported *error) {
 
 	if err := fs.Chmod(dir, mode); *reported == nil {
 
@@ -75,7 +69,7 @@ func chmod(fs afero.Fs, dir string, mode os.FileMode, reported *error) {
 	}
 }
 
-func closeFile(f afero.File, reported *error) {
+func xxxcloseFile(f afero.File, reported *error) {
 
 	if err := f.Close(); *reported == nil {
 
@@ -83,108 +77,20 @@ func closeFile(f afero.File, reported *error) {
 	}
 }
 
-func cleanDestination(diskFs afero.Fs, memFs afero.Fs, destinationPath string) error {
+func (wrt *writer) writeInputFolder() error {
 
 	var doDebug bool = false
 
 	if doDebug {
 
 		fmt.Println("*********************************************************************************")
-		fmt.Println("**************************  cleanDestination  ***********************************")
+		fmt.Println("*** writeInputFolder")
 		fmt.Println("*********************************************************************************")
 	}
 
-	exists, err := afero.DirExists(diskFs, destinationPath)
+	destFs := afero.NewOsFs()
 
-	if err != nil {
-
-		return err
-	}
-
-	if exists {
-
-		var toBeDeleted []string
-
-		err = afero.Walk(diskFs, destinationPath, func(path string, info fs.FileInfo, err error) error {
-
-			if err != nil {
-
-				return err
-			}
-
-			relativePath, err := filepath.Rel(destinationPath, path)
-
-			if err != nil {
-
-				return err
-			}
-
-			_, err = memFs.Stat(relativePath)
-
-			if err != nil {
-
-				if os.IsNotExist(err) {
-
-					toBeDeleted = append(toBeDeleted, path)
-				} else {
-
-					return err
-				}
-			}
-
-			return nil
-		})
-
-		for idx := len(toBeDeleted) - 1; idx >= 0; idx-- {
-
-			if doDebug {
-
-				fmt.Println("Lösche von Datenträger", toBeDeleted[idx])
-			}
-
-			if err = diskFs.Remove(toBeDeleted[idx]); err != nil {
-
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func calculateMD5(fsys afero.Fs, path string) (string, error) {
-
-	f, err := fsys.Open(path)
-
-	if err != nil {
-
-		return "", err
-	}
-
-	defer f.Close()
-
-	h := md5.New()
-
-	if _, err := io.Copy(h, f); err != nil {
-
-		return "", err
-	}
-
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
-}
-
-func syncDestination(diskFs afero.Fs, destinationFolder string, memFs afero.Fs, timeStamp time.Time) error {
-
-	var doDebug bool = false
-
-	if doDebug {
-
-		fmt.Println("*********************************************************************************")
-		fmt.Println("**************************  syncDestination  ************************************")
-		fmt.Println("*********************************************************************************")
-	}
-
-	err := cleanDestination(diskFs, memFs, destinationFolder)
+	err := cleanDir(destFs, wrt.outputFolder, *wrt.memFs)
 
 	if err != nil {
 
@@ -193,184 +99,13 @@ func syncDestination(diskFs afero.Fs, destinationFolder string, memFs afero.Fs, 
 
 	if doDebug {
 
-		fmt.Println("*** cleanDestination Ok!")
+		fmt.Println("*** cleanDir Ok!")
 		fmt.Println("---------------------------------------------------------------------------------")
 	}
 
-	return afero.Walk(memFs, "", func(path string, info fs.FileInfo, err error) error {
+	//-------------------------------------------------------------------------
 
-		if err != nil {
-
-			return err
-		}
-
-		if path == "" {
-
-			return nil
-		}
-
-		destinationPath := filepath.Join(destinationFolder, path)
-
-		if doDebug {
-
-			fmt.Println("*** destinationFolder:", destinationFolder)
-			fmt.Println("*** path             :", path)
-			fmt.Println("*** destinationPath  :", destinationPath)
-			fmt.Println("*** info.IsDir       :", info.IsDir())
-			fmt.Println("*** info.Name        :", info.Name())
-			fmt.Println("*** info.Size        :", info.Size())
-			fmt.Println("*** info.Mode        :", info.Mode())
-		}
-
-		if info.IsDir() {
-
-			return diskFs.MkdirAll(destinationPath, info.Mode())
-		}
-
-		destFileInfo, err := diskFs.Stat(destinationPath)
-
-		if err == nil { // The file does exist!!!
-
-			if destFileInfo.Size() == info.Size() {
-
-				ramHash, _ := calculateMD5(memFs, path)
-				diskHash, _ := calculateMD5(diskFs, destinationPath)
-
-				if ramHash == diskHash {
-
-					// DATEI & ZEITSTEMPEL bleiebn unverändert
-
-					return nil
-				}
-			}
-
-			data, err := afero.ReadFile(memFs, path)
-
-			if err != nil {
-
-				return err
-			}
-
-			err = afero.WriteFile(diskFs, destinationPath, data, info.Mode())
-
-			if err != nil {
-
-				return nil
-			}
-
-			return diskFs.Chtimes(destinationPath, timeStamp, timeStamp)
-		} else { // The file does NOT exist!!!
-
-			err = diskFs.MkdirAll(filepath.Dir(destinationPath), os.ModePerm)
-
-			if err != nil {
-
-				return err
-			}
-
-			//-----------------------------------------------------------------
-			// Create the destination file
-			//-----------------------------------------------------------------
-
-			hDestFile, err := diskFs.Create(destinationPath)
-
-			if err != nil {
-
-				return err
-			}
-
-			defer hDestFile.Close() // ensure the file ist closed
-
-			//---------------------------------------------------------------------
-			// Set the file's mode to the original
-			//---------------------------------------------------------------------
-
-			if err = diskFs.Chmod(destinationPath, info.Mode()); err != nil {
-
-				return err
-			}
-
-			//---------------------------------------------------------------------
-
-			if doDebug {
-
-				if localInfo, err := diskFs.Stat(destinationPath); err != nil {
-
-					panic(err)
-				} else {
-
-					fmt.Println("*** DestFile created:", destinationPath, "with", localInfo.Mode())
-				}
-			}
-
-			//---------------------------------------------------------------------
-
-			hSourceFile, err := memFs.Open(path)
-
-			if err != nil {
-
-				return err
-			}
-
-			defer hSourceFile.Close() // ensure the file ist closed
-
-			if doDebug {
-
-				if localInfo, err := memFs.Stat(path); err != nil {
-
-					panic(err)
-				} else {
-
-					fmt.Println("*** SourceFile opened:", path, "with", localInfo.Mode())
-				}
-			}
-
-			//---------------------------------------------------------------------
-			// copy file content from source to dest
-			//---------------------------------------------------------------------
-
-			if _, err := io.CopyBuffer(hDestFile, hSourceFile, nil); err != nil {
-
-				return err
-			}
-
-			if err = hDestFile.Sync(); err != nil {
-
-				return nil
-			}
-
-			//---------------------------------------------------------------------
-			/*
-				if err = osspecific.PreserveOwner(memFs, path, diskFs, destinationPath, info); err != nil {
-
-					return err
-				}
-				/*
-					if err = PreserveTimes(info, diskFs, destinationPath); err != nil {
-
-						return err
-					}
-			*/
-			if doDebug {
-
-				fmt.Println("*** Copy of filesuccessful")
-				fmt.Println("*********************************************************************************")
-			}
-		}
-
-		return err
-	})
-}
-
-func (wrt *writer) MachMal() error {
-
-	var doDebug bool = false
-
-	diskFs := afero.NewOsFs()
-
-	destinationFolder := "target"
-
-	err := syncDestination(diskFs, destinationFolder, *wrt.memFs, time.Now())
+	err = syncDir(*wrt.memFs, "", destFs, wrt.outputFolder, time.Now(), 0)
 
 	if err != nil {
 
@@ -379,18 +114,24 @@ func (wrt *writer) MachMal() error {
 
 	if doDebug {
 
-		fmt.Println("*** syncDestination OK!")
+		fmt.Println("*** syncDir OK!")
+		fmt.Println("*********************************************************************************")
 	}
 
 	return nil
 }
 
-func InputFolderWriteAsync(localizer *i18n.Localizer, inputfolder string, pureAppName string, memFs *afero.Fs, sigCh chan os.Signal) error {
+func InputFolderWrite(localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs) error {
 
-	batzen := newWriter(localizer, inputfolder, pureAppName, memFs)
+	return nil
+}
 
-	spinnerSuffix := batzen.getLocalizedMessage(constants.SpinnerSuffixInputFolderWrite, "", "")
-	spinnerStopMessage := batzen.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
+func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs, sigCh chan os.Signal) error {
+
+	writer := newWriter(localizer, outputfolder, memFs, 1)
+
+	spinnerSuffix := writer.getLocalizedMessage(constants.SpinnerSuffixInputFolderWrite, "", "")
+	spinnerStopMessage := writer.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
 
 	spinnerConfig := yacspin.Config{
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
@@ -424,7 +165,7 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 	go func() {
 
-		doneChannel <- batzen.MachMal()
+		doneChannel <- writer.writeInputFolder()
 	}()
 
 	//-------------------------------------------------------------------------
@@ -433,7 +174,7 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 	case <-sigCh:
 
-		stopFailMessage := batzen.getLocalizedMessage(constants.CheckError_AbortedByUser, "", "")
+		stopFailMessage := writer.getLocalizedMessage(constants.CheckError_AbortedByUser, "", "")
 
 		spinner.StopFailMessage(stopFailMessage)
 
@@ -447,26 +188,22 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 
 			if err == constants.ErrInputFolderNotCorrect {
 
-				stopFailMessage := batzen.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
+				stopFailMessage := writer.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
 
 				spinner.StopFailMessage(stopFailMessage)
 
 				spinner.StopFail()
-
-				// batzen.reportInputFolderErrors()
 
 				return err
 			}
 
 			if err == constants.ErrBulkDataNotCorrect {
 
-				stopFailMessage := batzen.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
+				stopFailMessage := writer.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
 
 				spinner.StopFailMessage(stopFailMessage)
 
 				spinner.StopFail()
-
-				// batzen.reportBulkDataErrors()
 
 				return err
 			}
@@ -474,8 +211,6 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, inputfolder string, pureAp
 			spinner.StopFailMessage(err.Error())
 
 			spinner.StopFail()
-
-			// batzen.reportBulkDataErrors()
 
 			return err
 		}
