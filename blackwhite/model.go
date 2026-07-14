@@ -54,8 +54,6 @@ type RuleSet struct {
 type Config struct {
 	Blacklist RuleSet `toml:"blacklist"`
 	Whitelist RuleSet `toml:"whitelist"`
-
-	baseDir string
 }
 
 //-----------------------------------------------------------------------------
