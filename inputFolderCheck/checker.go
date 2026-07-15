@@ -1,6 +1,7 @@
 package inputFolderCheck
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -325,7 +326,7 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh 
 	checker := newChecker(localizer, inputfolder)
 
 	spinnerSuffix := checker.getLocalizedMessage(constants.SpinnerSuffixInputfolderCheck, "", "")
-	spinnerStopMessage := checker.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
+	spinnerStopMessage := checker.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 
 	spinnerConfig := yacspin.Config{
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
@@ -358,6 +359,29 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh 
 	doneChannel := make(chan error, 1)
 
 	go func() {
+
+		defer func() {
+
+			if recover := recover(); recover != nil {
+
+				switch value := recover.(type) {
+
+				case error:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value.Error())
+
+				case string:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value)
+
+				default:
+
+					doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+				}
+			}
+
+			doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+		}()
 
 		if err := checker.checkInputFolder(); err == nil {
 
@@ -412,13 +436,23 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh 
 				return err
 			}
 
-			spinner.StopFailMessage(err.Error())
+			if strings.HasPrefix(err.Error(), constants.PanicPrefix) {
 
-			spinner.StopFail()
+				spinner.StopFailMessage(checker.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
 
-			checker.reportBulkDataErrors()
+				spinner.StopFail()
 
-			return err
+				after, _ := strings.CutPrefix(err.Error(), constants.PanicPrefix)
+
+				panic(errors.New(after)) // panics in main
+			} else {
+
+				spinner.StopFailMessage(err.Error())
+
+				spinner.StopFail()
+
+				return err
+			}
 		}
 
 		return err

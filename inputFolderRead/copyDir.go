@@ -9,10 +9,11 @@ import (
 	"github.com/ForTheTrashBin/LooLid/blackwhite"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/spf13/afero"
 )
 
-func copyDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, bwConfig blackwhite.Config) error {
+func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, bwConfig blackwhite.Config) error {
 
 	var doDebug bool = false
 
@@ -61,25 +62,31 @@ func copyDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder
 
 			if !sourceFileInfos[idx].IsDir() && sourceFileInfos[idx].Name() == configFileName {
 
-				localConfig, ok, err := blackwhite.LoadConfigFile(filepath.Join(sourceFolder, configFileName))
+				localConfig, ok, err := blackwhite.LoadConfigFile(localizer, filepath.Join(sourceFolder, configFileName))
 
-				if (err == nil) && ok {
+				if err == nil {
 
-					if localConfig.Blacklist.Inherit {
+					if ok {
 
-						bwConfig.Blacklist.MergeRuleSet(&localConfig.Blacklist)
-					} else {
+						if localConfig.DoBlacklistInherit() {
 
-						bwConfig.Blacklist = localConfig.Blacklist
+							bwConfig.Blacklist.MergeRuleSet(&localConfig.Blacklist)
+						} else {
+
+							bwConfig.Blacklist = localConfig.Blacklist
+						}
+
+						if localConfig.DoWhitelistInherit() {
+
+							bwConfig.Whitelist.MergeRuleSet(&localConfig.Whitelist)
+						} else {
+
+							bwConfig.Whitelist = localConfig.Whitelist
+						}
 					}
+				} else {
 
-					if localConfig.Whitelist.Inherit {
-
-						bwConfig.Whitelist.MergeRuleSet(&localConfig.Whitelist)
-					} else {
-
-						bwConfig.Whitelist = localConfig.Whitelist
-					}
+					return err
 				}
 				//Found
 
@@ -113,7 +120,7 @@ func copyDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder
 
 						if err = destFs.Mkdir(newDestPath, os.ModePerm); err == nil {
 
-							if err = copyDir(sourceFs, newSourcePath, destFs, newDestPath, bwConfig); err == nil {
+							if err = copyDir(localizer, sourceFs, newSourcePath, destFs, newDestPath, bwConfig); err == nil {
 
 								if err = destFs.Chmod(newDestPath, sourceFileInfo.Mode()); err != nil {
 

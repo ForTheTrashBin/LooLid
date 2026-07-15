@@ -1,24 +1,69 @@
 package blackwhite
 
 import (
-	"fmt"
+	"errors"
 	"strings"
+
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+)
+
+//-----------------------------------------------------------------------------
+// 'Matcher' is the internal abstraction for all pattern types.
+//-----------------------------------------------------------------------------
+
+type patternMatcher interface {
+	matchPattern(name string) bool
+}
+
+//-----------------------------------------------------------------------------
+// Scope specifies whether a rule applies to files, directories or both.
+//-----------------------------------------------------------------------------
+
+type patternScope uint8
+
+const (
+	patternScopeBoth patternScope = iota
+	patternScopeFile
+	patternScopeDir
+)
+
+//-----------------------------------------------------------------------------
+
+const (
+	patternPrefixGlob   = "glob:" // This is the default
+	patternPrefixRegex  = "regex:"
+	patternPreficExact  = "exact:"
+	patternPrefixPrefix = "prefix:"
+	patternPrefixSuffix = "suffix:"
 )
 
 //-----------------------------------------------------------------------------
 // prepare all rules
 //-----------------------------------------------------------------------------
 
-func (cfg *Config) prepareConfig() error {
+func (cfg *Config) prepare(localizer *i18n.Localizer) error {
 
-	if err := prepareRuleSet(&cfg.Blacklist); err != nil {
+	if err := cfg.Blacklist.prepare(localizer); err != nil {
 
-		return fmt.Errorf("blacklist: %w", err)
+		return errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
+
+			MessageID: constants.BlackWhiteError_Blacklist,
+			TemplateData: map[string]string{
+
+				"value1": err.Error(),
+			}}))
 	}
 
-	if err := prepareRuleSet(&cfg.Whitelist); err != nil {
+	if err := cfg.Whitelist.prepare(localizer); err != nil {
 
-		return fmt.Errorf("whitelist: %w", err)
+		return errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
+
+			MessageID: constants.BlackWhiteError_Whitelist,
+			TemplateData: map[string]string{
+
+				"value1": err.Error(),
+			}}))
 	}
 
 	return nil
@@ -26,44 +71,43 @@ func (cfg *Config) prepareConfig() error {
 
 //-----------------------------------------------------------------------------
 
-func prepareRuleSet(set *RuleSet) error {
+func (rs *RuleSet) prepare(localizer *i18n.Localizer) error {
 
-	if set.TomlInherit == nil {
+	if rs.TomlInherit == nil {
 
-		set.Inherit = true
+		rs.inherit = true
 	} else {
 
-		set.Inherit = *set.TomlInherit
+		rs.inherit = *rs.TomlInherit
 	}
 
 	//-------------------------------------------------------------------------
 
-	for i := range set.Rules {
+	for idx := range rs.Rules {
 
-		rule := &set.Rules[i]
+		rule := &rs.Rules[idx]
 
 		//---------------------------------------------------------------------
 
-		patternMatcher, err := createPatternMatcher(rule.TomlPattern)
+		patternMatcher, err := createPatternMatcher(localizer, rule.TomlPattern)
 
 		if err != nil {
 
-			return fmt.Errorf("rule %d (%s): %w", i+1, rule.TomlPattern, err)
+			return err
 		}
 
 		rule.patternMatcher = patternMatcher
 
 		//---------------------------------------------------------------------
 
-		patternScope, err := parseTomlScope(rule.TomlScope)
+		patternScope, err := parseTomlScope(localizer, rule.TomlScope)
 
 		if err != nil {
 
-			return fmt.Errorf("rule %d: %w", i+1, err)
+			return err
 		}
 
 		rule.patternScope = patternScope
-
 	}
 
 	return nil
@@ -71,25 +115,31 @@ func prepareRuleSet(set *RuleSet) error {
 
 //-----------------------------------------------------------------------------
 
-func parseTomlScope(tomlScope string) (PatternScope, error) {
+func parseTomlScope(localizer *i18n.Localizer, tomlScope string) (patternScope, error) {
 
 	switch strings.ToLower(tomlScope) {
 
 	case "", "both":
 
-		return PatternScopeBoth, nil
+		return patternScopeBoth, nil
 
 	case "file":
 
-		return PatternScopeFile, nil
+		return patternScopeFile, nil
 
 	case "dir":
 
-		return PatternScopeDir, nil
+		return patternScopeDir, nil
 
 	default:
 
-		return PatternScopeBoth, fmt.Errorf("unknown scope %q", tomlScope)
+		return patternScopeBoth, errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
+
+			MessageID: constants.BlackWhiteError_InvalidScope,
+			TemplateData: map[string]string{
+
+				"value1": tomlScope,
+			}}))
 	}
 }
 
@@ -99,14 +149,14 @@ func (ar *Rule) matchRule(name string, isDir bool) bool {
 
 	switch ar.patternScope {
 
-	case PatternScopeFile:
+	case patternScopeFile:
 
 		if isDir {
 
 			return false
 		}
 
-	case PatternScopeDir:
+	case patternScopeDir:
 
 		if !isDir {
 
@@ -114,7 +164,7 @@ func (ar *Rule) matchRule(name string, isDir bool) bool {
 		}
 	}
 
-	return ar.patternMatcher.MatchPattern(name)
+	return ar.patternMatcher.matchPattern(name)
 }
 
 //-----------------------------------------------------------------------------

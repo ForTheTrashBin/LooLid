@@ -1,26 +1,20 @@
 package blackwhite
 
 import (
-	"fmt"
+	"errors"
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ForTheTrashBin/LooLid/helper/constants"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 //-----------------------------------------------------------------------------
 // loadLocalFile reads teh specified 'LooLid.comfig'
 //-----------------------------------------------------------------------------
 
-func LoadConfigFile(fileName string) (*Config, bool, error) {
-
-	var doDebug bool = false
-
-	if doDebug {
-
-		fmt.Println("*********************************************************************************")
-		fmt.Print("*** LoadConfigFile fileName <", fileName, ">\n")
-		fmt.Println("*********************************************************************************")
-	}
+func LoadConfigFile(localizer *i18n.Localizer, fileName string) (*Config, bool, error) {
 
 	data, err := os.ReadFile(fileName)
 
@@ -34,31 +28,30 @@ func LoadConfigFile(fileName string) (*Config, bool, error) {
 		return nil, false, err
 	}
 
-	if doDebug {
-
-		fmt.Println("*** ConfigFile read")
-	}
+	//-------------------------------------------------------------------------
 
 	var cfg Config
 
 	if _, err := toml.Decode(string(data), &cfg); err != nil {
 
-		if doDebug {
+		relativePath, relError := filepath.Rel(constants.AppConfig_DefaultInputFolder, fileName)
 
-			out := fmt.Errorf("%s: %w", fileName, err)
+		if relError != nil {
 
-			fmt.Println(out)
+			relativePath = filepath.Base(fileName)
 		}
 
-		return nil, false, fmt.Errorf("%s: %w", fileName, err)
+		return nil, false, errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
+
+			MessageID: constants.BlackWhiteError_ReadConfig,
+			TemplateData: map[string]string{
+
+				"value1": relativePath,
+				"value2": err.Error(),
+			}}))
 	}
 
-	if doDebug {
-
-		fmt.Println("*** ConfigFile decoded")
-	}
-
-	return &cfg, true, cfg.prepareConfig()
+	return &cfg, true, cfg.prepare(localizer)
 }
 
 //-----------------------------------------------------------------------------
@@ -97,6 +90,11 @@ func (cfg *Config) IsBlacklisted(name string, isDir bool) bool {
 	return false
 }
 
+func (cfg *Config) DoBlacklistInherit() bool {
+
+	return cfg.Blacklist.inherit
+}
+
 //-----------------------------------------------------------------------------
 // IsWhitelisted checks the Whitelist only
 //-----------------------------------------------------------------------------
@@ -112,6 +110,11 @@ func (cfg *Config) IsWhitelisted(name string, isDir bool) bool {
 	}
 
 	return false
+}
+
+func (cfg *Config) DoWhitelistInherit() bool {
+
+	return cfg.Whitelist.inherit
 }
 
 //-----------------------------------------------------------------------------

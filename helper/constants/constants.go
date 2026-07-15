@@ -7,10 +7,13 @@ import "errors"
 
 const (
 	AppConfig_ConfigFileExtension = ".config"
+
 	// AppConfig_DefaultInputFolder = "/home/u32800"
-	AppConfig_DefaultInputFolder = "content"
-	// AppConfig_DefaultInputFolder  = "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
-	AppConfig_DefaultOutputFolder = "target"
+	// AppConfig_DefaultInputFolder = "content"
+	AppConfig_DefaultInputFolder = "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
+
+	AppConfig_DefaultOutputFolder = "/home/u32800/Dokumente/Development/GoLang/target"
+	// AppConfig_DefaultOutputFolder = "target"
 
 	Spinner_FrequencyMS       = 125
 	Spinner_CharSet           = 11
@@ -18,6 +21,8 @@ const (
 	Spinner_StopColor         = "fgGreen"
 	Spinner_StopFailCharacter = "✖"
 	Spinner_StopFailColor     = "fgRed"
+
+	PanicPrefix = "{+]{][}[-}"
 )
 
 var ErrInterrupted = errors.New("interrupted by user")
@@ -52,12 +57,24 @@ const (
 	CheckError_BulkdataIncorrect      = "check.header.bulkdata_incorrect"
 	CheckError_AbortedByUser          = "check.header.aborted_by_user"
 
+	BlackWhiteError_ReadConfig       = "blackwhite.read_config"
+	BlackWhiteError_Blacklist        = "blackwhite.blacklist"
+	BlackWhiteError_Whitelist        = "blackwhite.whitelist"
+	BlackWhiteError_InvalidScope     = "blackwhite.invalid_scope"
+	BlackWhiteError_EmptyPattern     = "blackwhite.empty_pattern"
+	BlackWhiteError_EmptyGlobPattern = "blackwhite.empty_glob_pattern"
+	BlackWhiteError_InvalidRegex     = "blackwhite.invalid_regex"
+	BlackWhiteError_EmptyExactValue  = "blackwhite.empty_exact_value"
+	BlackWhiteError_EmptySuffix      = "blackwhite.empty_suffix"
+	BlackWhiteError_EmptyPrefix      = "blackwhite.empty_prefix"
+
 	SpinnerSuffixInputfolderCheck    = "spinner.suffix.inputfolder_check"
 	SpinnerSuffixInputFolderRead     = "spinner.suffix.inputfolder_read"
 	SpinnerSuffixInputFolderProccess = "spinner.suffix.inputfolder_proccess"
 	SpinnerSuffixInputFolderWrite    = "spinner.suffix.inputfolder_write"
 	SpinnerSuffixZzzzz               = "spinner.suffix.zzzzz"
-	SpinnerStopMessage               = "spinner.stopmessage"
+	SpinnerStopMessageDone           = "spinner.stopmessage.done"
+	SpinnerStopMessageError          = "spinner.stopmessage.error"
 
 	Label_Folder = "label.folder"
 	Label_File   = "label.file"

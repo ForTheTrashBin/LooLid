@@ -199,8 +199,43 @@ other = "Schreiben in das Zielverzeichnis"
 [spinner.suffix_zzzzz]
 other = "zzzzz"
 
-[spinner.stopmessage]
+[spinner.stopmessage.done]
 other = "Fertig"
+
+[spinner.stopmessage.error]
+other = "Fehler"
+
+#------------------------------------------------------------------------------
+
+[blackwhite.read_config]
+other = "\x1b[31mFehler:\x1b[0m Lesen der Konfigurationsdatei fehlerhaft: {{.value1}}"
+
+[blackwhite.blacklist]
+other = "\x1b[31mFehler:\x1b[0m Blacklist: {{.value1}}"
+
+[blackwhite.whitelist]
+other = "\x1b[31mFehler:\x1b[0m Whitelist: {{.value1}}"
+
+[blackwhite.invalid_scope]
+other = "Ungültiger Geltungsbereich für Muster: scope = <{{- .value1 -}}>"
+
+[blackwhite.empty_pattern]
+other = "Ungültiges/leeres Muster"
+
+[blackwhite.empty_glob_pattern]
+other = "Ungültiges/leeres Muster"
+
+[blackwhite.invalid_regex]
+other = "Ungültiger Regulärer Ausdruck: {{.value1}}"
+
+[blackwhite.empty_exact_value]
+other = "Ungültiges/leeres Muster"
+
+[blackwhite.empty_suffix]
+other = "Ungültiges/leeres Muster"
+
+[blackwhite.empty_prefix]
+other = "Ungültiges/leeres Muster"
 
 #------------------------------------------------------------------------------
 

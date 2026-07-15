@@ -1,8 +1,10 @@
 package inputFolderProccess
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
@@ -56,7 +58,7 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 	proccess := newProccess(localizer, memFs)
 
 	spinnerSuffix := proccess.getLocalizedMessage(constants.SpinnerSuffixInputFolderProccess, "", "")
-	spinnerStopMessage := proccess.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
+	spinnerStopMessage := proccess.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 
 	spinnerConfig := yacspin.Config{
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
@@ -89,6 +91,29 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 	doneChannel := make(chan error, 1)
 
 	go func() {
+
+		defer func() {
+
+			if recover := recover(); recover != nil {
+
+				switch value := recover.(type) {
+
+				case error:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value.Error())
+
+				case string:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value)
+
+				default:
+
+					doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+				}
+			}
+
+			doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+		}()
 
 		doneChannel <- proccess.proccessInputFolder()
 	}()
@@ -133,11 +158,23 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 				return err
 			}
 
-			spinner.StopFailMessage(err.Error())
+			if strings.HasPrefix(err.Error(), constants.PanicPrefix) {
 
-			spinner.StopFail()
+				spinner.StopFailMessage(proccess.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
 
-			return err
+				spinner.StopFail()
+
+				after, _ := strings.CutPrefix(err.Error(), constants.PanicPrefix)
+
+				panic(errors.New(after)) // panics in main
+			} else {
+
+				spinner.StopFailMessage(err.Error())
+
+				spinner.StopFail()
+
+				return err
+			}
 		}
 
 		return err

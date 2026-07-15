@@ -147,7 +147,7 @@ func syncDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder
 									fmt.Println("*** The file is ident")
 								}
 
-								return nil // Leave file AND timestamp untouched
+								continue // Leave file AND timestamp untouched
 							}
 						}
 

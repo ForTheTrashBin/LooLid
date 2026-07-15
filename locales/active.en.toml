@@ -199,8 +199,43 @@ other = "Writing the target directory"
 [spinner.suffix_zzzzz]
 other = "zzzzz"
 
-[spinner.stopmessage]
+[spinner.stopmessage.done]
 other = "Done"
+
+[spinner.stopmessage.error]
+other = "Error"
+
+#------------------------------------------------------------------------------
+
+[blackwhite.read_config]
+other = "\x1b[31mError:\x1b[0m Error reading the configuration file: {{.value1}}"
+
+[blackwhite.blacklist]
+other = "\x1b[31mError:\x1b[0m Blacklist: {{.value1}}"
+
+[blackwhite.whitelist]
+other = "\x1b[31mError:\x1b[0m Whitelist: {{.value1}}"
+
+[blackwhite.invalid_scope]
+other = "blackwhite.invalid_scope {{.value1}} - {{.value2}}"
+
+[blackwhite.empty_pattern]
+other = "blackwhite.empty_pattern {{.value1}} - {{.value2}}"
+
+[blackwhite.empty_glob_pattern]
+other = "blackwhite.empty_glob_pattern {{.value1}} - {{.value2}}"
+
+[blackwhite.invalid_regex]
+other = "blackwhite.invalid_regex {{.value1}} - {{.value2}}"
+
+[blackwhite.empty_exact_value]
+other = "blackwhite.empty_exact_value {{.value1}} - {{.value2}}"
+
+[blackwhite.empty_suffix]
+other = "blackwhite.empty_suffix {{.value1}} - {{.value2}}"
+
+[blackwhite.empty_prefix]
+other = "blackwhite.empty_prefix {{.value1}} - {{.value2}}"
 
 #------------------------------------------------------------------------------
 

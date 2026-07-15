@@ -1,26 +1,6 @@
 package blackwhite
 
 //-----------------------------------------------------------------------------
-// 'Matcher' is the internal abstraction for all pattern types.
-//-----------------------------------------------------------------------------
-
-type PatternMatcher interface {
-	MatchPattern(name string) bool
-}
-
-//-----------------------------------------------------------------------------
-// Scope specifies whether a rule applies to files, directories or both.
-//-----------------------------------------------------------------------------
-
-type PatternScope uint8
-
-const (
-	PatternScopeBoth PatternScope = iota
-	PatternScopeFile
-	PatternScopeDir
-)
-
-//-----------------------------------------------------------------------------
 // Rule describes a single blacklist/whitelist rule.
 //-----------------------------------------------------------------------------
 
@@ -30,8 +10,8 @@ type Rule struct {
 
 	// generated internal values
 
-	patternMatcher PatternMatcher
-	patternScope   PatternScope
+	patternMatcher patternMatcher
+	patternScope   patternScope
 }
 
 //-----------------------------------------------------------------------------
@@ -44,7 +24,7 @@ type RuleSet struct {
 
 	// generated internal values
 
-	Inherit bool
+	inherit bool
 }
 
 //-----------------------------------------------------------------------------

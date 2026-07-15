@@ -1,8 +1,10 @@
 package inputFolderRead
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/blackwhite"
@@ -80,20 +82,11 @@ func closeFile(f afero.File, reported *error) {
 
 func (rdr *reader) readInputFolder() error {
 
-	// var doDebug bool = false
-
 	diskFs := afero.NewOsFs()
 
 	var bwConfig blackwhite.Config
 
-	err := copyDir(diskFs, rdr.inputFolder, *rdr.memFs, "", bwConfig)
-
-	if err != nil {
-
-		panic(err)
-	}
-
-	return nil
+	return copyDir(rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", bwConfig)
 }
 
 func InputFolderRead(localizer *i18n.Localizer, inputfolder string, memFs *afero.MemMapFs) error {
@@ -106,7 +99,7 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 	reader := newReader(localizer, inputfolder, memFs)
 
 	spinnerSuffix := reader.getLocalizedMessage(constants.SpinnerSuffixInputFolderRead, "", "")
-	spinnerStopMessage := reader.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
+	spinnerStopMessage := reader.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 
 	spinnerConfig := yacspin.Config{
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
@@ -139,6 +132,29 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 	doneChannel := make(chan error, 1)
 
 	go func() {
+
+		defer func() {
+
+			if recover := recover(); recover != nil {
+
+				switch value := recover.(type) {
+
+				case error:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value.Error())
+
+				case string:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value)
+
+				default:
+
+					doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+				}
+			}
+
+			doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+		}()
 
 		doneChannel <- reader.readInputFolder()
 	}()
@@ -183,11 +199,23 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 				return err
 			}
 
-			spinner.StopFailMessage(err.Error())
+			if strings.HasPrefix(err.Error(), constants.PanicPrefix) {
 
-			spinner.StopFail()
+				spinner.StopFailMessage(reader.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
 
-			return err
+				spinner.StopFail()
+
+				after, _ := strings.CutPrefix(err.Error(), constants.PanicPrefix)
+
+				panic(errors.New(after)) // panics in main
+			} else {
+
+				spinner.StopFailMessage(err.Error())
+
+				spinner.StopFail()
+
+				return err
+			}
 		}
 
 		return err

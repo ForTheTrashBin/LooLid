@@ -1,8 +1,10 @@
 package inputFolderWrite
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
@@ -131,7 +133,7 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 	writer := newWriter(localizer, outputfolder, memFs, 1)
 
 	spinnerSuffix := writer.getLocalizedMessage(constants.SpinnerSuffixInputFolderWrite, "", "")
-	spinnerStopMessage := writer.getLocalizedMessage(constants.SpinnerStopMessage, "", "")
+	spinnerStopMessage := writer.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 
 	spinnerConfig := yacspin.Config{
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
@@ -164,6 +166,29 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 	doneChannel := make(chan error, 1)
 
 	go func() {
+
+		defer func() {
+
+			if recover := recover(); recover != nil {
+
+				switch value := recover.(type) {
+
+				case error:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value.Error())
+
+				case string:
+
+					doneChannel <- errors.New(constants.PanicPrefix + value)
+
+				default:
+
+					doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+				}
+			}
+
+			doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+		}()
 
 		doneChannel <- writer.writeInputFolder()
 	}()
@@ -208,11 +233,23 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 				return err
 			}
 
-			spinner.StopFailMessage(err.Error())
+			if strings.HasPrefix(err.Error(), constants.PanicPrefix) {
 
-			spinner.StopFail()
+				spinner.StopFailMessage(writer.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
 
-			return err
+				spinner.StopFail()
+
+				after, _ := strings.CutPrefix(err.Error(), constants.PanicPrefix)
+
+				panic(errors.New(after)) // panics in main
+			} else {
+
+				spinner.StopFailMessage(err.Error())
+
+				spinner.StopFail()
+
+				return err
+			}
 		}
 
 		return err

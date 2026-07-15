@@ -195,8 +195,10 @@ func testableMain(args []string) int {
 func main() {
 
 	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "\x1b[31mInternal error:\x1b[0m %v\n", r)
+
+		if recover := recover(); recover != nil {
+
+			fmt.Fprintf(os.Stderr, "\x1b[31mInternal error:\x1b[0m %v\n", recover)
 
 			pcs := make([]uintptr, 32)
 
@@ -205,13 +207,16 @@ func main() {
 			frames := runtime.CallersFrames(pcs[:n])
 
 			for {
+
 				frame, more := frames.Next()
 
 				fmt.Printf("%s:%d\n",
+
 					filepath.Base(frame.File),
 					frame.Line)
 
 				if !more {
+
 					break
 				}
 			}
