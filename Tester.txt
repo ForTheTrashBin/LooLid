@@ -1,0 +1,631 @@
+	/*
+	Started 'i18n' and some command-line evaluation
+		issues, stats, err := FolderCheckerInput.Check("~")
+
+		if err != nil {
+			fmt.Println("Fatal:", err)
+			os.Exit(2)
+		}
+
+		FolderCheckerInput.Print(issues, stats)
+
+		if len(issues) > 0 {
+			os.Exit(1)
+		}
+	*/
+
+
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+var messages = map[string]map[string]string{
+	"de": {
+		"usage":      "Verwendung:\n  %s <build|serve|help>",
+		"unknownArg": "Unbekannter Parameter: %s",
+		"needArg":    "Es muss genau ein Parameter angegeben werden.",
+		"build":      "Build wird ausgeführt...",
+		"serve":      "Server wird gestartet...",
+	},
+	"en": {
+		"usage":      "Usage:\n  %s <build|serve|help>",
+		"unknownArg": "Unknown argument: %s",
+		"needArg":    "Exactly one argument is required.",
+		"build":      "Running build...",
+		"serve":      "Starting server...",
+	},
+}
+
+func lang() string {
+	l := os.Getenv("LANG")
+
+	if len(l) >= 2 && l[:2] == "de" {
+		return "de"
+	}
+
+	return "en"
+}
+
+func msg(key string, args ...any) string {
+	l := lang()
+	format := messages[l][key]
+	return fmt.Sprintf(format, args...)
+}
+
+func main() {
+	if len(os.Args) != 2 {
+		fmt.Fprintln(os.Stderr, msg("needArg"))
+		fmt.Fprintln(os.Stderr, msg("usage", os.Args[0]))
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "build":
+		fmt.Println(msg("build"))
+
+	case "serve":
+		fmt.Println(msg("serve"))
+
+	case "help":
+		fmt.Println(msg("usage", os.Args[0]))
+
+	default:
+		fmt.Fprintln(os.Stderr, msg("unknownArg", os.Args[1]))
+		fmt.Fprintln(os.Stderr, msg("usage", os.Args[0]))
+		os.Exit(1)
+	}
+}
+
+Unter Linux/macOS kannst du dann z. B. testen mit:
+
+LANG=de_DE.UTF-8 go run main.go foo
+LANG=en_US.UTF-8 go run main.go foo
+
+Wenn du es professioneller willst, nimm:
+
+go get golang.org/x/text
+
+und verwende golang.org/x/text/message. Für kleine CLI-Tools ist die Map-Variante aber meistens völlig ausreichend.
+Beispiel: Die Funktion os.Stat kann einen Fehler zurückgeben. Der Fehlertex kann mit err.Error() gelesenwerden. Dieser ist aber nur in Englisch. Was kann gemacht werden, um auch diese Art von Fehlermeldung zu internationalisieren?
+
+Bei Fehlern aus os, syscall usw. solltest du nicht den englischen Text aus err.Error() übersetzen. Diese Texte sind plattformabhängig und nicht als stabile API gedacht.
+
+Stattdessen: Fehler semantisch erkennen und dann deine eigene lokalisierte Meldung ausgeben.
+
+Beispiel mit os.Stat:
+
+info, err := os.Stat(path)
+if err != nil {
+	switch {
+	case os.IsNotExist(err):
+		fmt.Println(t("file_not_found", path))
+	case os.IsPermission(err):
+		fmt.Println(t("permission_denied", path))
+	default:
+		fmt.Println(t("stat_failed", path))
+	}
+	return
+}
+
+fmt.Println(info.Name())
+
+Mit einfacher Übersetzungstabelle:
+
+var texts = map[string]map[string]string{
+	"de": {
+		"file_not_found":    "Datei oder Verzeichnis nicht gefunden: %s",
+		"permission_denied": "Keine Berechtigung für: %s",
+		"stat_failed":       "Dateiinformationen konnten nicht gelesen werden: %s",
+	},
+	"en": {
+		"file_not_found":    "File or directory not found: %s",
+		"permission_denied": "Permission denied: %s",
+		"stat_failed":       "Could not read file information: %s",
+	},
+}
+
+func t(key string, args ...any) string {
+	lang := "de"
+
+	format := texts[lang][key]
+	return fmt.Sprintf(format, args...)
+}
+
+Vollständigeres Beispiel:
+
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+)
+
+var texts = map[string]map[string]string{
+	"de": {
+		"file_not_found":    "Datei oder Verzeichnis nicht gefunden: %s",
+		"permission_denied": "Keine Berechtigung für: %s",
+		"not_directory":     "Ein Bestandteil des Pfads ist kein Verzeichnis: %s",
+		"stat_failed":       "Dateiinformationen konnten nicht gelesen werden: %s",
+	},
+	"en": {
+		"file_not_found":    "File or directory not found: %s",
+		"permission_denied": "Permission denied: %s",
+		"not_directory":     "A path component is not a directory: %s",
+		"stat_failed":       "Could not read file information: %s",
+	},
+}
+
+func t(key string, args ...any) string {
+	lang := "de"
+	return fmt.Sprintf(texts[lang][key], args...)
+}
+
+func main() {
+	path := "test.txt"
+
+	_, err := os.Stat(path)
+	if err != nil {
+		fmt.Println(localizeStatError(err, path))
+		return
+	}
+
+	fmt.Println("OK")
+}
+
+func localizeStatError(err error, path string) string {
+	switch {
+	case os.IsNotExist(err):
+		return t("file_not_found", path)
+
+	case os.IsPermission(err):
+		return t("permission_denied", path)
+
+	case errors.Is(err, syscallENOTDIR()):
+		return t("not_directory", path)
+
+	default:
+		return t("stat_failed", path)
+	}
+}
+
+// Hilfsfunktion, damit das Beispiel plattformfreundlicher bleibt.
+// In echtem Code kann man auch direkt syscall.ENOTDIR verwenden,
+// wenn man für Unix-artige Systeme entwickelt.
+func syscallENOTDIR() error {
+	return os.ErrInvalid
+}
+
+Das letzte Beispiel zeigt das Prinzip, aber für ENOTDIR wäre auf Unix-Systemen eher das hier üblich:
+
+import (
+	"errors"
+	"syscall"
+)
+
+if errors.Is(err, syscall.ENOTDIR) {
+	fmt.Println(t("not_directory", path))
+}
+
+Wichtig ist:
+
+os.IsNotExist(err)
+os.IsPermission(err)
+errors.Is(err, fs.ErrNotExist)
+errors.Is(err, fs.ErrPermission)
+errors.Is(err, syscall.ENOTDIR)
+
+statt:
+
+if err.Error() == "no such file or directory" {
+	// schlecht
+}
+
+Falls du technische Details trotzdem anzeigen willst, kannst du sie zusätzlich ausgeben:
+
+fmt.Printf("%s\nDetails: %v\n", t("file_not_found", path), err)
+
+Dann ist die nutzerfreundliche Meldung übersetzt, während der Originalfehler für Debugging erhalten bleibt.
+Kannst Du das Beispiel bitte auf ALLE System-Fehlermeldungen erweitern!
+
+Nicht sinnvoll als „alle Texte übersetzen“. In Go gibt es keine stabile, vollständige Liste aller möglichen err.Error()-Systemmeldungen: sie kommen vom Betriebssystem, sind je nach OS/Version/Locale unterschiedlich und sollten nicht per Text gemappt werden.
+
+Der richtige Weg ist: Errno/Fehlerklasse erkennen und dafür eigene lokalisierte Meldungen ausgeben. Für sehr viele Systemfehler kannst du syscall.Errno behandeln.
+
+Beispiel für Unix/Linux/macOS-artige Systeme:
+
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"syscall"
+)
+
+var deErrno = map[syscall.Errno]string{
+	syscall.EACCES:       "Keine Berechtigung",
+	syscall.EPERM:        "Operation nicht erlaubt",
+	syscall.ENOENT:       "Datei oder Verzeichnis nicht gefunden",
+	syscall.EEXIST:       "Datei existiert bereits",
+	syscall.ENOTDIR:      "Ein Bestandteil des Pfads ist kein Verzeichnis",
+	syscall.EISDIR:       "Ist ein Verzeichnis",
+	syscall.ENOTEMPTY:    "Verzeichnis ist nicht leer",
+	syscall.EINVAL:       "Ungültiges Argument",
+	syscall.EIO:          "Ein-/Ausgabefehler",
+	syscall.ENOSPC:       "Kein Speicherplatz auf dem Gerät verfügbar",
+	syscall.EROFS:        "Nur-lesbares Dateisystem",
+	syscall.EMFILE:       "Zu viele geöffnete Dateien im Prozess",
+	syscall.ENFILE:       "Zu viele geöffnete Dateien im System",
+	syscall.ENAMETOOLONG: "Dateiname ist zu lang",
+	syscall.ELOOP:        "Zu viele symbolische Links",
+	syscall.EBUSY:        "Ressource ist belegt",
+	syscall.EXDEV:        "Ungültiger geräteübergreifender Link",
+	syscall.ENODEV:       "Kein solches Gerät",
+	syscall.ENXIO:        "Kein solches Gerät oder Adresse",
+	syscall.ESRCH:        "Kein solcher Prozess",
+	syscall.EINTR:        "Systemaufruf wurde unterbrochen",
+	syscall.EAGAIN:       "Ressource vorübergehend nicht verfügbar",
+	syscall.ENOMEM:       "Nicht genügend Speicher",
+	syscall.EFAULT:       "Ungültige Speicheradresse",
+	syscall.EPIPE:        "Pipe unterbrochen",
+	syscall.ETIMEDOUT:    "Zeitüberschreitung",
+	syscall.ECONNREFUSED: "Verbindung wurde abgelehnt",
+	syscall.ECONNRESET:   "Verbindung wurde zurückgesetzt",
+	syscall.EHOSTUNREACH: "Host ist nicht erreichbar",
+	syscall.ENETUNREACH:  "Netzwerk ist nicht erreichbar",
+	syscall.EADDRINUSE:   "Adresse wird bereits verwendet",
+	syscall.EADDRNOTAVAIL:"Adresse ist nicht verfügbar",
+}
+
+func localizeError(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	var errno syscall.Errno
+	if errors.As(err, &errno) {
+		if msg, ok := deErrno[errno]; ok {
+			return msg
+		}
+		return fmt.Sprintf("Systemfehler %d", errno)
+	}
+
+	if os.IsNotExist(err) {
+		return "Datei oder Verzeichnis nicht gefunden"
+	}
+	if os.IsPermission(err) {
+		return "Keine Berechtigung"
+	}
+
+	return "Ein unbekannter Fehler ist aufgetreten"
+}
+
+func main() {
+	path := "/root/test.txt"
+
+	_, err := os.Stat(path)
+	if err != nil {
+		fmt.Printf("%s: %s\n", localizeError(err), path)
+
+		// Optional für Debugging:
+		fmt.Printf("Technische Details: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+Wichtig: Das ist nicht wirklich “alle”, sondern eine umfangreiche Auswahl häufiger Systemfehler. Die Menge der errno-Werte ist plattformabhängig.
+
+Wenn du wirklich möglichst breit arbeiten willst, kannst du unbekannte errno zumindest generisch anzeigen:
+
+var errno syscall.Errno
+if errors.As(err, &errno) {
+	return fmt.Sprintf("Systemfehler %d", errno)
+}
+
+Für robuste CLI-Programme ist meist besser:
+
+Lokalisierte Kontextmeldung + optional technische Originaldetails
+
+Also z. B.:
+
+fmt.Printf("Datei konnte nicht gelesen werden: %s\n", path)
+fmt.Printf("Details: %v\n", err)
+
+Damit bleibt die Benutzeroberfläche übersetzt, ohne dass du instabile Betriebssystem-Fehlertexte nachbauen musst.
+Ich habe eine Anwendung, die gleichermassen under Windows, MacOs und Linux läuft. Ich möchte die System-Fehlermeldungen für internationale Benutzer möglichst gleich in Ihrer eingenen Sprache darstellen!
+Dein heutiges Guthaben von 3.000ja Token (GPT-5.5) ist aufgebraucht. Bitte wechsle auf ein anderes Modell oder lade hier schnell und einfach ohne Anmeldung neues Guthaben auf.
+
+
+
+// https://github.com/briandowns/spinner
+// https://github.com/theckman/yacspin
+// https://github.com/tiagomelo/go-spinner // SCHLECHT
+
+// https://pkg.go.dev/github.com/fsnotify/fsnotify
+
+func runStep(name string, duration time.Duration, sigCh chan os.Signal) error {
+	cfg := yacspin.Config{
+		Frequency:         100 * time.Millisecond,
+		CharSet:           yacspin.CharSets[14],
+		Suffix:            " " + name,
+		SuffixAutoColon:   true,
+		StopCharacter:     "✓",
+		StopColors:        []string{"fgGreen"},
+		StopFailCharacter: "x",               // TODO: Mist
+		StopFailColors:    []string{"fgRed"}, // TODO: Mist
+		StopMessage:       "done",
+	}
+
+	spinner, err := yacspin.New(cfg)
+	if err != nil {
+		return fmt.Errorf("spinner init failed: %w", err)
+	}
+
+	if err := spinner.Start(); err != nil {
+		return fmt.Errorf("spinner start failed: %w", err)
+	}
+
+	defer spinner.Stop()
+
+	doneCh := make(chan error, 1)
+
+	// simulierte Arbeit + Fehlerchance
+	go func() {
+		timer := time.NewTimer(duration)
+		defer timer.Stop()
+
+		<-timer.C
+
+		// Beispiel: künstlicher Fehler in Step 2
+		if name == "Step 4: proccessing acknowledge" {
+			doneCh <- errors.New("simulated processing error")
+			return
+		}
+
+		doneCh <- nil
+	}()
+
+	select {
+	case <-sigCh:
+		spinner.StopFailMessage("aborted by user")
+		spinner.StopFail()
+		return ErrInterrupted
+
+	case err := <-doneCh:
+		if err != nil {
+			spinner.StopFailMessage(err.Error())
+			spinner.StopFail()
+			return err
+		}
+		return nil
+	}
+}
+
+func handleError(step string, err error) {
+	/*
+		if errors.Is(err, ErrInterrupted) {
+			fmt.Printf("%s aborted by user\n", step)
+			return
+		}
+
+		fmt.Printf("%s failed: %v\n", step, err)
+	*/
+}
+
+var ErrInterrupted = errors.New("interrupted by user")
+
+func main() {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(sigCh)
+
+	if err := runStep("Step 1: loading data", 3*time.Second, sigCh); err != nil {
+		handleError("Step 1", err)
+		return
+	}
+
+	if err := runStep("Step 2: processing data", 3*time.Second, sigCh); err != nil {
+		handleError("Step 2", err)
+		return
+	}
+
+	if err := runStep("Step 3: sending data", 3*time.Second, sigCh); err != nil {
+		handleError("Step 3", err)
+		return
+	}
+
+	if err := runStep("Step 4: proccessing acknowledge", 3*time.Second, sigCh); err != nil {
+		handleError("Step 5", err)
+		return
+	}
+
+	if err := runStep("Step 5: saving results", 3*time.Second, sigCh); err != nil {
+		handleError("Step 5", err)
+		return
+	}
+}
+
+
+
+//-----------------------------------------------------------------------------
+// Build-commands (when running on a linux system)
+//-----------------------------------------------------------------------------
+
+Linux:		                          go build -trimpath .					==> LooLid
+Windows :	GOOS=windows GOARCH=amd64 go build -trimpath -o LooLid.exe .	==> LooLid.exe (64-Bit)
+macOS:		GOOS=darwin  GOARCH=amd64 go build -trimpath -o LooLid.mac .	==> LooLid.mac (64-Bit)
+
+//-----------------------------------------------------------------------------
+// Running the app with different languages 
+//-----------------------------------------------------------------------------
+
+LANGUAGE=de go run . ==> Deutsch
+LANGUAGE=en go run . ==> Englisch
+LANGUAGE=fr go run . ==> Englisch (default)
+
+Aufgabe: Eine GO-CLI-Applikation, die einen gegebenen Verzeichnisbaum mit allen Dateien (Quelle) 
+in einen gegebenen anderen Verzeichnisbaum (Ziel) kopiert. Optional könnte in jedem Verzeichnis 
+der Quelle eine Konfigurationsdatei mit dem Namen "fritz.config" vorhanden sein. Diese Konfigurationsdatei 
+wird nicht mitkopiert, sondern deren Inhalt wird ausgewertet. Der Inhalt kann aus 2 Parametern bestehen: 
+1. Eine "Blacklist" in Form einer RegEx, die Dateinamen enthält, die nicht kopiert werden sollen. 
+2. Eine "Whitelist" in Form einer RegEx, die die "Blacklist" wieder aufhebt. 
+Die Einstellungen von Blacklist und Whitelist werden an die jeweiligen Unterverzeichnisse vererbt und 
+durch die Einträge in den dortigen Konfigurationsdateien ergänzt. Gibt mir bitte das KOMPLETTE Go-Programm!
+
+
+Tests schreiben,
+Dokumentation erzeugen.
+
+Das kommt dem von dir gewünschten "Agenten" schon sehr nahe.
+
+2. ChatGPT Codex / Agent Mode ⭐⭐⭐⭐⭐
+
+OpenAI arbeitet außerdem an einem Agentenmodus, der noch weiter geht.
+
+Damit kann der Agent beispielsweise
+
+Dateien anlegen,
+Projekte umstrukturieren,
+Git verwenden,
+Tests ausführen,
+Build-Fehler beheben,
+mehrere Dateien gleichzeitig ändern.
+
+Für Projekte wie dein fritzcopy ist das praktisch ideal.
+
+3. GitHub Copilot ⭐⭐⭐⭐☆
+
+Falls du bereits GitHub Copilot nutzt:
+
+Copilot ist hervorragend beim Schreiben einzelner Funktionen.
+Für Architektur, Designentscheidungen und größere Refactorings finde ich ChatGPT deutlich stärker.
+
+Viele Entwickler verwenden inzwischen beides:
+
+Copilot für Autovervollständigung
+ChatGPT für die eigentliche Entwicklung
+4. Continue ⭐⭐⭐⭐☆
+
+Es gibt außerdem die Open-Source-Erweiterung Continue.
+
+Sie kann verschiedene Modelle verwenden und den gesamten Workspace als Kontext einbeziehen.
+
+Viele Go-Entwickler mögen Continue sehr.
+
+Meine Empfehlung
+
+Da du bereits mit VS Code arbeitest, würde ich Folgendes installieren:
+
+Go Extension (von Google)
+ChatGPT (offizielle OpenAI-Erweiterung)
+GitHub Copilot (optional, aber sehr hilfreich)
+GitLens (empfehlenswert für Git-Arbeit)
+
+Damit hast du eine sehr leistungsfähige Entwicklungsumgebung.
+
+Für dein Projekt "fritzcopy"
+
+Mit einer solchen Umgebung könnten wir sehr effizient zusammenarbeiten. Du könntest beispielsweise schreiben:
+
+Erstelle das komplette Projekt.
+
+Ich würde dann:
+
+go.mod anlegen,
+etwa 15–20 Go-Dateien erzeugen,
+README.md schreiben,
+Tests hinzufügen,
+Beispielkonfigurationen erstellen,
+und alles so strukturieren, dass go build ./... ohne Anpassungen funktioniert.
+
+Danach könntest du einfach F5 oder go run ./cmd/fritzcopy ausführen.
+
+Eine kleine Anmerkung
+
+In unserer Unterhaltung hatte ich erwähnt, dass ich in einer IDE direkt Dateien anlegen könnte. 
+Das hängt allerdings von der jeweiligen Integration ab. In einer ChatGPT-fähigen VS-Code-Erweiterung 
+mit Workspace-Bearbeitung kann ich Änderungen an Dateien vorschlagen oder – je nach Modus und deinen 
+Einstellungen – auch direkt vornehmen. Ich entscheide aber nie selbstständig über Änderungen: 
+Du behältst die Kontrolle und bestätigst die vorgeschlagenen Aktionen. Für ein Projekt wie deines 
+ist das eine deutlich angenehmere Arbeitsweise als lange Codeblöcke im Chat.
+
+**********************************************
+
+Tests schreiben,
+Dokumentation erzeugen.
+
+Das kommt dem von dir gewünschten "Agenten" schon sehr nahe.
+
+2. ChatGPT Codex / Agent Mode ⭐⭐⭐⭐⭐
+
+OpenAI arbeitet außerdem an einem Agentenmodus, der noch weiter geht.
+
+Damit kann der Agent beispielsweise
+
+Dateien anlegen,
+Projekte umstrukturieren,
+Git verwenden,
+Tests ausführen,
+Build-Fehler beheben,
+mehrere Dateien gleichzeitig ändern.
+
+Für Projekte wie dein fritzcopy ist das praktisch ideal.
+
+3. GitHub Copilot ⭐⭐⭐⭐☆
+
+Falls du bereits GitHub Copilot nutzt:
+
+Copilot ist hervorragend beim Schreiben einzelner Funktionen.
+Für Architektur, Designentscheidungen und größere Refactorings finde ich ChatGPT deutlich stärker.
+
+Viele Entwickler verwenden inzwischen beides:
+
+Copilot für Autovervollständigung
+ChatGPT für die eigentliche Entwicklung
+4. Continue ⭐⭐⭐⭐☆
+
+Es gibt außerdem die Open-Source-Erweiterung Continue.
+
+Sie kann verschiedene Modelle verwenden und den gesamten Workspace als Kontext einbeziehen.
+
+Viele Go-Entwickler mögen Continue sehr.
+
+Meine Empfehlung
+
+Da du bereits mit VS Code arbeitest, würde ich Folgendes installieren:
+
+Go Extension (von Google)
+ChatGPT (offizielle OpenAI-Erweiterung)
+GitHub Copilot (optional, aber sehr hilfreich)
+GitLens (empfehlenswert für Git-Arbeit)
+
+Damit hast du eine sehr leistungsfähige Entwicklungsumgebung.
+
+Für dein Projekt "fritzcopy"
+
+Mit einer solchen Umgebung könnten wir sehr effizient zusammenarbeiten. Du könntest beispielsweise schreiben:
+
+Erstelle das komplette Projekt.
+
+Ich würde dann:
+
+go.mod anlegen,
+etwa 15–20 Go-Dateien erzeugen,
+README.md schreiben,
+Tests hinzufügen,
+Beispielkonfigurationen erstellen,
+und alles so strukturieren, dass go build ./... ohne Anpassungen funktioniert.
+
+Danach könntest du einfach F5 oder go run ./cmd/fritzcopy ausführen.
+
+Eine kleine Anmerkung
+
+In unserer Unterhaltung hatte ich erwähnt, dass ich in einer IDE direkt Dateien anlegen könnte. Das hängt 
+allerdings von der jeweiligen Integration ab. In einer ChatGPT-fähigen VS-Code-Erweiterung mit Workspace-Bearbeitung 
+kann ich Änderungen an Dateien vorschlagen oder – je nach Modus und deinen Einstellungen – auch direkt vornehmen. 
+Ich entscheide aber nie selbstständig über Änderungen: Du behältst die Kontrolle und bestätigst die vorgeschlagenen 
+Aktionen. Für ein Projekt wie deines ist das eine deutlich angenehmere Arbeitsweise als lange Codeblöcke im Chat.
