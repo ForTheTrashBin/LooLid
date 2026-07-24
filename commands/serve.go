@@ -17,7 +17,8 @@ import (
 var serveUsageMessage string
 
 func printServeUsageMessage() {
-	fmt.Fprintf(os.Stderr, serveUsageMessage)
+
+	fmt.Fprint(os.Stderr, serveUsageMessage)
 }
 
 //-----------------------------------------------------------------------------

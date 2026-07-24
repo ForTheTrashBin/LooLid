@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
@@ -89,30 +88,31 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 	//-------------------------------------------------------------------------
 
 	doneChannel := make(chan error, 1)
+	panicChannel := make(chan error, 1)
 
 	go func() {
 
 		defer func() {
 
-			if recover := recover(); recover != nil {
+			if rec := recover(); rec != nil {
 
-				switch value := recover.(type) {
+				switch value := rec.(type) {
 
 				case error:
 
-					doneChannel <- errors.New(constants.PanicPrefix + value.Error())
+					panicChannel <- value
 
 				case string:
 
-					doneChannel <- errors.New(constants.PanicPrefix + value)
+					panicChannel <- errors.New(value)
 
 				default:
 
-					doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+					panicChannel <- errors.New("Recovered panic without type")
 				}
 			}
 
-			doneChannel <- errors.New(constants.PanicPrefix + "Recovered panic without type")
+			panicChannel <- errors.New("Recovered panic without type")
 		}()
 
 		doneChannel <- proccess.proccessInputFolder()
@@ -158,25 +158,21 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 				return err
 			}
 
-			if strings.HasPrefix(err.Error(), constants.PanicPrefix) {
+			spinner.StopFailMessage(err.Error())
 
-				spinner.StopFailMessage(proccess.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
+			spinner.StopFail()
 
-				spinner.StopFail()
-
-				after, _ := strings.CutPrefix(err.Error(), constants.PanicPrefix)
-
-				panic(errors.New(after)) // panics in main
-			} else {
-
-				spinner.StopFailMessage(err.Error())
-
-				spinner.StopFail()
-
-				return err
-			}
+			return err
 		}
 
 		return err
+
+	case err := <-panicChannel:
+
+		spinner.StopFailMessage(proccess.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
+
+		spinner.StopFail()
+
+		panic(err) // panics in main
 	}
 }

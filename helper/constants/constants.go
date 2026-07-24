@@ -9,8 +9,8 @@ const (
 	AppConfig_ConfigFileExtension = ".config"
 
 	// AppConfig_DefaultInputFolder = "/home/u32800"
-	// AppConfig_DefaultInputFolder = "content"
-	AppConfig_DefaultInputFolder = "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
+	AppConfig_DefaultInputFolder = "content"
+	// AppConfig_DefaultInputFolder = "/home/u32800/Dokumente/Development/Websites/Website_de/hugo/content"
 
 	AppConfig_DefaultOutputFolder = "/home/u32800/Dokumente/Development/GoLang/target"
 	// AppConfig_DefaultOutputFolder = "target"
@@ -21,8 +21,6 @@ const (
 	Spinner_StopColor         = "fgGreen"
 	Spinner_StopFailCharacter = "✖"
 	Spinner_StopFailColor     = "fgRed"
-
-	PanicPrefix = "{+]{][}[-}"
 )
 
 var ErrInterrupted = errors.New("interrupted by user")

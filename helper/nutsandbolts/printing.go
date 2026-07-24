@@ -21,7 +21,7 @@ func PrintLocalizedMessage(localizer *i18n.Localizer, MessageID string, value1 s
 			},
 		})
 
-	fmt.Fprintf(os.Stderr, localizedMessage)
+	fmt.Fprint(os.Stderr, localizedMessage)
 }
 
 //-----------------------------------------------------------------------------
@@ -37,5 +37,5 @@ func PrintLocalizedListHeader(localizer *i18n.Localizer, MessageID string, listL
 			PluralCount: listLength,
 		})
 
-	fmt.Fprintf(os.Stderr, localizedMessage)
+	fmt.Fprint(os.Stderr, localizedMessage)
 }

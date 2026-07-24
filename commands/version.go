@@ -17,7 +17,8 @@ import (
 var versionUsageMessage string
 
 func printVersionUsageMessage() {
-	fmt.Fprintf(os.Stderr, versionUsageMessage)
+
+	fmt.Fprint(os.Stderr, versionUsageMessage)
 }
 
 type VersionCommand struct {

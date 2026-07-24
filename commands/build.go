@@ -25,7 +25,8 @@ import (
 var buildUsageMessage string
 
 func printBuildUsageMessage() {
-	fmt.Fprintf(os.Stderr, buildUsageMessage)
+
+	fmt.Fprint(os.Stderr, buildUsageMessage)
 }
 
 //-----------------------------------------------------------------------------
