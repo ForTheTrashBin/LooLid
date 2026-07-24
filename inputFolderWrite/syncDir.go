@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
@@ -60,28 +59,7 @@ func syncDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder
 
 	if err == nil {
 
-		sort.Slice(sourceFileInfos, func(i, j int) bool {
-
-			if sourceFileInfos[i].IsDir() {
-
-				if sourceFileInfos[j].IsDir() {
-
-					return sourceFileInfos[i].Name() < sourceFileInfos[j].Name()
-				} else {
-
-					return true
-				}
-			} else {
-
-				if sourceFileInfos[j].IsDir() {
-
-					return false
-				} else {
-
-					return sourceFileInfos[i].Name() < sourceFileInfos[j].Name()
-				}
-			}
-		})
+		nutsandbolts.SortFileInfos(sourceFileInfos, true)
 
 		configFileName := nutsandbolts.GetConfigFileName()
 

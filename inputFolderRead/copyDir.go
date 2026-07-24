@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 
 	"github.com/ForTheTrashBin/LooLid/blackwhite"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
@@ -28,32 +27,11 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 	if err == nil {
 
-		sort.Slice(sourceFileInfos, func(i, j int) bool {
-
-			if sourceFileInfos[i].IsDir() {
-
-				if sourceFileInfos[j].IsDir() {
-
-					return sourceFileInfos[i].Name() < sourceFileInfos[j].Name()
-				} else {
-
-					return false
-				}
-			} else {
-
-				if sourceFileInfos[j].IsDir() {
-
-					return true
-				} else {
-
-					return sourceFileInfos[i].Name() < sourceFileInfos[j].Name()
-				}
-			}
-		})
+		nutsandbolts.SortFileInfos(sourceFileInfos, false)
 
 		configFileName := nutsandbolts.GetConfigFileName()
 
-		for idx := range len(sourceFileInfos) - 1 {
+		for idx := range sourceFileInfos {
 
 			if doDebug {
 

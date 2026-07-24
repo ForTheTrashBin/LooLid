@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
@@ -87,16 +88,23 @@ func GetConfigFileName() string {
  */
 
 func GetFlagMessage(err error) (string, []string) {
+
 	if after, found := strings.CutPrefix(err.Error(), "bad flag syntax: "); found {
+
 		return "flag.bad_flag_syntax", []string{after}
 	} else {
+
 		if after, found := strings.CutPrefix(err.Error(), "flag provided but not defined: "); found {
+
 			return "flag.flag_provided_but_not_defined", []string{after}
 		} else {
+
 			if after, found := strings.CutPrefix(err.Error(), "invalid boolean value "); found {
+
 				var values []string = make([]string, 2)
 
 				if before, after, found := strings.Cut(after, " for "); found {
+
 					values[0] = before
 
 					if before, _, found := strings.Cut(after, ":"); found {
@@ -106,34 +114,47 @@ func GetFlagMessage(err error) (string, []string) {
 
 				return "flag.invalid_boolean_value", values
 			} else {
+
 				if after, found := strings.CutPrefix(err.Error(), "invalid boolean flag "); found {
+
 					var values []string = make([]string, 2)
 
 					if before, after, found := strings.Cut(after, ": "); found {
+
 						values[0] = before
 						values[1] = after
 					}
 
 					return "flag.invalid_boolean_flag", []string{after}
 				} else {
+
 					if after, found := strings.CutPrefix(err.Error(), "flag needs an argument: "); found {
+
 						return "flag.flag_needs_an_argument", []string{after}
 					} else {
+
 						if after, found := strings.CutPrefix(err.Error(), "invalid value "); found {
+
 							var values []string = make([]string, 2)
 
 							if before, after, found := strings.Cut(after, " for flag "); found {
+
 								values[0] = before
 
 								if before, _, found := strings.Cut(after, ":"); found {
+
 									values[1] = before
 								}
 							}
+
 							return "flag.invalid_value", values
 						} else {
+
 							if after, found = strings.CutPrefix(err.Error(), ErrInvalidNumberOfCommands.Error()); found {
+
 								return "flag.invalid_number_of_commands", nil
 							} else {
+
 								return "", nil
 							}
 						}
@@ -142,6 +163,25 @@ func GetFlagMessage(err error) (string, []string) {
 			}
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+func SortFileInfos(fileInfos []os.FileInfo, directoriesFirst bool) {
+
+	sort.Slice(fileInfos, func(i, j int) bool {
+
+		iDir := fileInfos[i].IsDir()
+		jDir := fileInfos[j].IsDir()
+
+		if iDir != jDir {
+
+			return directoriesFirst == iDir
+		}
+
+		return fileInfos[i].Name() < fileInfos[j].Name()
+	})
 }
 
 //-----------------------------------------------------------------------------
