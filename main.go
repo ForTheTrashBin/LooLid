@@ -20,7 +20,7 @@ import (
 )
 
 //-----------------------------------------------------------------------------
-// Enbed message-files direct into the app, so NO externel files are needed
+// Embed message files directly into the app, so NO external files are needed
 //-----------------------------------------------------------------------------
 
 //go:embed locales/active.*.toml
@@ -32,7 +32,8 @@ var LocalFS embed.FS
 var mainUsageMessage string
 
 func printMainUsageMessage() {
-	fmt.Fprintf(os.Stderr, mainUsageMessage)
+
+	fmt.Fprint(os.Stderr, mainUsageMessage)
 }
 
 //-----------------------------------------------------------------------------
@@ -76,7 +77,7 @@ func testableMain(args []string) int {
 	//-------------------------------------------------------------------------
 	// Initialize i18n-bundle to use for the lifetime of the application
 	//
-	// Englich is the bundle default language.
+	// English is the bundle default language.
 	// Every unsupported language automatically falls back to English.
 	//-------------------------------------------------------------------------
 
@@ -86,7 +87,7 @@ func testableMain(args []string) int {
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal) // Bundle now can read toml-formatted message-files
 
 	//-------------------------------------------------------------------------
-	// Enbed message-files direct into the app, so NO externel files are needed
+	// Embed message files directly into the app, so NO external files are needed
 	//-------------------------------------------------------------------------
 
 	nutsandbolts.Must(bundle.LoadMessageFileFS(LocalFS, "locales/active.en.toml"))
@@ -188,8 +189,8 @@ func testableMain(args []string) int {
 }
 
 //-----------------------------------------------------------------------------
-// Supress private information, when printing the stack-trace at panic()
-// Use "go build -trimpath ." to avoid having privat information in binary
+// Suppress private information when printing the stack trace at panic()
+// Use "go build -trimpath ." to avoid having private information in the binary
 //-----------------------------------------------------------------------------
 
 func main() {

@@ -11,7 +11,7 @@ import (
 )
 
 //-----------------------------------------------------------------------------
-// loadLocalFile reads teh specified 'LooLid.comfig'
+// loadLocalFile reads the specified 'LooLid.config'
 //-----------------------------------------------------------------------------
 
 func LoadConfigFile(localizer *i18n.Localizer, fileName string) (*Config, bool, error) {

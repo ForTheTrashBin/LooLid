@@ -28,7 +28,7 @@ type RuleSet struct {
 }
 
 //-----------------------------------------------------------------------------
-// Config represents the Back- and Whitelist configuration
+// Config represents the Black- and Whitelist configuration
 //-----------------------------------------------------------------------------
 
 type Config struct {
