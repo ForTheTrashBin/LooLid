@@ -1,10 +1,10 @@
 package inputFolderWrite
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/spf13/afero"
@@ -15,15 +15,6 @@ import (
 //-----------------------------------------------------------------------------
 
 func cleanDir(destFs afero.Fs, destFolder string, sourceFs afero.Fs) error {
-
-	var doDebug bool = false
-
-	if doDebug {
-
-		fmt.Println("*********************************************************************************")
-		fmt.Print("*** cleanDestination destFolder: <", destFolder, ">\n")
-		fmt.Println("*********************************************************************************")
-	}
 
 	dirExists, err := afero.DirExists(destFs, destFolder)
 
@@ -87,14 +78,9 @@ func cleanDir(destFs afero.Fs, destFolder string, sourceFs afero.Fs) error {
 
 		//---------------------------------------------------------------------
 
-		for idx := len(toBeDeleted) - 1; idx >= 0; idx-- {
+		for _, path := range slices.Backward(toBeDeleted) {
 
-			if doDebug {
-
-				fmt.Println("*** Delete from disk:", toBeDeleted[idx])
-			}
-
-			if err = destFs.Remove(toBeDeleted[idx]); err != nil {
+			if err = destFs.Remove(path); err != nil {
 
 				return err
 			}

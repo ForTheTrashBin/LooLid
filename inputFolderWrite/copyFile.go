@@ -1,7 +1,6 @@
 package inputFolderWrite
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
@@ -9,15 +8,6 @@ import (
 )
 
 func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName string) error {
-
-	var doDebug bool = false
-
-	if doDebug {
-
-		fmt.Println("*********************************************************************************")
-		fmt.Print("*** copyFile source <", sourceName, "> dest <", destName, ">\n")
-		fmt.Println("*********************************************************************************")
-	}
 
 	//-------------------------------------------------------------------------
 	// inner function to manage defered operations properly
@@ -38,11 +28,6 @@ func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName st
 
 		defer sourceFile.Close() // ensure the file is closed on exit
 
-		if doDebug {
-
-			fmt.Println("*** sourceFile opened    :", sourceName)
-		}
-
 		//---------------------------------------------------------------------
 		// Create the destination file
 		//---------------------------------------------------------------------
@@ -55,25 +40,6 @@ func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName st
 		}
 
 		defer destFile.Close() // ensure the file is closed on exit
-
-		//---------------------------------------------------------------------
-
-		if doDebug {
-
-			fmt.Println("*** destFile created     :", destName)
-
-			if destFileInfo, err := destFile.Stat(); err == nil {
-
-				fmt.Println("*** destFileInfo.IsDir   :", destFileInfo.IsDir())
-				fmt.Println("*** destFileInfo.Name    :", destFileInfo.Name())
-				fmt.Println("*** destFileInfo.Size    :", destFileInfo.Size())
-				fmt.Println("*** destFileInfo.Mode    :", destFileInfo.Mode())
-				fmt.Println("---------------------------------------------------------------------------------")
-			} else {
-
-				return err
-			}
-		}
 
 		//---------------------------------------------------------------------
 		// copy file content from source to dest
@@ -108,15 +74,6 @@ func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName st
 		return err
 	}
 
-	if doDebug {
-
-		fmt.Println("*** sourceFileInfo.IsDir :", sourceFileInfo.IsDir())
-		fmt.Println("*** sourceFileInfo.Name  :", sourceFileInfo.Name())
-		fmt.Println("*** sourceFileInfo.Size  :", sourceFileInfo.Size())
-		fmt.Println("*** sourceFileInfo.Mode  :", sourceFileInfo.Mode())
-		fmt.Println("---------------------------------------------------------------------------------")
-	}
-
 	//-------------------------------------------------------------------------
 	// Set the destFile's mode to the original (Windows: AFTER the file is closed)
 	//-------------------------------------------------------------------------
@@ -131,12 +88,6 @@ func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName st
 	if err = osspecific.PreserveOwner(sourceFs, sourceName, destFs, destName, sourceFileInfo); err != nil {
 
 		return err
-	}
-
-	if doDebug {
-
-		fmt.Println("*** copyFile of filesuccessful")
-		fmt.Println("*********************************************************************************")
 	}
 
 	return nil

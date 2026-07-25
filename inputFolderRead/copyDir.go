@@ -1,7 +1,6 @@
 package inputFolderRead
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -14,33 +13,31 @@ import (
 
 func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, bwConfig *blackwhite.BWConfig, depth int) error {
 
-	var doDebug bool = false
-
-	if doDebug {
-
-		fmt.Println("*********************************************************************************")
-		fmt.Print("*** copyDir sourceFolder <", sourceFolder, "> destFolder <", destFolder, ">\n")
-		fmt.Println("*********************************************************************************")
-	}
+	//-------------------------------------------------------------------------
+	// Get all files and directories in the source folder
+	//-------------------------------------------------------------------------
 
 	sourceFileInfos, err := afero.ReadDir(sourceFs, sourceFolder)
 
+	//-------------------------------------------------------------------------
+
 	if err == nil {
 
-		nutsandbolts.SortFileInfos(sourceFileInfos, false)
+		deepCopyBWConfig := bwConfig // Copy of pointers, NOT a deep-copy
 
 		configFileName := nutsandbolts.GetConfigFileName()
 
-		deepCopyBWConfig := bwConfig
+		//---------------------------------------------------------------------
 
-		for idx := range sourceFileInfos {
+		nutsandbolts.SortFileInfos(sourceFileInfos, false)
 
-			if doDebug {
+		//---------------------------------------------------------------------
+		// Iterate over all files and directories and try to find a config file
+		//---------------------------------------------------------------------
 
-				fmt.Println("*** Search for", configFileName, "in", idx, sourceFileInfos[idx].Name(), sourceFileInfos[idx].IsDir())
-			}
+		for _, sourceFileInfo := range sourceFileInfos {
 
-			if !sourceFileInfos[idx].IsDir() && sourceFileInfos[idx].Name() == configFileName {
+			if !sourceFileInfo.IsDir() && (sourceFileInfo.Name() == configFileName) {
 
 				localBWConfig, err := blackwhite.NewBWConfigFromFile(localizer, filepath.Join(sourceFolder, configFileName), depth)
 
@@ -49,7 +46,9 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 					return err
 				}
 
-				deepCopyBWConfig = blackwhite.NewBWConfigFromBWConfig(bwConfig) // Deep copy
+				//-------------------------------------------------------------
+
+				deepCopyBWConfig = blackwhite.NewBWConfigFromBWConfig(bwConfig) // Deep copy now
 
 				if localBWConfig.DoBlacklistInherit() {
 
@@ -67,58 +66,41 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 					deepCopyBWConfig.Whitelist = blackwhite.NewRuleSetFromRuleSet(&localBWConfig.Whitelist)
 				}
 
-				break // Should be only ONE config-file per folder, so we can stop searching
+				break // There should be only ONE config-file per folder, so we can stop searching
 			}
 		}
 
-		for idx, sourceFileInfo := range sourceFileInfos {
-
-			if doDebug {
-
-				fmt.Println("*** Index                :", idx)
-				fmt.Println("*** sourceFolder         :", sourceFolder)
-				fmt.Println("*** destFolder           :", destFolder)
-				fmt.Println("*** sourceFileInfo.IsDir :", sourceFileInfo.IsDir())
-				fmt.Println("*** sourceFileInfo.Name  :", sourceFileInfo.Name())
-				fmt.Println("*** sourceFileInfo.Size  :", sourceFileInfo.Size())
-				fmt.Println("*** sourceFileInfo.Mode  :", sourceFileInfo.Mode())
-			}
+		for _, sourceFileInfo := range sourceFileInfos {
 
 			if !deepCopyBWConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir()) {
 
-				if sourceFileInfo.IsDir() {
+				if !osspecific.IsHiddenOrSystem(sourceFolder) {
 
-					if !osspecific.IsHiddenOrSystem(sourceFolder) { // TODO: Path?
+					newSource := filepath.Join(sourceFolder, sourceFileInfo.Name())
+					newDest := filepath.Join(destFolder, sourceFileInfo.Name())
 
-						newSourcePath := filepath.Join(sourceFolder, sourceFileInfo.Name())
-						newDestPath := filepath.Join(destFolder, sourceFileInfo.Name())
+					if sourceFileInfo.IsDir() {
 
-						if err = destFs.Mkdir(newDestPath, os.ModePerm); err == nil {
-
-							if err = copyDir(localizer, sourceFs, newSourcePath, destFs, newDestPath, deepCopyBWConfig, depth+1); err == nil {
-
-								if err = destFs.Chmod(newDestPath, sourceFileInfo.Mode()); err != nil {
-
-									return err
-								}
-							} else {
-
-								return err
-							}
-						} else {
+						if err = destFs.Mkdir(newDest, os.ModePerm); err != nil {
 
 							return err
 						}
-					}
-				} else {
 
-					if err = copyFile(
-						sourceFs,
-						filepath.Join(sourceFolder, sourceFileInfo.Name()),
-						destFs,
-						filepath.Join(destFolder, sourceFileInfo.Name())); err != nil {
+						if err = copyDir(localizer, sourceFs, newSource, destFs, newDest, deepCopyBWConfig, depth+1); err != nil {
 
-						return err
+							return err
+						}
+
+						if err = destFs.Chmod(newDest, sourceFileInfo.Mode()); err != nil {
+
+							return err
+						}
+					} else {
+
+						if err = copyFile(sourceFs, newSource, destFs, newDest); err != nil {
+
+							return err
+						}
 					}
 				}
 			}

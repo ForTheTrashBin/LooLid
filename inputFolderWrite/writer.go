@@ -19,7 +19,7 @@ type writer struct {
 	memFs        *afero.Fs
 }
 
-func newWriter(localizer *i18n.Localizer, outputFolder string, memFs *afero.Fs, x int) *writer {
+func newWriter(localizer *i18n.Localizer, outputFolder string, memFs *afero.Fs) *writer {
 
 	wrt := &writer{
 
@@ -80,15 +80,6 @@ func xxxcloseFile(f afero.File, reported *error) {
 
 func (wrt *writer) writeInputFolder() error {
 
-	var doDebug bool = false
-
-	if doDebug {
-
-		fmt.Println("*********************************************************************************")
-		fmt.Println("*** writeInputFolder")
-		fmt.Println("*********************************************************************************")
-	}
-
 	destFs := afero.NewOsFs()
 
 	err := cleanDir(destFs, wrt.outputFolder, *wrt.memFs)
@@ -96,12 +87,6 @@ func (wrt *writer) writeInputFolder() error {
 	if err != nil {
 
 		return err
-	}
-
-	if doDebug {
-
-		fmt.Println("*** cleanDir Ok!")
-		fmt.Println("---------------------------------------------------------------------------------")
 	}
 
 	//-------------------------------------------------------------------------
@@ -113,23 +98,17 @@ func (wrt *writer) writeInputFolder() error {
 		panic(err)
 	}
 
-	if doDebug {
-
-		fmt.Println("*** syncDir OK!")
-		fmt.Println("*********************************************************************************")
-	}
-
 	return nil
 }
 
 func InputFolderWrite(localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs) error {
 
-	return nil
+	return newWriter(localizer, outputfolder, memFs).writeInputFolder()
 }
 
 func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs, sigCh chan os.Signal) error {
 
-	writer := newWriter(localizer, outputfolder, memFs, 1)
+	writer := newWriter(localizer, outputfolder, memFs)
 
 	spinnerSuffix := writer.getLocalizedMessage(constants.SpinnerSuffixInputFolderWrite, "", "")
 	spinnerStopMessage := writer.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")

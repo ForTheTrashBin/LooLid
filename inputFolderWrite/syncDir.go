@@ -17,15 +17,6 @@ import (
 
 func syncDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, timeStamp time.Time, x int) error {
 
-	var doDebug bool = false
-
-	if doDebug {
-
-		fmt.Println("*********************************************************************************")
-		fmt.Print("*** syncDir sourceFolder <", sourceFolder, "> destFolder <", destFolder, ">\n")
-		fmt.Println("*********************************************************************************")
-	}
-
 	//-------------------------------------------------------------------------
 	// A 'local' function to calculate the MD5-hash of a file
 	//-------------------------------------------------------------------------
@@ -59,41 +50,28 @@ func syncDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder
 
 	if err == nil {
 
-		nutsandbolts.SortFileInfos(sourceFileInfos, true)
-
 		configFileName := nutsandbolts.GetConfigFileName()
 
-		for idx, sourceFileInfo := range sourceFileInfos {
+		nutsandbolts.SortFileInfos(sourceFileInfos, true)
 
-			if doDebug {
+		for _, sourceFileInfo := range sourceFileInfos {
 
-				fmt.Println("*** Index                :", idx)
-				fmt.Println("*** sourceFolder         :", sourceFolder)
-				fmt.Println("*** destFolder           :", destFolder)
-				fmt.Println("*** sourceFileInfo.IsDir :", sourceFileInfo.IsDir())
-				fmt.Println("*** sourceFileInfo.Name  :", sourceFileInfo.Name())
-				fmt.Println("*** sourceFileInfo.Size  :", sourceFileInfo.Size())
-				fmt.Println("*** sourceFileInfo.Mode  :", sourceFileInfo.Mode())
-			}
+			newSource := filepath.Join(sourceFolder, sourceFileInfo.Name())
+			newDest := filepath.Join(destFolder, sourceFileInfo.Name())
 
 			if sourceFileInfo.IsDir() {
 
-				newSourcePath := filepath.Join(sourceFolder, sourceFileInfo.Name())
-				newDestPath := filepath.Join(destFolder, sourceFileInfo.Name())
+				if err = destFs.MkdirAll(newDest, os.ModePerm); err != nil { // ALL rights on directory
 
-				if err = destFs.MkdirAll(newDestPath, os.ModePerm); err == nil { // ALL rights on directory
+					return err
+				}
 
-					if err = syncDir(sourceFs, newSourcePath, destFs, newDestPath, timeStamp, x+1); err == nil {
+				if err = syncDir(sourceFs, newSource, destFs, newDest, timeStamp, x+1); err != nil {
 
-						if err = destFs.Chmod(newDestPath, sourceFileInfo.Mode()); err != nil {
+					return err
+				}
 
-							return err
-						}
-					} else {
-
-						return err
-					}
-				} else {
+				if err = destFs.Chmod(newDest, sourceFileInfo.Mode()); err != nil {
 
 					return err
 				}
@@ -101,51 +79,28 @@ func syncDir(sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder
 
 				if sourceFileInfo.Name() != configFileName { // Never copy configuration files
 
-					sourcePath := filepath.Join(sourceFolder, sourceFileInfo.Name())
-					destPath := filepath.Join(destFolder, sourceFileInfo.Name())
-
-					destFileInfo, err := destFs.Stat(destPath)
+					destFileInfo, err := destFs.Stat(newDest)
 
 					if err == nil {
 
-						if doDebug {
-
-							fmt.Println("*** The file does exist")
-						}
-
 						if destFileInfo.Size() == sourceFileInfo.Size() { // Are the files of same size
 
-							ramHash, _ := calculateMD5(sourceFs, sourcePath)
-							diskHash, _ := calculateMD5(destFs, destPath)
+							ramHash, _ := calculateMD5(sourceFs, newSource)
+							diskHash, _ := calculateMD5(destFs, newDest)
 
 							if ramHash == diskHash { // Are the files of same content
-
-								if doDebug {
-
-									fmt.Println("*** The file is ident")
-								}
 
 								continue // Leave file AND timestamp untouched
 							}
 						}
 
-						if doDebug {
-
-							fmt.Println("*** The file is NOT ident --> need to copy")
-						}
-
-						if err = copyFile(sourceFs, sourcePath, destFs, destPath); err != nil {
+						if err = copyFile(sourceFs, newSource, destFs, newDest); err != nil {
 
 							return err
 						}
 					} else {
 
-						if doDebug {
-
-							fmt.Println("*** The file does NOT exist --> need to copy")
-						}
-
-						if err = copyFile(sourceFs, sourcePath, destFs, destPath); err != nil {
+						if err = copyFile(sourceFs, newSource, destFs, newDest); err != nil {
 
 							return err
 						}

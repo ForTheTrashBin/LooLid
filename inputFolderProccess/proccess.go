@@ -47,9 +47,9 @@ func (prc *proccess) proccessInputFolder() error {
 	return nil
 }
 
-func InputFolderProccess(localizer *i18n.Localizer, memFs *afero.MemMapFs) error {
+func InputFolderProccess(localizer *i18n.Localizer, memFs *afero.Fs) error {
 
-	return nil // TODO:
+	return newProccess(localizer, memFs).proccessInputFolder()
 }
 
 func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh chan os.Signal) error {

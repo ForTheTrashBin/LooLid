@@ -88,9 +88,9 @@ func (rdr *reader) readInputFolder() error {
 	return copyDir(rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", bwConfig, 0)
 }
 
-func InputFolderRead(localizer *i18n.Localizer, inputfolder string, memFs *afero.MemMapFs) error {
+func InputFolderRead(localizer *i18n.Localizer, inputfolder string, memFs *afero.Fs) error {
 
-	return nil // TODO:
+	return newReader(localizer, inputfolder, memFs).readInputFolder()
 }
 
 func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *afero.Fs, sigCh chan os.Signal) error {
