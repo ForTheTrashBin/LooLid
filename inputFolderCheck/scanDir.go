@@ -13,7 +13,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, bwConfig blackwhite.Config) error {
+func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, bwConfig *blackwhite.BWConfig, depth int) error {
 
 	//-------------------------------------------------------------------------
 	// Get all files and directories in the source folder
@@ -141,58 +141,42 @@ func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, bwConfig bla
 
 		if hasDirs {
 
+			deepCopyBWConfig := blackwhite.NewBWConfigFromBWConfig(bwConfig)
+
 			for _, sourceFileInfo := range sourceFileInfos {
 
 				if !sourceFileInfo.IsDir() && sourceFileInfo.Name() == configFileName {
 
-					localConfig, ok, err := blackwhite.LoadConfigFile(chk.localizer, filepath.Join(sourceFolder, configFileName))
+					localBWConfig, err := blackwhite.NewBWConfigFromFile(chk.localizer, filepath.Join(sourceFolder, configFileName), depth)
 
-					if err == nil {
-
-						if ok {
-
-							// Create a local independent copy of bwConfig so modifications
-							// (Merge/assignment) for this folder do not affect the caller
-							// after recursion returns. We must copy the slices to avoid
-							// sharing the underlying array.
-							localBW := bwConfig
-							localBW.Blacklist.Rules = append([]blackwhite.Rule(nil), bwConfig.Blacklist.Rules...)
-							localBW.Whitelist.Rules = append([]blackwhite.Rule(nil), bwConfig.Whitelist.Rules...)
-
-							if localConfig.DoBlacklistInherit() {
-
-								localBW.Blacklist.MergeRuleSet(&localConfig.Blacklist)
-							} else {
-
-								localBW.Blacklist = localConfig.Blacklist
-							}
-
-							if localConfig.DoWhitelistInherit() {
-
-								localBW.Whitelist.MergeRuleSet(&localConfig.Whitelist)
-							} else {
-
-								localBW.Whitelist = localConfig.Whitelist
-							}
-
-							// Use the local copy for subsequent recursion and processing
-							bwConfig = localBW
-						}
-					} else {
+					if err != nil {
 
 						return err
 					}
-					//Found
 
-					break
+					if localBWConfig.DoBlacklistInherit() {
+
+						deepCopyBWConfig.Blacklist.MergeRuleSet(&localBWConfig.Blacklist)
+					} else {
+
+						deepCopyBWConfig.Blacklist = blackwhite.NewRuleSetFromRuleSet(&localBWConfig.Blacklist)
+					}
+
+					if localBWConfig.DoWhitelistInherit() {
+
+						deepCopyBWConfig.Whitelist.MergeRuleSet(&localBWConfig.Whitelist)
+					} else {
+
+						deepCopyBWConfig.Whitelist = blackwhite.NewRuleSetFromRuleSet(&localBWConfig.Whitelist)
+					}
+
+					break // Should be only ONE config-file per folder, so we can stop searching
 				}
 			}
 
 			for _, sourceFileInfo := range sourceFileInfos {
 
-				isListed := bwConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir())
-
-				if !isListed {
+				if !deepCopyBWConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir()) {
 
 					if sourceFileInfo.IsDir() {
 
@@ -200,7 +184,7 @@ func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, bwConfig bla
 
 							newSourcePath := filepath.Join(sourceFolder, sourceFileInfo.Name())
 
-							if err = chk.scanDir(sourceFs, newSourcePath, bwConfig); err != nil {
+							if err = chk.scanDir(sourceFs, newSourcePath, deepCopyBWConfig, depth+1); err != nil {
 
 								return err
 							}

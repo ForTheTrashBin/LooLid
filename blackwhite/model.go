@@ -12,6 +12,7 @@ type Rule struct {
 
 	patternMatcher patternMatcher
 	patternScope   patternScope
+	patternDepth   int
 }
 
 //-----------------------------------------------------------------------------
@@ -31,7 +32,7 @@ type RuleSet struct {
 // Config represents the Black- and Whitelist configuration
 //-----------------------------------------------------------------------------
 
-type Config struct {
+type BWConfig struct {
 	Blacklist RuleSet `toml:"blacklist"`
 	Whitelist RuleSet `toml:"whitelist"`
 }

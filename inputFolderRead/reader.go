@@ -83,9 +83,9 @@ func (rdr *reader) readInputFolder() error {
 
 	diskFs := afero.NewOsFs()
 
-	var bwConfig blackwhite.Config
+	bwConfig := blackwhite.NewBWConfig() // Start with default config
 
-	return copyDir(rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", bwConfig)
+	return copyDir(rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", bwConfig, 0)
 }
 
 func InputFolderRead(localizer *i18n.Localizer, inputfolder string, memFs *afero.MemMapFs) error {

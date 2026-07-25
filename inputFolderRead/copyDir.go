@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, bwConfig blackwhite.Config) error {
+func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, bwConfig *blackwhite.BWConfig, depth int) error {
 
 	var doDebug bool = false
 
@@ -31,6 +31,8 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 		configFileName := nutsandbolts.GetConfigFileName()
 
+		deepCopyBWConfig := bwConfig
+
 		for idx := range sourceFileInfos {
 
 			if doDebug {
@@ -40,46 +42,32 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 			if !sourceFileInfos[idx].IsDir() && sourceFileInfos[idx].Name() == configFileName {
 
-				localConfig, ok, err := blackwhite.LoadConfigFile(localizer, filepath.Join(sourceFolder, configFileName))
+				localBWConfig, err := blackwhite.NewBWConfigFromFile(localizer, filepath.Join(sourceFolder, configFileName), depth)
 
-				if err == nil {
-
-					if ok {
-
-						// Create a local independent copy of bwConfig so modifications
-						// (Merge/assignment) for this folder do not affect the caller
-						// after recursion returns. We must copy the slices to avoid
-						// sharing the underlying array.
-						localBW := bwConfig
-						localBW.Blacklist.Rules = append([]blackwhite.Rule(nil), bwConfig.Blacklist.Rules...)
-						localBW.Whitelist.Rules = append([]blackwhite.Rule(nil), bwConfig.Whitelist.Rules...)
-
-						if localConfig.DoBlacklistInherit() {
-
-							localBW.Blacklist.MergeRuleSet(&localConfig.Blacklist)
-						} else {
-
-							localBW.Blacklist = localConfig.Blacklist
-						}
-
-						if localConfig.DoWhitelistInherit() {
-
-							localBW.Whitelist.MergeRuleSet(&localConfig.Whitelist)
-						} else {
-
-							localBW.Whitelist = localConfig.Whitelist
-						}
-
-						// Use the local copy for subsequent recursion and processing
-						bwConfig = localBW
-					}
-				} else {
+				if err != nil {
 
 					return err
 				}
-				//Found
 
-				break
+				deepCopyBWConfig = blackwhite.NewBWConfigFromBWConfig(bwConfig) // Deep copy
+
+				if localBWConfig.DoBlacklistInherit() {
+
+					deepCopyBWConfig.Blacklist.MergeRuleSet(&localBWConfig.Blacklist)
+				} else {
+
+					deepCopyBWConfig.Blacklist = blackwhite.NewRuleSetFromRuleSet(&localBWConfig.Blacklist)
+				}
+
+				if localBWConfig.DoWhitelistInherit() {
+
+					deepCopyBWConfig.Whitelist.MergeRuleSet(&localBWConfig.Whitelist)
+				} else {
+
+					deepCopyBWConfig.Whitelist = blackwhite.NewRuleSetFromRuleSet(&localBWConfig.Whitelist)
+				}
+
+				break // Should be only ONE config-file per folder, so we can stop searching
 			}
 		}
 
@@ -96,9 +84,7 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 				fmt.Println("*** sourceFileInfo.Mode  :", sourceFileInfo.Mode())
 			}
 
-			isListed := bwConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir())
-
-			if !isListed {
+			if !deepCopyBWConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir()) {
 
 				if sourceFileInfo.IsDir() {
 
@@ -109,7 +95,7 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 						if err = destFs.Mkdir(newDestPath, os.ModePerm); err == nil {
 
-							if err = copyDir(localizer, sourceFs, newSourcePath, destFs, newDestPath, bwConfig); err == nil {
+							if err = copyDir(localizer, sourceFs, newSourcePath, destFs, newDestPath, deepCopyBWConfig, depth+1); err == nil {
 
 								if err = destFs.Chmod(newDestPath, sourceFileInfo.Mode()); err != nil {
 

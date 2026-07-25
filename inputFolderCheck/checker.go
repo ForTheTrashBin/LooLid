@@ -285,9 +285,9 @@ func (chk *checker) checkBulkData() error {
 
 	diskFs := afero.NewOsFs()
 
-	var bwConfig blackwhite.Config
+	bwConfig := blackwhite.NewBWConfig()
 
-	if err := chk.scanDir(diskFs, chk.inputFolder, bwConfig); err != nil {
+	if err := chk.scanDir(diskFs, chk.inputFolder, bwConfig, 0); err != nil {
 
 		return err
 	}

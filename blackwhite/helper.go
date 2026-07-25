@@ -42,9 +42,9 @@ const (
 // prepare all rules
 //-----------------------------------------------------------------------------
 
-func (cfg *Config) prepare(localizer *i18n.Localizer) error {
+func (bwConfig *BWConfig) prepare(localizer *i18n.Localizer, patternDepth int) error {
 
-	if err := cfg.Blacklist.prepare(localizer); err != nil {
+	if err := bwConfig.Blacklist.prepare(localizer, patternDepth); err != nil {
 
 		return errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
 
@@ -55,7 +55,7 @@ func (cfg *Config) prepare(localizer *i18n.Localizer) error {
 			}}))
 	}
 
-	if err := cfg.Whitelist.prepare(localizer); err != nil {
+	if err := bwConfig.Whitelist.prepare(localizer, patternDepth); err != nil {
 
 		return errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
 
@@ -71,21 +71,21 @@ func (cfg *Config) prepare(localizer *i18n.Localizer) error {
 
 //-----------------------------------------------------------------------------
 
-func (rs *RuleSet) prepare(localizer *i18n.Localizer) error {
+func (ruleSet *RuleSet) prepare(localizer *i18n.Localizer, patternDepth int) error {
 
-	if rs.TomlInherit == nil {
+	if ruleSet.TomlInherit == nil {
 
-		rs.inherit = true
+		ruleSet.inherit = true
 	} else {
 
-		rs.inherit = *rs.TomlInherit
+		ruleSet.inherit = *ruleSet.TomlInherit
 	}
 
 	//-------------------------------------------------------------------------
 
-	for idx := range rs.Rules {
+	for idx := range ruleSet.Rules {
 
-		rule := &rs.Rules[idx]
+		rule := &ruleSet.Rules[idx]
 
 		//---------------------------------------------------------------------
 
@@ -108,6 +108,10 @@ func (rs *RuleSet) prepare(localizer *i18n.Localizer) error {
 		}
 
 		rule.patternScope = patternScope
+
+		//---------------------------------------------------------------------
+
+		rule.patternDepth = patternDepth
 	}
 
 	return nil
@@ -145,9 +149,9 @@ func parseTomlScope(localizer *i18n.Localizer, tomlScope string) (patternScope, 
 
 //-----------------------------------------------------------------------------
 
-func (ar *Rule) matchRule(name string, isDir bool) bool {
+func (rule *Rule) matchRule(name string, isDir bool) bool {
 
-	switch ar.patternScope {
+	switch rule.patternScope {
 
 	case patternScopeFile:
 
@@ -164,7 +168,7 @@ func (ar *Rule) matchRule(name string, isDir bool) bool {
 		}
 	}
 
-	return ar.patternMatcher.matchPattern(name)
+	return rule.patternMatcher.matchPattern(name)
 }
 
 //-----------------------------------------------------------------------------

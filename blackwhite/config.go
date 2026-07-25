@@ -11,10 +11,96 @@ import (
 )
 
 //-----------------------------------------------------------------------------
-// loadLocalFile reads the specified 'LooLid.config'
+// Creates a new blackwhite.BWConfig with default values
 //-----------------------------------------------------------------------------
 
-func LoadConfigFile(localizer *i18n.Localizer, fileName string) (*Config, bool, error) {
+func NewBWConfig() *BWConfig {
+
+	bwConfig := &BWConfig{}
+
+	bwConfig.Blacklist.inherit = true
+	bwConfig.Whitelist.inherit = true
+
+	return bwConfig
+}
+
+//-----------------------------------------------------------------------------
+// NewRuleSetFromRuleSet creates a deep copy of the specified RuleSet.
+//-----------------------------------------------------------------------------
+
+func NewRuleSetFromRuleSet(ruleSet *RuleSet) RuleSet {
+
+	copyBoolPtr := func(src *bool) *bool {
+
+		if src == nil {
+
+			return nil
+		}
+
+		dst := *src
+
+		return &dst
+	}
+
+	copyRules := func(rules []Rule) []Rule {
+
+		if rules == nil {
+
+			return nil
+		}
+
+		dst := make([]Rule, len(rules))
+
+		for i := range rules {
+
+			dst[i] = Rule{
+
+				TomlPattern:    rules[i].TomlPattern,
+				TomlScope:      rules[i].TomlScope,
+				patternDepth:   rules[i].patternDepth,
+				patternMatcher: rules[i].patternMatcher,
+				patternScope:   rules[i].patternScope,
+			}
+		}
+
+		return dst
+	}
+
+	if ruleSet == nil {
+
+		return RuleSet{}
+	}
+
+	return RuleSet{
+		TomlInherit: copyBoolPtr(ruleSet.TomlInherit),
+		Rules:       copyRules(ruleSet.Rules),
+		inherit:     ruleSet.inherit,
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Creates a new BWConfig as a deep copy of the specified BWConfig
+//-----------------------------------------------------------------------------
+
+func NewBWConfigFromBWConfig(bwConfig *BWConfig) *BWConfig {
+
+	if bwConfig == nil {
+
+		return nil
+	}
+
+	return &BWConfig{
+
+		Blacklist: NewRuleSetFromRuleSet(&bwConfig.Blacklist),
+		Whitelist: NewRuleSetFromRuleSet(&bwConfig.Whitelist),
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Creates a new blackwhite.BWConfig from the specified file
+//-----------------------------------------------------------------------------
+
+func NewBWConfigFromFile(localizer *i18n.Localizer, fileName string, patternDepth int) (*BWConfig, error) {
 
 	data, err := os.ReadFile(fileName)
 
@@ -22,17 +108,17 @@ func LoadConfigFile(localizer *i18n.Localizer, fileName string) (*Config, bool, 
 
 		if os.IsNotExist(err) {
 
-			return &Config{}, false, nil
+			return NewBWConfig(), nil
 		}
 
-		return nil, false, err
+		return nil, err
 	}
 
 	//-------------------------------------------------------------------------
 
-	var cfg Config
+	bwConfig := NewBWConfig()
 
-	if _, err := toml.Decode(string(data), &cfg); err != nil {
+	if _, err := toml.Decode(string(data), bwConfig); err != nil {
 
 		relativePath, relError := filepath.Rel(constants.AppConfig_DefaultInputFolder, fileName)
 
@@ -41,7 +127,7 @@ func LoadConfigFile(localizer *i18n.Localizer, fileName string) (*Config, bool, 
 			relativePath = filepath.Base(fileName)
 		}
 
-		return nil, false, errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
+		return nil, errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
 
 			MessageID: constants.BlackWhiteError_ReadConfig,
 			TemplateData: map[string]string{
@@ -51,37 +137,77 @@ func LoadConfigFile(localizer *i18n.Localizer, fileName string) (*Config, bool, 
 			}}))
 	}
 
-	return &cfg, true, cfg.prepare(localizer)
+	return bwConfig, bwConfig.prepare(localizer, patternDepth)
 }
 
 //-----------------------------------------------------------------------------
 // Checks all rules of Black- and Whitelist
 //-----------------------------------------------------------------------------
 
-func (cfg *Config) IsListed(name string, isDir bool) bool {
+func (bwConfig *BWConfig) IsListed(name string, isDir bool) bool {
 
-	isListed := cfg.IsBlacklisted(name, isDir)
+	bestDepth := -1
 
-	if isListed {
+	blackMatch := false
+	whiteMatch := false
 
-		if cfg.IsWhitelisted(name, isDir) {
+	for idx := range bwConfig.Blacklist.Rules {
 
-			isListed = false
+		rule := &bwConfig.Blacklist.Rules[idx]
+
+		if !rule.matchRule(name, isDir) {
+
+			continue
+		}
+
+		if rule.patternDepth > bestDepth {
+
+			bestDepth = rule.patternDepth
+			blackMatch = true
+			whiteMatch = false
+		} else if rule.patternDepth == bestDepth {
+
+			blackMatch = true
 		}
 	}
 
-	return isListed
+	for idx := range bwConfig.Whitelist.Rules {
+
+		rule := &bwConfig.Whitelist.Rules[idx]
+
+		if !rule.matchRule(name, isDir) {
+
+			continue
+		}
+
+		if rule.patternDepth > bestDepth {
+
+			bestDepth = rule.patternDepth
+			blackMatch = false
+			whiteMatch = true
+		} else if rule.patternDepth == bestDepth {
+
+			whiteMatch = true
+		}
+	}
+
+	if whiteMatch {
+
+		return false
+	}
+
+	return blackMatch
 }
 
 //-----------------------------------------------------------------------------
 // IsBlacklisted checks the Blacklist only
 //-----------------------------------------------------------------------------
 
-func (cfg *Config) IsBlacklisted(name string, isDir bool) bool {
+func (bwConfig *BWConfig) IsBlacklisted(name string, isDir bool) bool {
 
-	for idx := range cfg.Blacklist.Rules {
+	for idx := range bwConfig.Blacklist.Rules {
 
-		if cfg.Blacklist.Rules[idx].matchRule(name, isDir) {
+		if bwConfig.Blacklist.Rules[idx].matchRule(name, isDir) {
 
 			return true
 		}
@@ -90,20 +216,20 @@ func (cfg *Config) IsBlacklisted(name string, isDir bool) bool {
 	return false
 }
 
-func (cfg *Config) DoBlacklistInherit() bool {
+func (bwConfig *BWConfig) DoBlacklistInherit() bool {
 
-	return cfg.Blacklist.inherit
+	return bwConfig.Blacklist.inherit
 }
 
 //-----------------------------------------------------------------------------
 // IsWhitelisted checks the Whitelist only
 //-----------------------------------------------------------------------------
 
-func (cfg *Config) IsWhitelisted(name string, isDir bool) bool {
+func (bwConfig *BWConfig) IsWhitelisted(name string, isDir bool) bool {
 
-	for idx := range cfg.Whitelist.Rules {
+	for idx := range bwConfig.Whitelist.Rules {
 
-		if cfg.Whitelist.Rules[idx].matchRule(name, isDir) {
+		if bwConfig.Whitelist.Rules[idx].matchRule(name, isDir) {
 
 			return true
 		}
@@ -112,16 +238,20 @@ func (cfg *Config) IsWhitelisted(name string, isDir bool) bool {
 	return false
 }
 
-func (cfg *Config) DoWhitelistInherit() bool {
+func (bwConfig *BWConfig) DoWhitelistInherit() bool {
 
-	return cfg.Whitelist.inherit
+	return bwConfig.Whitelist.inherit
 }
 
 //-----------------------------------------------------------------------------
 
-func (rs *RuleSet) MergeRuleSet(src *RuleSet) {
+func (ruleSet *RuleSet) MergeRuleSet(src *RuleSet) {
 
-	rs.Rules = append(rs.Rules, src.Rules...)
+	ruleSet.TomlInherit = src.TomlInherit
+
+	ruleSet.Rules = append(ruleSet.Rules, src.Rules...)
+
+	ruleSet.inherit = src.inherit
 }
 
 //-----------------------------------------------------------------------------
