@@ -106,7 +106,9 @@ func testableMain(args []string) int {
 	localizer := i18n.NewLocalizer(bundle, systemLanguage)
 
 	mainUsageMessage = localizer.MustLocalize(
+
 		&i18n.LocalizeConfig{
+
 			MessageID:    "flag.mainUsageMessage",
 			TemplateData: map[string]string{"pureAppName": pureAppName},
 		})
@@ -211,10 +213,7 @@ func main() {
 
 				frame, more := frames.Next()
 
-				fmt.Printf("%s:%d\n",
-
-					filepath.Base(frame.File),
-					frame.Line)
+				fmt.Printf("%s:%d\n", filepath.Base(frame.File), frame.Line)
 
 				if !more {
 

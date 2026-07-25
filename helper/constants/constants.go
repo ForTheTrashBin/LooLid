@@ -25,6 +25,7 @@ const (
 var ErrInterrupted = errors.New("interrupted by user")
 var ErrInputFolderNotCorrect = errors.New("err_inputfolder")
 var ErrBulkDataNotCorrect = errors.New("err_bulkdata")
+var ErrRecoveredPanicWithoutType = errors.New("err_recovered_panic_without_type")
 
 const (
 	CheckError_NoFileInfo              = "check.no_fileinfo"

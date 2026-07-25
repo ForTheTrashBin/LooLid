@@ -101,6 +101,7 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 	spinnerStopMessage := reader.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 
 	spinnerConfig := yacspin.Config{
+
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
 		CharSet:           yacspin.CharSets[constants.Spinner_CharSet],
 		Suffix:            " " + spinnerSuffix,
@@ -115,12 +116,14 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 	spinner, err := yacspin.New(spinnerConfig)
 
 	if err != nil {
+
 		panic(fmt.Errorf("spinner init failed: %w", err))
 	}
 
 	spinner.Reverse()
 
 	if err := spinner.Start(); err != nil {
+
 		panic(fmt.Errorf("spinner start failed: %w", err))
 	}
 
@@ -149,11 +152,12 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 
 				default:
 
-					panicChannel <- errors.New("Recovered panic without type")
+					panicChannel <- constants.ErrRecoveredPanicWithoutType
 				}
-			}
+			} else {
 
-			panicChannel <- errors.New("Recovered panic without type")
+				panicChannel <- constants.ErrRecoveredPanicWithoutType
+			}
 		}()
 
 		doneChannel <- reader.readInputFolder()
@@ -177,33 +181,9 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 
 		if err != nil {
 
-			if err == constants.ErrInputFolderNotCorrect {
-
-				stopFailMessage := reader.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				return err
-			}
-
-			if err == constants.ErrBulkDataNotCorrect {
-
-				stopFailMessage := reader.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				return err
-			}
-
 			spinner.StopFailMessage(err.Error())
 
 			spinner.StopFail()
-
-			return err
 		}
 
 		return err

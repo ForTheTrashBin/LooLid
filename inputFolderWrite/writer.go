@@ -135,6 +135,7 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 	spinnerStopMessage := writer.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 
 	spinnerConfig := yacspin.Config{
+
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
 		CharSet:           yacspin.CharSets[constants.Spinner_CharSet],
 		Suffix:            " " + spinnerSuffix,
@@ -149,12 +150,14 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 	spinner, err := yacspin.New(spinnerConfig)
 
 	if err != nil {
+
 		panic(fmt.Errorf("spinner init failed: %w", err))
 	}
 
 	spinner.Reverse()
 
 	if err := spinner.Start(); err != nil {
+
 		panic(fmt.Errorf("spinner start failed: %w", err))
 	}
 
@@ -162,7 +165,7 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 
 	//-------------------------------------------------------------------------
 
-	xdoneChannel := make(chan error, 1)
+	doneChannel := make(chan error, 1)
 	panicChannel := make(chan error, 1)
 
 	go func() {
@@ -183,14 +186,15 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 
 				default:
 
-					panicChannel <- errors.New("Recovered panic without type")
+					panicChannel <- constants.ErrRecoveredPanicWithoutType
 				}
-			}
+			} else {
 
-			panicChannel <- errors.New("Recovered panic without type")
+				panicChannel <- constants.ErrRecoveredPanicWithoutType
+			}
 		}()
 
-		xdoneChannel <- writer.writeInputFolder()
+		doneChannel <- writer.writeInputFolder()
 	}()
 
 	//-------------------------------------------------------------------------
@@ -207,37 +211,13 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 
 		return constants.ErrInterrupted
 
-	case err := <-xdoneChannel:
+	case err := <-doneChannel:
 
 		if err != nil {
-
-			if err == constants.ErrInputFolderNotCorrect {
-
-				stopFailMessage := writer.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				return err
-			}
-
-			if err == constants.ErrBulkDataNotCorrect {
-
-				stopFailMessage := writer.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				return err
-			}
 
 			spinner.StopFailMessage(err.Error())
 
 			spinner.StopFail()
-
-			return err
 		}
 
 		return err

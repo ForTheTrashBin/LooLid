@@ -60,6 +60,7 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 	spinnerStopMessage := proccess.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 
 	spinnerConfig := yacspin.Config{
+
 		Frequency:         constants.Spinner_FrequencyMS * time.Millisecond,
 		CharSet:           yacspin.CharSets[constants.Spinner_CharSet],
 		Suffix:            " " + spinnerSuffix,
@@ -74,12 +75,14 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 	spinner, err := yacspin.New(spinnerConfig)
 
 	if err != nil {
+
 		panic(fmt.Errorf("spinner init failed: %w", err))
 	}
 
 	spinner.Reverse()
 
 	if err := spinner.Start(); err != nil {
+
 		panic(fmt.Errorf("spinner start failed: %w", err))
 	}
 
@@ -108,11 +111,12 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 
 				default:
 
-					panicChannel <- errors.New("Recovered panic without type")
+					panicChannel <- constants.ErrRecoveredPanicWithoutType
 				}
-			}
+			} else {
 
-			panicChannel <- errors.New("Recovered panic without type")
+				panicChannel <- constants.ErrRecoveredPanicWithoutType
+			}
 		}()
 
 		doneChannel <- proccess.proccessInputFolder()
@@ -136,33 +140,9 @@ func InputFolderProccessAsync(localizer *i18n.Localizer, memFs *afero.Fs, sigCh 
 
 		if err != nil {
 
-			if err == constants.ErrInputFolderNotCorrect {
-
-				stopFailMessage := proccess.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				return err
-			}
-
-			if err == constants.ErrBulkDataNotCorrect {
-
-				stopFailMessage := proccess.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				return err
-			}
-
 			spinner.StopFailMessage(err.Error())
 
 			spinner.StopFail()
-
-			return err
 		}
 
 		return err
