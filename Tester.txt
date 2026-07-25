@@ -629,3 +629,47 @@ allerdings von der jeweiligen Integration ab. In einer ChatGPT-fähigen VS-Code-
 kann ich Änderungen an Dateien vorschlagen oder – je nach Modus und deinen Einstellungen – auch direkt vornehmen. 
 Ich entscheide aber nie selbstständig über Änderungen: Du behältst die Kontrolle und bestätigst die vorgeschlagenen 
 Aktionen. Für ein Projekt wie deines ist das eine deutlich angenehmere Arbeitsweise als lange Codeblöcke im Chat.
+
+Kurzantwort: Mach vor dem Weitergeben eine Kopie des Slice-Headers +, falls nötig, elementweise Kopien. Beispiele:
+
+Kopie des Slice-Backings (verhindert, dass Append/Swap im Aufrufer wirkt):
+
+local := append([]T(nil), orig...)
+
+make+copy äquivalent:
+
+local := make([]T, len(orig))
+copy(local, orig)
+
+Deep-copy für Slice von Struct-Pointern:
+
+func deepCopyPtrSlice[T any](s []*T) []*T {
+    out := make([]*T, len(s))
+    for i, v := range s {
+        if v == nil { continue }
+        cp := *v
+        out[i] = &cp
+    }
+    return out
+}
+
+Wenn Elemente Interfaces/komplex sind: verlangen einen Kopierer:
+
+func copyWithCopier[T any](s []T, copier func(T) T) []T {
+    out := make([]T, len(s))
+    for i := range s { out[i] = copier(s[i]) }
+    return out
+}
+
+Aufruf in rekursiver Funktion:
+
+func recurse(items []MyType) {
+    // Für reine Slice-Kopie:
+    local := append([]MyType(nil), items...)
+    // Oder mit elementweisem Kopierer:
+    // local := copyWithCopier(items, myCopier)
+
+    // Modifiziere local / füge hinzu — Aufrufer bleibt unverändert
+    recurse(local)
+}
+*/

@@ -46,21 +46,32 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 					if ok {
 
+						// Create a local independent copy of bwConfig so modifications
+						// (Merge/assignment) for this folder do not affect the caller
+						// after recursion returns. We must copy the slices to avoid
+						// sharing the underlying array.
+						localBW := bwConfig
+						localBW.Blacklist.Rules = append([]blackwhite.Rule(nil), bwConfig.Blacklist.Rules...)
+						localBW.Whitelist.Rules = append([]blackwhite.Rule(nil), bwConfig.Whitelist.Rules...)
+
 						if localConfig.DoBlacklistInherit() {
 
-							bwConfig.Blacklist.MergeRuleSet(&localConfig.Blacklist)
+							localBW.Blacklist.MergeRuleSet(&localConfig.Blacklist)
 						} else {
 
-							bwConfig.Blacklist = localConfig.Blacklist
+							localBW.Blacklist = localConfig.Blacklist
 						}
 
 						if localConfig.DoWhitelistInherit() {
 
-							bwConfig.Whitelist.MergeRuleSet(&localConfig.Whitelist)
+							localBW.Whitelist.MergeRuleSet(&localConfig.Whitelist)
 						} else {
 
-							bwConfig.Whitelist = localConfig.Whitelist
+							localBW.Whitelist = localConfig.Whitelist
 						}
+
+						// Use the local copy for subsequent recursion and processing
+						bwConfig = localBW
 					}
 				} else {
 

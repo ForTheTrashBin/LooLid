@@ -185,15 +185,20 @@ func (chk *checker) checkSymLink(entry Entry) {
 // Check all entries with all methods
 //-----------------------------------------------------------------------------
 
+func (chk *checker) validateEntry(entry Entry) {
+
+	chk.checkInvalidWindowsChar(entry)
+	chk.checkTrailingDotSpace(entry)
+	chk.checkReservedWindowsName(entry)
+	chk.checkFileNameAndPathNameLength(entry)
+	chk.checkUnicodeNormalization(entry)
+	chk.checkSymLink(entry)
+}
+
 func (chk *checker) validateEntries(entries []Entry) {
 
 	for _, entry := range entries {
 
-		chk.checkInvalidWindowsChar(entry)
-		chk.checkTrailingDotSpace(entry)
-		chk.checkReservedWindowsName(entry)
-		chk.checkFileNameAndPathNameLength(entry)
-		chk.checkUnicodeNormalization(entry)
-		chk.checkSymLink(entry)
+		chk.validateEntry(entry)
 	}
 }

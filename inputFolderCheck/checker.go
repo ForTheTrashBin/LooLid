@@ -8,10 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ForTheTrashBin/LooLid/blackwhite"
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/spf13/afero"
 	"github.com/theckman/yacspin"
 )
 
@@ -148,7 +150,7 @@ func (chk *checker) checkInputFolder() error {
 	}
 
 	//-------------------------------------------------------------------------
-	// On windows directory must not be hidden or system
+	// On windows the directory must not be hidden or system
 	//-------------------------------------------------------------------------
 
 	if osspecific.IsHiddenOrSystem(chk.inputFolder) {
@@ -172,6 +174,7 @@ func (chk *checker) checkInputFolder() error {
 	_, err = os.ReadDir(chk.inputFolder)
 
 	if err != nil {
+
 		if os.IsPermission(err) {
 
 			return errors.New(chk.getLocalizedMessage(constants.CheckError_DirectoryNoPermission, chk.inputFolder, ""))
@@ -280,7 +283,11 @@ func (chk *checker) checkInputFolder() error {
 
 func (chk *checker) checkBulkData() error {
 
-	if err := chk.scanDirectories(); err != nil {
+	diskFs := afero.NewOsFs()
+
+	var bwConfig blackwhite.Config
+
+	if err := chk.scanDir(diskFs, chk.inputFolder, bwConfig); err != nil {
 
 		return err
 	}

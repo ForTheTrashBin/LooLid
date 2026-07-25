@@ -27,6 +27,7 @@ func GetPureAppName() string {
 	executablePath, err := os.Executable()
 
 	if err != nil {
+
 		executablePath = os.Args[0]
 	}
 
@@ -43,18 +44,34 @@ func GetPureAppName() string {
 	executableEndings := []string{".exe", ".com", ".cmd", ".bat"}
 
 	for trimmed {
+
 		trimmed = false
 
 		ext := filepath.Ext(executableBase)
 
 		for _, executableEnding := range executableEndings {
+
 			if strings.EqualFold(ext, executableEnding) {
+
 				executableBase = strings.TrimSuffix(executableBase, ext)
+
 				trimmed = true
+
 				break
 			}
 		}
 	}
+
+	//-------------------------------------------------------------------------
+	// When running in debug mode, return a fake executable name
+	//-------------------------------------------------------------------------
+
+	if strings.HasPrefix(executableBase, "__debug_bin") {
+
+		executableBase = "LooLid"
+	}
+
+	//-------------------------------------------------------------------------
 
 	return executableBase
 }
@@ -188,8 +205,11 @@ func SortFileInfos(fileInfos []os.FileInfo, directoriesFirst bool) {
 //-----------------------------------------------------------------------------
 
 func Must[T any](x T, err error) T {
+
 	if err != nil {
+
 		panic(err)
 	}
+
 	return x
 }
