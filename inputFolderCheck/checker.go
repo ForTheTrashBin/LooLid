@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ForTheTrashBin/LooLid/blackwhite"
+	"github.com/ForTheTrashBin/LooLid/configParser"
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
@@ -285,9 +285,9 @@ func (chk *checker) checkBulkData() error {
 
 	diskFs := afero.NewOsFs()
 
-	bwConfig := blackwhite.NewBWConfig()
+	rulesConfig := configParser.NewRulesConfig()
 
-	if err := chk.scanDir(diskFs, chk.inputFolder, bwConfig, 0); err != nil {
+	if err := chk.scanDir(diskFs, chk.inputFolder, rulesConfig, 0); err != nil {
 
 		return err
 	}

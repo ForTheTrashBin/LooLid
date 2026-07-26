@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ForTheTrashBin/LooLid/blackwhite"
+	"github.com/ForTheTrashBin/LooLid/configParser"
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -83,9 +83,9 @@ func (rdr *reader) readInputFolder() error {
 
 	diskFs := afero.NewOsFs()
 
-	bwConfig := blackwhite.NewBWConfig() // Start with default config
+	rulesConfig := configParser.NewRulesConfig() // Start with default config
 
-	return copyDir(rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", bwConfig, 0)
+	return copyDir(rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", rulesConfig, 0)
 }
 
 func InputFolderRead(localizer *i18n.Localizer, inputfolder string, memFs *afero.Fs) error {

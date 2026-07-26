@@ -4,14 +4,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ForTheTrashBin/LooLid/blackwhite"
+	"github.com/ForTheTrashBin/LooLid/configParser"
+	"github.com/ForTheTrashBin/LooLid/helper"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/spf13/afero"
 )
 
-func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, bwConfig *blackwhite.BWConfig, depth int) error {
+func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, rulesConfig *configParser.RulesConfig, depth int) error {
 
 	//-------------------------------------------------------------------------
 	// Get all files and directories in the source folder
@@ -23,7 +24,7 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 	if err == nil {
 
-		deepCopyBWConfig := bwConfig // Copy of pointers, NOT a deep-copy
+		deepCopyRulesConfig := rulesConfig // Copy of pointers, NOT a deep-copy
 
 		configFileName := nutsandbolts.GetConfigFileName()
 
@@ -39,7 +40,7 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 			if !sourceFileInfo.IsDir() && (sourceFileInfo.Name() == configFileName) {
 
-				localBWConfig, err := blackwhite.NewBWConfigFromFile(localizer, filepath.Join(sourceFolder, configFileName), depth)
+				localRulesConfig, err := configParser.NewRulesConfigFromFile(localizer, filepath.Join(sourceFolder, configFileName), depth)
 
 				if err != nil {
 
@@ -48,22 +49,35 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 				//-------------------------------------------------------------
 
-				deepCopyBWConfig = blackwhite.NewBWConfigFromBWConfig(bwConfig) // Deep copy now
+				deepCopyRulesConfig = configParser.NewRulesConfigFromRulesConfig(rulesConfig) // Deep copy now
 
-				if localBWConfig.DoBlacklistInherit() {
+				if localRulesConfig.DoBlacklistInherit() {
 
-					deepCopyBWConfig.Blacklist.MergeRuleSet(&localBWConfig.Blacklist)
+					deepCopyRulesConfig.Blacklist.MergeRuleSet(&localRulesConfig.Blacklist)
 				} else {
 
-					deepCopyBWConfig.Blacklist = blackwhite.NewRuleSetFromRuleSet(&localBWConfig.Blacklist)
+					deepCopyRulesConfig.Blacklist = configParser.CloneRuleSet(&localRulesConfig.Blacklist)
 				}
 
-				if localBWConfig.DoWhitelistInherit() {
+				if localRulesConfig.DoWhitelistInherit() {
 
-					deepCopyBWConfig.Whitelist.MergeRuleSet(&localBWConfig.Whitelist)
+					deepCopyRulesConfig.Whitelist.MergeRuleSet(&localRulesConfig.Whitelist)
 				} else {
 
-					deepCopyBWConfig.Whitelist = blackwhite.NewRuleSetFromRuleSet(&localBWConfig.Whitelist)
+					deepCopyRulesConfig.Whitelist = configParser.CloneRuleSet(&localRulesConfig.Whitelist)
+				}
+
+				deepCopyRulesConfig.FrontMatter = configParser.CloneFrontMatter(localRulesConfig.FrontMatter)
+
+				if len(deepCopyRulesConfig.FrontMatter) > 0 {
+					frontMatterFile := filepath.Join(destFolder, "loolid-frontmatter")
+					frontMatterData, err := helper.SerializeFrontMatter(deepCopyRulesConfig.FrontMatter)
+					if err != nil {
+						return err
+					}
+					if err := afero.WriteFile(destFs, frontMatterFile, frontMatterData, 0o600); err != nil {
+						return err
+					}
 				}
 
 				break // There should be only ONE config-file per folder, so we can stop searching
@@ -72,7 +86,7 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 		for _, sourceFileInfo := range sourceFileInfos {
 
-			if !deepCopyBWConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir()) {
+			if !deepCopyRulesConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir()) {
 
 				if !osspecific.IsHiddenOrSystem(sourceFolder) {
 
@@ -86,7 +100,7 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 							return err
 						}
 
-						if err = copyDir(localizer, sourceFs, newSource, destFs, newDest, deepCopyBWConfig, depth+1); err != nil {
+						if err = copyDir(localizer, sourceFs, newSource, destFs, newDest, deepCopyRulesConfig, depth+1); err != nil {
 
 							return err
 						}

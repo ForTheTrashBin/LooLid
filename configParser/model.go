@@ -1,4 +1,4 @@
-package blackwhite
+package configParser
 
 //-----------------------------------------------------------------------------
 // Rule describes a single blacklist/whitelist rule.
@@ -29,12 +29,19 @@ type RuleSet struct {
 }
 
 //-----------------------------------------------------------------------------
-// Config represents the Black- and Whitelist configuration
+// FrontMatter stores optional metadata for a configuration file.
 //-----------------------------------------------------------------------------
 
-type BWConfig struct {
-	Blacklist RuleSet `toml:"blacklist"`
-	Whitelist RuleSet `toml:"whitelist"`
+type FrontMatter map[string]any
+
+//-----------------------------------------------------------------------------
+// Config represents the Black- and Whitelist configuration together with optional frontmatter.
+//-----------------------------------------------------------------------------
+
+type RulesConfig struct {
+	FrontMatter FrontMatter `toml:"frontmatter"`
+	Blacklist   RuleSet     `toml:"blacklist"`
+	Whitelist   RuleSet     `toml:"whitelist"`
 }
 
 //-----------------------------------------------------------------------------

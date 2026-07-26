@@ -1,4 +1,4 @@
-package blackwhite
+package configParser
 
 import (
 	"errors"
@@ -42,9 +42,9 @@ const (
 // prepare all rules
 //-----------------------------------------------------------------------------
 
-func (bwConfig *BWConfig) prepare(localizer *i18n.Localizer, patternDepth int) error {
+func (rulesConfig *RulesConfig) prepare(localizer *i18n.Localizer, patternDepth int) error {
 
-	if err := bwConfig.Blacklist.prepare(localizer, patternDepth); err != nil {
+	if err := rulesConfig.Blacklist.prepare(localizer, patternDepth); err != nil {
 
 		return errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
 
@@ -55,7 +55,7 @@ func (bwConfig *BWConfig) prepare(localizer *i18n.Localizer, patternDepth int) e
 			}}))
 	}
 
-	if err := bwConfig.Whitelist.prepare(localizer, patternDepth); err != nil {
+	if err := rulesConfig.Whitelist.prepare(localizer, patternDepth); err != nil {
 
 		return errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{
 
