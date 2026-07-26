@@ -29,19 +29,13 @@ type RuleSet struct {
 }
 
 //-----------------------------------------------------------------------------
-// FrontMatter stores optional metadata for a configuration file.
-//-----------------------------------------------------------------------------
-
-type FrontMatter map[string]any
-
-//-----------------------------------------------------------------------------
 // Config represents the Black- and Whitelist configuration together with optional frontmatter.
 //-----------------------------------------------------------------------------
 
 type RulesConfig struct {
-	FrontMatter FrontMatter `toml:"frontmatter"`
-	Blacklist   RuleSet     `toml:"blacklist"`
-	Whitelist   RuleSet     `toml:"whitelist"`
+	FrontMatter map[string]any `toml:"frontmatter"`
+	Blacklist   RuleSet        `toml:"blacklist"`
+	Whitelist   RuleSet        `toml:"whitelist"`
 }
 
 //-----------------------------------------------------------------------------

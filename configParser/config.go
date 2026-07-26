@@ -125,13 +125,13 @@ func NewRulesConfigFromFile(localizer *i18n.Localizer, fileName string, patternD
 
 	if rulesConfig.FrontMatter == nil {
 
-		rulesConfig.FrontMatter = FrontMatter{}
+		rulesConfig.FrontMatter = map[string]any{}
 	}
 
 	return rulesConfig, rulesConfig.prepare(localizer, patternDepth)
 }
 
-func parseFrontmatterBlock(content string) (FrontMatter, string, error) {
+func parseFrontmatterBlock(content string) (map[string]any, string, error) {
 
 	trimmed := strings.TrimSpace(content)
 
@@ -187,7 +187,7 @@ func parseFrontmatterBlock(content string) (FrontMatter, string, error) {
 	frontMatterLines := lines[1:closingIndex]
 	frontMatterContent := strings.Join(frontMatterLines, "\n")
 
-	frontMatter := FrontMatter{}
+	frontMatter := map[string]any{}
 
 	if openingDelimiter == "+++" {
 
@@ -213,9 +213,9 @@ func parseFrontmatterBlock(content string) (FrontMatter, string, error) {
 	return frontMatter, remainingContent, nil
 }
 
-func parseSimpleYAMLFrontMatter(content string) (FrontMatter, error) {
+func parseSimpleYAMLFrontMatter(content string) (map[string]any, error) {
 
-	frontMatter := FrontMatter{}
+	frontMatter := map[string]any{}
 
 	for _, rawLine := range strings.Split(content, "\n") {
 
@@ -344,21 +344,67 @@ func CloneRuleSet(ruleSet *RuleSet) RuleSet {
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-func CloneFrontMatter(frontMatter FrontMatter) FrontMatter {
+func CloneFrontMatter(frontMatter map[string]any) map[string]any {
 
-	if frontMatter == nil {
+	if frontMatter == nil { // Security prompt
 
-		return nil
+		return map[string]any{} // An empty map
 	}
 
-	copiedFrontMatter := make(FrontMatter, len(frontMatter))
+	//-------------------------------------------------------------------------
+
+	copiedFrontMatter := make(map[string]any, len(frontMatter))
 
 	for key, value := range frontMatter {
 
-		copiedFrontMatter[key] = value
+		if subMap, isSubMap := value.(map[string]any); isSubMap {
+
+			copiedFrontMatter[key] = CloneFrontMatter(subMap)
+		} else {
+
+			copiedFrontMatter[key] = value // Primitive types such as strings and integers are safe
+		}
 	}
 
 	return copiedFrontMatter
+}
+
+func MergeFrontMatter(base, addendum map[string]any) map[string]any {
+
+	result := CloneFrontMatter(base)
+
+	for addendumKey, addendumVal := range addendum {
+
+		if baseVal, exists := result[addendumKey]; exists {
+
+			baseMap, baseOk := baseVal.(map[string]any)
+			addendumMap, addendumOk := addendumVal.(map[string]any)
+
+			if baseOk && addendumOk {
+
+				result[addendumKey] = MergeFrontMatter(baseMap, addendumMap)
+			} else {
+				if subMap2, ok := addendumVal.(map[string]any); ok {
+
+					result[addendumKey] = CloneFrontMatter(subMap2)
+				} else {
+
+					result[addendumKey] = addendumVal
+				}
+			}
+		} else {
+
+			if subMap2, ok := addendumVal.(map[string]any); ok {
+
+				result[addendumKey] = CloneFrontMatter(subMap2)
+			} else {
+
+				result[addendumKey] = addendumVal
+			}
+		}
+	}
+
+	return result
 }
 
 //-----------------------------------------------------------------------------

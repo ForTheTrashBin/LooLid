@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/ForTheTrashBin/LooLid/configParser"
-	"github.com/ForTheTrashBin/LooLid/helper"
 	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -67,22 +66,31 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 					deepCopyRulesConfig.Whitelist = configParser.CloneRuleSet(&localRulesConfig.Whitelist)
 				}
 
-				deepCopyRulesConfig.FrontMatter = configParser.CloneFrontMatter(localRulesConfig.FrontMatter)
-
-				if len(deepCopyRulesConfig.FrontMatter) > 0 {
-					frontMatterFile := filepath.Join(destFolder, "loolid-frontmatter")
-					frontMatterData, err := helper.SerializeFrontMatter(deepCopyRulesConfig.FrontMatter)
-					if err != nil {
-						return err
-					}
-					if err := afero.WriteFile(destFs, frontMatterFile, frontMatterData, 0o600); err != nil {
-						return err
-					}
-				}
+				deepCopyRulesConfig.FrontMatter = configParser.MergeFrontMatter(deepCopyRulesConfig.FrontMatter, localRulesConfig.FrontMatter)
 
 				break // There should be only ONE config-file per folder, so we can stop searching
 			}
 		}
+
+		//---------------------------------------------------------------------
+		// Write FrontMatter to a file in the destination folder for later use
+		//---------------------------------------------------------------------
+
+		frontMatterData, err := nutsandbolts.SerializeFrontMatter(deepCopyRulesConfig.FrontMatter)
+
+		if err != nil {
+
+			return err
+		}
+
+		frontMatterFile := filepath.Join(destFolder, configFileName)
+
+		if err := afero.WriteFile(destFs, frontMatterFile, frontMatterData, 0o600); err != nil {
+
+			return err
+		}
+
+		//---------------------------------------------------------------------
 
 		for _, sourceFileInfo := range sourceFileInfos {
 
@@ -111,13 +119,17 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 						}
 					} else {
 
-						if err = copyFile(sourceFs, newSource, destFs, newDest); err != nil {
+						if sourceFileInfo.Name() != configFileName { // Never copy configuration file, because it is already written
 
-							return err
+							if err = copyFile(sourceFs, newSource, destFs, newDest); err != nil {
+
+								return err
+							}
 						}
 					}
 				}
 			}
+
 		}
 	}
 
