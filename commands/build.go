@@ -39,13 +39,19 @@ func (cmd *BuildCommand) GetName() string {
 	return "build"
 }
 
-func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, pureAppName string, args []string) error {
+func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, args []string) error {
 
 	cmd.localizer = localizer
 
 	buildUsageMessage = localizer.MustLocalize(&i18n.LocalizeConfig{
-		MessageID:    "flag." + cmd.GetName() + "UsageMessage",
-		TemplateData: map[string]string{"pureAppName": pureAppName},
+
+		MessageID: "flag." + cmd.GetName() + "UsageMessage",
+
+		TemplateData: map[string]string{
+
+			"pureAppName":    nutsandbolts.GetPureAppName(),
+			"configFileName": nutsandbolts.GetConfigFileName(),
+		},
 	})
 
 	flagSet := flag.NewFlagSet(cmd.GetName(), flag.ContinueOnError)

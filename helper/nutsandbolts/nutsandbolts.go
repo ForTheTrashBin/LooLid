@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
 )
@@ -16,79 +17,104 @@ import (
 var ErrInvalidNumberOfCommands = errors.New("invalid number of commands")
 
 //-----------------------------------------------------------------------------
+// Get the pure application name and cache it for future use.
 //-----------------------------------------------------------------------------
+
+var (
+	pureAppName     string
+	pureAppNameOnce sync.Once
+)
 
 func GetPureAppName() string {
 
-	//-------------------------------------------------------------------------
-	// "os.Executable()" seems to be more reliable, so only use "os.Args" when nessesarry
-	//-------------------------------------------------------------------------
+	pureAppNameOnce.Do(func() {
 
-	executablePath, err := os.Executable()
+		//---------------------------------------------------------------------
+		// "os.Executable()" seems to be more reliable, so only use "os.Args" when nessesarry
+		//---------------------------------------------------------------------
 
-	if err != nil {
+		executablePath, err := os.Executable()
 
-		executablePath = os.Args[0]
-	}
+		if err != nil {
 
-	//-------------------------------------------------------------------------
+			executablePath = os.Args[0]
+		}
 
-	executableBase := filepath.Base(executablePath) // Could be "app.exe", "app.v2.exe", "app.com", "app.v2", "app", ...
+		//---------------------------------------------------------------------
 
-	//-------------------------------------------------------------------------
-	// Remove repeatedly if there are multiple "(renamed) executable" extensions appended to the end.
-	//-------------------------------------------------------------------------
+		executableBase := filepath.Base(executablePath) // Could be "app.exe", "app.v2.exe", "app.com", "app.v2", "app", ...
 
-	trimmed := true
+		//---------------------------------------------------------------------
+		// Remove repeatedly if there are multiple "(renamed) executable" extensions appended to the end.
+		//---------------------------------------------------------------------
 
-	executableEndings := []string{".exe", ".com", ".cmd", ".bat"}
+		trimmed := true
 
-	for trimmed {
+		executableEndings := []string{".exe", ".com", ".cmd", ".bat"}
 
-		trimmed = false
+		for trimmed {
 
-		ext := filepath.Ext(executableBase)
+			trimmed = false
 
-		for _, executableEnding := range executableEndings {
+			ext := filepath.Ext(executableBase)
 
-			if strings.EqualFold(ext, executableEnding) {
+			for _, executableEnding := range executableEndings {
 
-				executableBase = strings.TrimSuffix(executableBase, ext)
+				if strings.EqualFold(ext, executableEnding) {
 
-				trimmed = true
+					executableBase = strings.TrimSuffix(executableBase, ext)
 
-				break
+					trimmed = true
+
+					break
+				}
 			}
 		}
-	}
 
-	//-------------------------------------------------------------------------
-	// When running in debug mode, return a fake executable name
-	//-------------------------------------------------------------------------
+		//---------------------------------------------------------------------
+		// When running in debug mode, return a fake executable name
+		//---------------------------------------------------------------------
 
-	if strings.HasPrefix(executableBase, "__debug_bin") {
+		if strings.HasPrefix(executableBase, "__debug_bin") {
 
-		executableBase = "LooLid"
-	}
+			executableBase = "LooLid"
+		}
 
-	//-------------------------------------------------------------------------
+		//---------------------------------------------------------------------
 
-	return executableBase
+		executableBase, _ = strings.CutPrefix(executableBase, ".")
+		executableBase, _ = strings.CutSuffix(executableBase, ".")
+
+		pureAppName = executableBase
+	})
+
+	return pureAppName
 }
+
+//-----------------------------------------------------------------------------
+// Get the config file name and cache it for future use.
+//-----------------------------------------------------------------------------
+
+var (
+	configFileName     string
+	configFileNameOnce sync.Once
+)
 
 func GetConfigFileName() string {
 
-	executableBase := GetPureAppName()
+	configFileNameOnce.Do(func() {
 
-	executableBase, _ = strings.CutPrefix(executableBase, ".")
-	executableBase, _ = strings.CutSuffix(executableBase, ".")
+		executableBase := GetPureAppName()
 
-	configFileExtension := constants.AppConfig_ConfigFileExtension
+		configFileExtension := constants.AppConfig_ConfigFileExtension
 
-	configFileExtension, _ = strings.CutPrefix(configFileExtension, ".")
-	configFileExtension, _ = strings.CutSuffix(configFileExtension, ".")
+		configFileExtension, _ = strings.CutPrefix(configFileExtension, ".")
+		configFileExtension, _ = strings.CutSuffix(configFileExtension, ".")
 
-	return executableBase + "." + configFileExtension
+		configFileName = executableBase + "." + configFileExtension
+	})
+
+	return configFileName
 }
 
 //-----------------------------------------------------------------------------

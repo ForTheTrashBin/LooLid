@@ -24,24 +24,28 @@ func printServeUsageMessage() {
 //-----------------------------------------------------------------------------
 
 type ServeCommand struct {
-	localizer   *i18n.Localizer
-	pureAppName string
-	port        int
-	doUpdate    bool
+	localizer *i18n.Localizer
+	port      int
+	doUpdate  bool
 }
 
 func (cmd *ServeCommand) GetName() string {
 	return "serve"
 }
 
-func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, pureAppName string, args []string) error {
+func (cmd *ServeCommand) Parse(localizer *i18n.Localizer, args []string) error {
 
 	cmd.localizer = localizer
-	cmd.pureAppName = pureAppName
 
 	serveUsageMessage = localizer.MustLocalize(&i18n.LocalizeConfig{
-		MessageID:    "flag." + cmd.GetName() + "UsageMessage",
-		TemplateData: map[string]string{"pureAppName": pureAppName},
+
+		MessageID: "flag." + cmd.GetName() + "UsageMessage",
+
+		TemplateData: map[string]string{
+
+			"pureAppName":    nutsandbolts.GetPureAppName(),
+			"configFileName": nutsandbolts.GetConfigFileName(),
+		},
 	})
 
 	flagSet := flag.NewFlagSet(cmd.GetName(), flag.ContinueOnError)

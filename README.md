@@ -13,12 +13,12 @@ The program offers very few options for direct configuration. Almost all setting
 - The name of the source directory is 'content'.
 - The name of the destination directory is 'target'
 - The program is shipped under the name "LooLid" or "LooLid.exe" (on Windows)
-- Possible configuration files are named 'LooLid.config'
+- Possible configuration files are named 'LooLid.toml'
 - The user can rename the program file; names of configuration files are adjusted accordingly
-    - Example 1: LooLid(.exe) renamed to Donald.(exe). The configuration files must be named Donald.config
-    - Example 2: LooLid(.exe) renamed to DAISY.(exe). The configuration files must be named DAISY.config
+    - Example 1: LooLid(.exe) renamed to Donald.(exe). The configuration files must be named Donald.toml
+    - Example 2: LooLid(.exe) renamed to DAISY.(exe). The configuration files must be named DAISY.toml
     
-    - Example 3: LooLid(.exe) renamed to goofY.(exe). The configuration files must be named goofY.config
+    - Example 3: LooLid(.exe) renamed to goofY.(exe). The configuration files must be named goofY.toml
 
 - Program features to look for
     - Upper- and lowercase letters are **strictly observed** (even on Windows).

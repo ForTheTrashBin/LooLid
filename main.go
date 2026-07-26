@@ -63,7 +63,6 @@ type commandItem interface {
 
 	Parse(
 		localizer *i18n.Localizer,
-		pureAppName string,
 		arguments []string,
 	) error
 
@@ -71,8 +70,6 @@ type commandItem interface {
 }
 
 func testableMain(args []string) int {
-
-	pureAppName := nutsandbolts.GetPureAppName()
 
 	//-------------------------------------------------------------------------
 	// Initialize i18n-bundle to use for the lifetime of the application
@@ -100,6 +97,7 @@ func testableMain(args []string) int {
 	systemLanguage, err := locales.GetLanguage()
 
 	if err != nil {
+
 		systemLanguage = language.English.String()
 	}
 
@@ -109,13 +107,15 @@ func testableMain(args []string) int {
 
 		&i18n.LocalizeConfig{
 
-			MessageID:    "flag.mainUsageMessage",
-			TemplateData: map[string]string{"pureAppName": pureAppName},
+			MessageID: "flag.mainUsageMessage",
+			TemplateData: map[string]string{
+				"pureAppName":    nutsandbolts.GetPureAppName(),
+				"configFileName": nutsandbolts.GetConfigFileName()},
 		})
 
 	//-------------------------------------------------------------------------
 
-	flagSet := flag.NewFlagSet(pureAppName, flag.ContinueOnError)
+	flagSet := flag.NewFlagSet(nutsandbolts.GetPureAppName(), flag.ContinueOnError)
 
 	flagSet.Usage = printMainUsageMessage
 
@@ -151,7 +151,7 @@ func testableMain(args []string) int {
 
 		if commandItem.GetName() == commandName {
 
-			if err := commandItem.Parse(localizer, pureAppName, flagSet.Args()[1:]); err != nil {
+			if err := commandItem.Parse(localizer, flagSet.Args()[1:]); err != nil {
 
 				if err != flag.ErrHelp {
 
@@ -178,9 +178,12 @@ func testableMain(args []string) int {
 	printMainUsageMessage()
 
 	unknownSubcommand := localizer.MustLocalize(
+
 		&i18n.LocalizeConfig{
+
 			MessageID: "flag.unknownSubCommand",
 			TemplateData: map[string]string{
+
 				"value1": commandName,
 			},
 		})

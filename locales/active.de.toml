@@ -24,9 +24,9 @@ other = """
 Anwendung: {{.pureAppName}} build
 
 Wandelt den Inhalt eines bestimmten Verzeichnisses unter Anwendung komplexer
-Transformationsregeln in ein anderes Verzeichnis um. Die Konfiguration wird aus
-der Datei '{{.pureAppName}}.config' gelesen, die im aktuellen
-Arbeitverzeichnis plaziert ist. Andernfalls werden Voreinstellungen verwendet.
+Transformationsregeln in ein anderes Verzeichnis um. In jedem einzelnen Unter-
+verzechnis kann eine Konfigurationsdatei '{{.configFileName}}' angegeben werden,
+mit der die Funktionsweise des Programms gezielt gesteuert werden kann.
 
 Beispiel:
 	{{.pureAppName}} build
@@ -39,10 +39,9 @@ other = """
 Anwendung: {{.pureAppName}} serve [Schalter]
 
 Wandelt den Inhalt eines bestimmten Verzeichnisses unter Anwendung komplexer
-Transformationsregeln in ein anderes Verzeichnis um. Startet einen WEB-Server,
-damit die Inhalte abgerufen werden können. Die Konfiguration wird aus
-der Datei '{{.pureAppName}}.config' gelesen, die im aktuellen
-Arbeitverzeichnis plaziert ist. Andernfalls werden Voreinstellungen verwendet.
+Transformationsregeln in ein anderes Verzeichnis um. In jedem einzelnen Unter-
+verzechnis kann eine Konfigurationsdatei '{{.configFileName}}' angegeben werden,
+mit der die Funktionsweise des Programms gezielt gesteuert werden kann.
 
 Schalter:
 

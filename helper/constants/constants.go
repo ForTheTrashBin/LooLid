@@ -6,7 +6,7 @@ import "errors"
 //-----------------------------------------------------------------------------
 
 const (
-	AppConfig_ConfigFileExtension = ".config"
+	AppConfig_ConfigFileExtension = ".toml"
 
 	// AppConfig_DefaultInputFolder = "content"
 	// AppConfig_DefaultOutputFolder = "target"
