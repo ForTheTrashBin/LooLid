@@ -77,6 +77,7 @@ func (cmd *BuildCommand) Execute() error {
 
 	inputFolder := constants.AppConfig_DefaultInputFolder
 	outputFolder := constants.AppConfig_DefaultOutputFolder
+	templatesFolder := constants.AppConfig_DefaultTemplatesFolder
 
 	//-------------------------------------------------------------------------
 
@@ -88,7 +89,7 @@ func (cmd *BuildCommand) Execute() error {
 
 	//-------------------------------------------------------------------------
 
-	if err := inputFolderCheck.InputFolderCheckAsync(cmd.localizer, inputFolder, sigCh); err != nil {
+	if err := inputFolderCheck.InputFolderCheckAsync(cmd.localizer, inputFolder, templatesFolder, sigCh); err != nil {
 
 		return nil
 	}

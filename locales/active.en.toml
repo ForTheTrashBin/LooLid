@@ -133,6 +133,9 @@ other = "\x1b[31mError:\x1b[0m The working directory is part of the input-folder
 [check.header.inputfolder_incorrect]
 other = "Errors occurred while checking the input directory:" 
 
+[check.header.templatefolder_incorrect]
+other = "Errors occurred while checking the template directory:" 
+
 [check.header.bulkdata_incorrect]
 other = "Errors occurred while checking the input directory:" 
 
@@ -180,6 +183,18 @@ other = "\x1b[31mError:\x1b[0m A total of {{.count}} ambiguous configuration-ent
 [check.header.duplicate_entries]
 one = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a folder:\n"
 other = "\x1b[31mError:\x1b[0m Duplicate or ambiguous entries were found in a total of {{.count}} folders:\n"
+
+[check.header.subfolder_found]
+one = "\x1b[31mError:\x1b[0m An unauthorised subdirectory has been found in the template directory:\n"
+other = "\x1b[31mError:\x1b[0m {{.count}} unauthorised subdirectories were found in the template directory:\n"
+
+[check.header.no_extension]
+one = "\x1b[31mError:\x1b[0m A file without an extension has been found in the templates directory:\n"
+other = "\x1b[31mError:\x1b[0m {{.count}} files without file extensions were found in the template directory:\n"
+
+[check.header.duplicate_extension]
+one = "\x1b[31mError:\x1b[0m An extension has been found that is used for multiple files in the templates directory:\n"
+other = "\x1b[31mError:\x1b[0m {{.count}} extensions were found that are used in multiple files in the template directory:\n"
 
 #------------------------------------------------------------------------------
 
@@ -243,3 +258,6 @@ other = "Folder"
 
 [label.file]
 other = "File"
+
+[label.extension]
+other = "Extension"

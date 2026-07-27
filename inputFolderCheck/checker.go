@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -18,8 +19,9 @@ import (
 )
 
 type checker struct {
-	localizer   *i18n.Localizer
-	inputFolder string
+	localizer      *i18n.Localizer
+	inputFolder    string
+	templateFolder string
 
 	issuesInputDirectorySiblings []Issue // checker.go
 	issuesInvalidWindowsChar     []Issue // rules.go
@@ -32,14 +34,23 @@ type checker struct {
 	issuesConfigFile             []Issue // scanner.go
 
 	duplicateGroups []DuplicateGroup
+
+	violations Violations
 }
 
-func newChecker(localizer *i18n.Localizer, inputFolder string) *checker {
+func newChecker(localizer *i18n.Localizer, inputFolder string, templateFolder string) *checker {
 
 	chk := &checker{
 
-		localizer:   localizer,
-		inputFolder: inputFolder,
+		localizer:      localizer,
+		inputFolder:    inputFolder,
+		templateFolder: templateFolder,
+
+		violations: Violations{
+			Directories:   []string{},
+			NoExtension:   []string{},
+			DupExtensions: make(map[string][]string),
+		},
 	}
 
 	return chk
@@ -50,6 +61,7 @@ func (chk *checker) isInputDirectoryCorrect() bool {
 	result := true
 
 	if len(chk.issuesInputDirectorySiblings) > 0 {
+
 		result = false
 	}
 
@@ -61,42 +73,56 @@ func (chk *checker) isBulkDataCorrect() bool {
 	result := true
 
 	if len(chk.issuesInvalidWindowsChar) > 0 {
+
 		result = false
 	}
 
 	if len(chk.issuesTrailingDotSpace) > 0 {
+
 		result = false
 	}
 
 	if len(chk.issuesReservedWindowsName) > 0 {
+
 		result = false
 	}
 
 	if len(chk.issuesFileNameLength) > 0 {
+
 		result = false
 	}
 
 	if len(chk.issuesPathNameLength) > 0 {
+
 		result = false
 	}
 
 	if len(chk.issuesUnicodeNormalization) > 0 {
+
 		result = false
 	}
 
 	if len(chk.issuesSymLink) > 0 {
+
 		result = false
 	}
 
 	if len(chk.issuesConfigFile) > 0 {
+
 		return false
 	}
 
 	if len(chk.duplicateGroups) > 0 {
+
 		result = false
 	}
 
 	return result
+}
+
+func (chk *checker) isTemplatesCorrect() bool {
+
+	return len(chk.violations.Directories) == 0 && len(chk.violations.NoExtension) == 0 && len(chk.violations.DupExtensions) == 0
 }
 
 func (chk *checker) getLocalizedMessage(MessageId string, value1 string, value2 string) string {
@@ -272,7 +298,7 @@ func (chk *checker) checkInputFolder() error {
 						},
 					)
 
-					err = constants.ErrInputFolderNotCorrect
+					err = constants.ErrInputFolderIncorrect
 				}
 			}
 		}
@@ -294,7 +320,66 @@ func (chk *checker) checkBulkData() error {
 
 	if !chk.isBulkDataCorrect() {
 
-		return constants.ErrBulkDataNotCorrect
+		return constants.ErrBulkDataIncorrect
+	}
+
+	return nil
+}
+
+func (chk *checker) checkTemplatesFolder() error {
+
+	diskFs := afero.NewOsFs()
+
+	fileInfos, err := afero.ReadDir(diskFs, chk.templateFolder)
+
+	if err != nil {
+
+		if exists, _ := afero.Exists(diskFs, chk.templateFolder); !exists {
+
+			return nil
+		}
+
+		return err
+	}
+
+	//-------------------------------------------------------------------------
+
+	extensions := make(map[string][]string)
+
+	for _, fileInfo := range fileInfos {
+
+		if fileInfo.IsDir() {
+
+			chk.violations.Directories = append(chk.violations.Directories, fileInfo.Name())
+		} else {
+
+			fileName := fileInfo.Name()
+
+			fileExtension := filepath.Ext(fileName)
+
+			if fileExtension == "" || !strings.Contains(fileName, ".") {
+
+				chk.violations.NoExtension = append(chk.violations.NoExtension, fileName)
+			} else {
+
+				fileExtension = strings.ToLower(strings.TrimPrefix(fileExtension, "."))
+
+				extensions[fileExtension] = append(extensions[fileExtension], fileName)
+			}
+		}
+	}
+
+	for extension, files := range extensions {
+
+		if len(files) > 1 {
+
+			chk.violations.DupExtensions[extension] = files
+		}
+	}
+
+	if !chk.isTemplatesCorrect() {
+
+		return constants.ErrTemplateFolderIncorrect
 	}
 
 	return nil
@@ -304,21 +389,36 @@ func (chk *checker) checkBulkData() error {
 // Check the input-directory and it's content AND print error messages
 //-----------------------------------------------------------------------------
 
-func InputFolderCheck(localizer *i18n.Localizer, inputfolder string) error {
+func InputFolderCheck(localizer *i18n.Localizer, inputfolder string, templateFolder string) error {
 
 	var err error
 
-	checker := newChecker(localizer, inputfolder)
+	checker := newChecker(localizer, inputfolder, templateFolder)
 
 	if err = checker.checkInputFolder(); err == nil {
 
-		if err = checker.checkBulkData(); err == nil {
+		if err = checker.checkTemplatesFolder(); err == nil {
 
-			checker.reportBulkDataErrors()
+			if err = checker.checkBulkData(); err != nil {
+
+				if err == constants.ErrBulkDataIncorrect {
+
+					checker.reportBulkDataErrors()
+				}
+			}
+		} else {
+
+			if err == constants.ErrTemplateFolderIncorrect {
+
+				checker.reportTemplatesFolderErrors()
+			}
 		}
 	} else {
 
-		checker.reportInputFolderErrors()
+		if err == constants.ErrInputFolderIncorrect {
+
+			checker.reportInputFolderErrors()
+		}
 	}
 
 	return err
@@ -328,9 +428,9 @@ func InputFolderCheck(localizer *i18n.Localizer, inputfolder string) error {
 // Check the input-directory and it's content AND print error messages asynchronous
 //-----------------------------------------------------------------------------
 
-func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh chan os.Signal) error {
+func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, templateFolder string, sigCh chan os.Signal) error {
 
-	checker := newChecker(localizer, inputfolder)
+	checker := newChecker(localizer, inputfolder, templateFolder)
 
 	spinnerSuffix := checker.getLocalizedMessage(constants.SpinnerSuffixInputfolderCheck, "", "")
 	spinnerStopMessage := checker.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
@@ -375,6 +475,26 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh 
 
 			if rec := recover(); rec != nil {
 
+				fmt.Fprintf(os.Stderr, "\x1b[31mInternal error:\x1b[0m %v\n", rec)
+
+				pcs := make([]uintptr, 32)
+
+				n := runtime.Callers(3, pcs)
+
+				frames := runtime.CallersFrames(pcs[:n])
+
+				for {
+
+					frame, more := frames.Next()
+
+					fmt.Printf("%s:%d\n", filepath.Base(frame.File), frame.Line)
+
+					if !more {
+
+						break
+					}
+				}
+
 				switch value := rec.(type) {
 
 				case error:
@@ -397,7 +517,13 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh 
 
 		if err := checker.checkInputFolder(); err == nil {
 
-			doneChannel <- checker.checkBulkData()
+			if err := checker.checkTemplatesFolder(); err == nil {
+
+				doneChannel <- checker.checkBulkData()
+			} else {
+
+				doneChannel <- err
+			}
 		} else {
 
 			doneChannel <- err
@@ -422,7 +548,7 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh 
 
 		if err != nil {
 
-			if err == constants.ErrInputFolderNotCorrect {
+			if err == constants.ErrInputFolderIncorrect {
 
 				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
 
@@ -435,7 +561,20 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, sigCh 
 				return err
 			}
 
-			if err == constants.ErrBulkDataNotCorrect {
+			if err == constants.ErrTemplateFolderIncorrect {
+
+				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_TemplatefolderIncorrect, "", "")
+
+				spinner.StopFailMessage(stopFailMessage)
+
+				spinner.StopFail()
+
+				checker.reportTemplatesFolderErrors()
+
+				return err
+			}
+
+			if err == constants.ErrBulkDataIncorrect {
 
 				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
 

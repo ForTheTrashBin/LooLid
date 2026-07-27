@@ -10,9 +10,11 @@ const (
 
 	// AppConfig_DefaultInputFolder = "content"
 	// AppConfig_DefaultOutputFolder = "target"
+	// AppConfig_DefaultTemplatesFolder = "templates"
 
-	AppConfig_DefaultInputFolder  = "/home/u32800/Documents/WebSite/content"
-	AppConfig_DefaultOutputFolder = "/home/u32800/Documents/WebSite/target"
+	AppConfig_DefaultInputFolder     = "/home/u32800/Documents/WebSite/content"
+	AppConfig_DefaultOutputFolder    = "/home/u32800/Documents/WebSite/target"
+	AppConfig_DefaultTemplatesFolder = "/home/u32800/Documents/WebSite/templates"
 
 	Spinner_FrequencyMS       = 125
 	Spinner_CharSet           = 11
@@ -23,8 +25,11 @@ const (
 )
 
 var ErrInterrupted = errors.New("interrupted by user")
-var ErrInputFolderNotCorrect = errors.New("err_inputfolder")
-var ErrBulkDataNotCorrect = errors.New("err_bulkdata")
+
+var ErrInputFolderIncorrect = errors.New("err_inputfolderincorrect")
+var ErrTemplateFolderIncorrect = errors.New("err_templatefolderincorrect")
+var ErrBulkDataIncorrect = errors.New("err_bulkdataincorrect")
+
 var ErrRecoveredPanicWithoutType = errors.New("err_recovered_panic_without_type")
 
 const (
@@ -41,19 +46,23 @@ const (
 	CheckError_NoPathRel               = "check.no_pathrel"
 	CheckError_WorkingDirInInput       = "check.workingdir_in_input"
 
-	CheckError_DirectorySiblingsFound = "check.header.directory_siblings_found"
-	CheckError_InvalidWindowsChar     = "check.header.invalid_windows_chars"
-	CheckError_TrailingDotSpace       = "check.header.trailing_dot_or_space"
-	CheckError_ReservedWindowsName    = "check.header.reserved_windows_name"
-	CheckError_FileNameTooLong        = "check.header.filename_too_long"
-	CheckError_PathNameTooLong        = "check.header.pathname_too_long"
-	CheckError_UnicodeCollision       = "check.header.unicode_collision"
-	CheckError_SymbolicLinkDetected   = "check.header.symbolic_link"
-	CheckError_ConfigFile             = "check.header.config_file"
-	CheckError_DuplicateEntries       = "check.header.duplicate_entries"
-	CheckError_InputfolderIncorrect   = "check.header.inputfolder_incorrect"
-	CheckError_BulkdataIncorrect      = "check.header.bulkdata_incorrect"
-	CheckError_AbortedByUser          = "check.header.aborted_by_user"
+	CheckError_DirectorySiblingsFound  = "check.header.directory_siblings_found"
+	CheckError_InvalidWindowsChar      = "check.header.invalid_windows_chars"
+	CheckError_TrailingDotSpace        = "check.header.trailing_dot_or_space"
+	CheckError_ReservedWindowsName     = "check.header.reserved_windows_name"
+	CheckError_FileNameTooLong         = "check.header.filename_too_long"
+	CheckError_PathNameTooLong         = "check.header.pathname_too_long"
+	CheckError_UnicodeCollision        = "check.header.unicode_collision"
+	CheckError_SymbolicLinkDetected    = "check.header.symbolic_link"
+	CheckError_ConfigFile              = "check.header.config_file"
+	CheckError_DuplicateEntries        = "check.header.duplicate_entries"
+	CheckError_SubfoldersFound         = "check.header.subfolder_found"
+	CheckError_NoExtensions            = "check.header.no_extension"
+	CheckError_DuplicateExtension      = "check.header.duplicate_extension"
+	CheckError_InputfolderIncorrect    = "check.header.inputfolder_incorrect"
+	CheckError_TemplatefolderIncorrect = "check.header.templatefolder_incorrect"
+	CheckError_BulkdataIncorrect       = "check.header.bulkdata_incorrect"
+	CheckError_AbortedByUser           = "check.header.aborted_by_user"
 
 	BlackWhiteError_ReadConfig       = "blackwhite.read_config"
 	BlackWhiteError_Blacklist        = "blackwhite.blacklist"
@@ -74,6 +83,7 @@ const (
 	SpinnerStopMessageDone           = "spinner.stopmessage.done"
 	SpinnerStopMessageError          = "spinner.stopmessage.error"
 
-	Label_Folder = "label.folder"
-	Label_File   = "label.file"
+	Label_Folder    = "label.folder"
+	Label_File      = "label.file"
+	Label_Extension = "label.extension"
 )

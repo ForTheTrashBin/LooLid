@@ -11,6 +11,14 @@ type Entry struct {
 
 //-----------------------------------------------------------------------------
 
+type Violations struct {
+	Directories   []string
+	NoExtension   []string
+	DupExtensions map[string][]string
+}
+
+//-----------------------------------------------------------------------------
+
 type DuplicateItem struct {
 	itemName string
 	isDir    bool

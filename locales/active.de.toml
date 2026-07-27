@@ -133,6 +133,9 @@ other = "\x1b[31mFehler:\x1b[0m Das Arbeitsverzeichnis ist Teil des Eingangsverz
 [check.header.inputfolder_incorrect]
 other = "Bei der Überprüfung des Eingangsverzeichnisses sind Fehler aufgetreten:" 
 
+[check.header.templatefolder_incorrect]
+other = "Bei der Überprüfung des Vorlagenverzeichnisses sind Fehler aufgetreten:" 
+
 [check.header.bulkdata_incorrect]
 other = "Bei der Überprüfung des Eingangsverzeichnisses sind Fehler aufgetreten:" 
 
@@ -180,6 +183,18 @@ other = "\x1b[31mFehler:\x1b[0m Es wurden insgesamt {{.count}} mehrdeutige Konfi
 [check.header.duplicate_entries]
 one = "\x1b[31mFehler:\x1b[0m In einem Verzeichnis wurden doppelte oder mehrdeutige Einträge gefunden:\n"
 other = "\x1b[31mFehler:\x1b[0m Doppelte oder mehrdeutige Einträge gefunden in insgesamt {{.count}} Verzeichnissen gefunden:\n"
+
+[check.header.subfolder_found]
+one = "\x1b[31mError:\x1b[0m Es wurde ein nicht erlaubtes Unterverzeichnis im Vorlagenverzeichnis gefunden:\n"
+other = "\x1b[31mError:\x1b[0m Es wurden {{.count}} nicht erlaubte Unterverzeichnisse im Vorlagenverzeichnis gefunden:\n"
+
+[check.header.no_extension]
+one = "\x1b[31mError:\x1b[0m Es wurde eine Datei ohne Erweiterung im Vorlagenverzeichnis gefunden:\n"
+other = "\x1b[31mError:\x1b[0m Es wurden {{.count}} Dateien ohne Erweiterung im Vorlagenverzeichnis gefunden:\n"
+
+[check.header.duplicate_extension]
+one = "\x1b[31mError:\x1b[0m Es eine Erweiterung, die bei mehreren Dateien im Vorlagenverzeichnis verwendet wird, gefunden:\n"
+other = "\x1b[31mError:\x1b[0m Es wurden {{.count}} Erweiterungen, die bei mehreren Dateien im Vorlagenverzeichnis verwendet werden, gefunden:\n"
 
 #------------------------------------------------------------------------------
 
@@ -243,3 +258,6 @@ other = "Verzeichnis"
 
 [label.file]
 other = "Datei"
+
+[label.extension]
+other = "Erweiterung"

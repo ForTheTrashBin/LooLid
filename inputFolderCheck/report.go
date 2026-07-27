@@ -3,6 +3,7 @@ package inputFolderCheck
 import (
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
@@ -137,6 +138,98 @@ func (chk *checker) printDuplicates() {
 func (chk *checker) reportInputFolderErrors() {
 
 	chk.printIssues(constants.CheckError_DirectorySiblingsFound, chk.issuesInputDirectorySiblings)
+}
+
+func (chk *checker) reportTemplatesFolderErrors() {
+
+	strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_File})
+	strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_Folder})
+	strExtension := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_Extension})
+
+	//-------------------------------------------------------------------------
+
+	numEntries := len(chk.violations.Directories)
+
+	if numEntries > 0 {
+
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_SubfoldersFound, numEntries)
+
+		//---------------------------------------------------------------------
+		// Sorting for a better customer-experience
+		//---------------------------------------------------------------------
+
+		slices.Sort(chk.violations.Directories)
+
+		//---------------------------------------------------------------------
+
+		for _, dirName := range chk.violations.Directories {
+
+			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strFolder, dirName)
+		}
+	}
+
+	//-------------------------------------------------------------------------
+
+	numEntries = len(chk.violations.NoExtension)
+
+	if numEntries > 0 {
+
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_NoExtensions, numEntries) // TODO
+
+		//---------------------------------------------------------------------
+		// Sorting for a better customer-experience
+		//---------------------------------------------------------------------
+
+		slices.Sort(chk.violations.NoExtension)
+
+		//---------------------------------------------------------------------
+
+		for _, fileName := range chk.violations.NoExtension {
+
+			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strFile, fileName)
+		}
+	}
+
+	//-------------------------------------------------------------------------
+
+	numEntries = len(chk.violations.DupExtensions)
+
+	if numEntries > 0 {
+
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_DuplicateExtension, numEntries) // TODO
+
+		//---------------------------------------------------------------------
+		// Sorting for a better customer-experience
+		//---------------------------------------------------------------------
+
+		keySlice := make([]string, 0, numEntries)
+
+		for key := range chk.violations.DupExtensions {
+
+			keySlice = append(keySlice, key)
+		}
+
+		slices.Sort(keySlice)
+
+		//---------------------------------------------------------------------
+
+		for _, key := range keySlice {
+
+			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strExtension, key)
+
+			fileNames := chk.violations.DupExtensions[key]
+
+			slices.Sort(fileNames)
+
+			//-----------------------------------------------------------------
+
+			for _, fileName := range chk.violations.DupExtensions[key] {
+
+				fmt.Fprintf(os.Stderr, "    - %s: %s\n", strFile, fileName)
+			}
+
+		}
+	}
 }
 
 func (chk *checker) reportBulkDataErrors() {
