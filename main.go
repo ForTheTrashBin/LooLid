@@ -202,9 +202,9 @@ func main() {
 
 	defer func() {
 
-		if recover := recover(); recover != nil {
+		if rec := recover(); rec != nil {
 
-			fmt.Fprintf(os.Stderr, "\x1b[31mInternal error:\x1b[0m %v\n", recover)
+			fmt.Fprintf(os.Stderr, "\x1b[31mInternal error:\x1b[0m %v\n", rec)
 
 			pcs := make([]uintptr, 32)
 
