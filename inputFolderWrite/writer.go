@@ -1,6 +1,7 @@
 package inputFolderWrite
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -78,11 +79,11 @@ func xxxcloseFile(f afero.File, reported *error) {
 	}
 }
 
-func (wrt *writer) writeInputFolder() error {
+func (wrt *writer) writeInputFolder(ctx context.Context) error {
 
 	destFs := afero.NewOsFs()
 
-	err := cleanDir(destFs, wrt.outputFolder, *wrt.memFs)
+	err := cleanDir(ctx, destFs, wrt.outputFolder, *wrt.memFs)
 
 	if err != nil {
 
@@ -91,7 +92,7 @@ func (wrt *writer) writeInputFolder() error {
 
 	//-------------------------------------------------------------------------
 
-	err = syncDir(*wrt.memFs, "", destFs, wrt.outputFolder, time.Now(), 0)
+	err = syncDir(ctx, *wrt.memFs, "", destFs, wrt.outputFolder, time.Now(), 0)
 
 	if err != nil {
 
@@ -101,12 +102,12 @@ func (wrt *writer) writeInputFolder() error {
 	return nil
 }
 
-func InputFolderWrite(localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs) error {
+func InputFolderWrite(ctx context.Context, localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs) error {
 
-	return newWriter(localizer, outputfolder, memFs).writeInputFolder()
+	return newWriter(localizer, outputfolder, memFs).writeInputFolder(ctx)
 }
 
-func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs, sigCh chan os.Signal) error {
+func InputFolderWriteAsync(ctx context.Context, localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs) error {
 
 	writer := newWriter(localizer, outputfolder, memFs)
 
@@ -135,79 +136,27 @@ func InputFolderWriteAsync(localizer *i18n.Localizer, outputfolder string, memFs
 
 	spinner.Reverse()
 
-	if err := spinner.Start(); err != nil {
+	if err = spinner.Start(); err != nil {
 
 		panic(fmt.Errorf("spinner start failed: %w", err))
 	}
 
-	defer spinner.Stop()
+	defer spinner.Stop() // Don't forget to stop the spinner when done
 
 	//-------------------------------------------------------------------------
 
-	doneChannel := make(chan error, 1)
-	panicChannel := make(chan error, 1)
+	if err = writer.writeInputFolder(ctx); err != nil {
 
-	go func() {
+		if errors.Is(err, context.Canceled) {
 
-		defer func() {
-
-			if recover := recover(); recover != nil {
-
-				switch value := recover.(type) {
-
-				case error:
-
-					panicChannel <- value
-
-				case string:
-
-					panicChannel <- errors.New(value)
-
-				default:
-
-					panicChannel <- constants.ErrRecoveredPanicWithoutType
-				}
-			} else {
-
-				panicChannel <- constants.ErrRecoveredPanicWithoutType
-			}
-		}()
-
-		doneChannel <- writer.writeInputFolder()
-	}()
-
-	//-------------------------------------------------------------------------
-
-	select {
-
-	case <-sigCh:
-
-		stopFailMessage := writer.getLocalizedMessage(constants.CheckError_AbortedByUser, "", "")
-
-		spinner.StopFailMessage(stopFailMessage)
-
-		spinner.StopFail()
-
-		return constants.ErrInterrupted
-
-	case err := <-doneChannel:
-
-		if err != nil {
+			spinner.StopFailMessage(writer.getLocalizedMessage(constants.CheckError_AbortedByUser, "", ""))
+		} else {
 
 			spinner.StopFailMessage(err.Error())
-
-			spinner.StopFail()
 		}
 
-		return err
-
-	case err := <-panicChannel:
-
-		spinner.StopFailMessage(writer.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
-
 		spinner.StopFail()
-
-		panic(err) // panics in main
-
 	}
+
+	return err
 }

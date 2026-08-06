@@ -1,11 +1,11 @@
 package inputFolderCheck
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -389,11 +389,13 @@ func (chk *checker) checkTemplatesFolder() error {
 // Check the input-directory and it's content AND print error messages
 //-----------------------------------------------------------------------------
 
-func InputFolderCheck(localizer *i18n.Localizer, inputfolder string, templateFolder string) error {
+func InputFolderCheck(ctx context.Context, localizer *i18n.Localizer, inputfolder string, templateFolder string) error {
 
 	var err error
 
 	checker := newChecker(localizer, inputfolder, templateFolder)
+
+	// TODO: Alle drei Funktionen mit Context ausrüsten!
 
 	if err = checker.checkInputFolder(); err == nil {
 
@@ -428,7 +430,7 @@ func InputFolderCheck(localizer *i18n.Localizer, inputfolder string, templateFol
 // Check the input-directory and it's content AND print error messages asynchronous
 //-----------------------------------------------------------------------------
 
-func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, templateFolder string, sigCh chan os.Signal) error {
+func InputFolderCheckAsync(ctx context.Context, localizer *i18n.Localizer, inputfolder string, templateFolder string) error {
 
 	checker := newChecker(localizer, inputfolder, templateFolder)
 
@@ -457,149 +459,52 @@ func InputFolderCheckAsync(localizer *i18n.Localizer, inputfolder string, templa
 
 	spinner.Reverse()
 
-	if err := spinner.Start(); err != nil {
+	if err = spinner.Start(); err != nil {
 
 		panic(fmt.Errorf("spinner start failed: %w", err))
 	}
 
-	defer spinner.Stop()
+	defer spinner.Stop() // Don't forget to stop the spinner when done
 
 	//-------------------------------------------------------------------------
 
-	doneChannel := make(chan error, 1)
-	panicChannel := make(chan error, 1)
+	// TODO: Alle drei Funktionen mit Context ausrüsten!
 
-	go func() {
+	if err = checker.checkInputFolder(); err == nil {
 
-		defer func() {
+		if err = checker.checkTemplatesFolder(); err == nil {
 
-			if rec := recover(); rec != nil {
+			err = checker.checkBulkData()
+		}
+	}
 
-				fmt.Fprintf(os.Stderr, "\x1b[31mInternal error:\x1b[0m %v\n", rec)
+	//-------------------------------------------------------------------------
 
-				pcs := make([]uintptr, 32)
+	if err != nil {
 
-				n := runtime.Callers(3, pcs)
+		if errors.Is(err, context.Canceled) {
 
-				frames := runtime.CallersFrames(pcs[:n])
+			spinner.StopFailMessage(checker.getLocalizedMessage(constants.CheckError_AbortedByUser, "", ""))
 
-				for {
+		} else if errors.Is(err, constants.ErrInputFolderIncorrect) {
 
-					frame, more := frames.Next()
+			checker.reportInputFolderErrors()
 
-					fmt.Printf("%s:%d\n", filepath.Base(frame.File), frame.Line)
+		} else if errors.Is(err, constants.ErrTemplateFolderIncorrect) {
 
-					if !more {
+			checker.reportTemplatesFolderErrors()
 
-						break
-					}
-				}
+		} else if errors.Is(err, constants.ErrBulkDataIncorrect) {
 
-				switch value := rec.(type) {
+			checker.reportBulkDataErrors()
 
-				case error:
-
-					panicChannel <- value
-
-				case string:
-
-					panicChannel <- errors.New(value)
-
-				default:
-
-					panicChannel <- constants.ErrRecoveredPanicWithoutType
-				}
-			} else {
-
-				panicChannel <- constants.ErrRecoveredPanicWithoutType
-			}
-		}()
-
-		if err := checker.checkInputFolder(); err == nil {
-
-			if err := checker.checkTemplatesFolder(); err == nil {
-
-				doneChannel <- checker.checkBulkData()
-			} else {
-
-				doneChannel <- err
-			}
 		} else {
 
-			doneChannel <- err
-		}
-	}()
-
-	//-------------------------------------------------------------------------
-
-	select {
-
-	case <-sigCh:
-
-		stopFailMessage := checker.getLocalizedMessage(constants.CheckError_AbortedByUser, "", "")
-
-		spinner.StopFailMessage(stopFailMessage)
-
-		spinner.StopFail()
-
-		return constants.ErrInterrupted
-
-	case err := <-doneChannel:
-
-		if err != nil {
-
-			if err == constants.ErrInputFolderIncorrect {
-
-				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				checker.reportInputFolderErrors()
-
-				return err
-			}
-
-			if err == constants.ErrTemplateFolderIncorrect {
-
-				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_TemplatefolderIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				checker.reportTemplatesFolderErrors()
-
-				return err
-			}
-
-			if err == constants.ErrBulkDataIncorrect {
-
-				stopFailMessage := checker.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", "")
-
-				spinner.StopFailMessage(stopFailMessage)
-
-				spinner.StopFail()
-
-				checker.reportBulkDataErrors()
-
-				return err
-			}
-
 			spinner.StopFailMessage(err.Error())
-
-			spinner.StopFail()
 		}
 
-		return err
-
-	case err := <-panicChannel:
-
-		spinner.StopFailMessage(checker.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
-
 		spinner.StopFail()
-
-		panic(err) // panics in main
 	}
+
+	return err
 }

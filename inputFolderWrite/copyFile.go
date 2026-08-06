@@ -1,19 +1,36 @@
 package inputFolderWrite
 
 import (
+	"context"
 	"io"
 
+	"github.com/ForTheTrashBin/LooLid/helper/nutsandbolts"
 	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"github.com/spf13/afero"
 )
 
-func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName string) error {
+//-----------------------------------------------------------------------------
+
+func copyFile(ctx context.Context, sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName string) error {
 
 	//-------------------------------------------------------------------------
 	// inner function to manage defered operations properly
 	//-------------------------------------------------------------------------
 
 	innerCopyFile := func() error {
+
+		//---------------------------------------------------------------------
+		// Check cancellation
+		//---------------------------------------------------------------------
+
+		select {
+
+		case <-ctx.Done():
+
+			return ctx.Err()
+
+		default:
+		}
 
 		//---------------------------------------------------------------------
 		// Open the source file to be copied
@@ -42,10 +59,23 @@ func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName st
 		defer destFile.Close() // ensure the file is closed on exit
 
 		//---------------------------------------------------------------------
-		// copy file content from source to dest
+		// Check cancellation
 		//---------------------------------------------------------------------
 
-		if _, err = io.CopyBuffer(destFile, sourceFile, nil); err != nil {
+		select {
+
+		case <-ctx.Done():
+
+			return ctx.Err()
+
+		default:
+		}
+
+		//---------------------------------------------------------------------
+		// copy file content from source to dest and do it context-aware!
+		//---------------------------------------------------------------------
+
+		if _, err = io.CopyBuffer(destFile, &nutsandbolts.ContextReader{Context: ctx, Reader: sourceFile}, nil); err != nil {
 
 			return err
 		}
@@ -57,6 +87,21 @@ func copyFile(sourceFs afero.Fs, sourceName string, destFs afero.Fs, destName st
 
 		return nil
 	}
+
+	//-------------------------------------------------------------------------
+	// Check cancellation
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	default:
+	}
+
+	//-------------------------------------------------------------------------
 
 	if err := innerCopyFile(); err != nil {
 

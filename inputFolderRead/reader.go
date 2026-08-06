@@ -1,6 +1,7 @@
 package inputFolderRead
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -79,21 +80,30 @@ func closeFile(f afero.File, reported *error) {
 	}
 }
 
-func (rdr *reader) readInputFolder() error {
+func (rdr *reader) readInputFolder(ctx context.Context) error {
 
-	diskFs := afero.NewOsFs()
+	select {
 
-	rulesConfig := configParser.NewRulesConfig() // Start with default config
+	case <-ctx.Done():
 
-	return copyDir(rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", rulesConfig, 0)
+		return ctx.Err()
+
+	default:
+
+		diskFs := afero.NewOsFs()
+
+		rulesConfig := configParser.NewRulesConfig() // Start with default config
+
+		return copyDir(ctx, rdr.localizer, diskFs, rdr.inputFolder, *rdr.memFs, "", rulesConfig, 0)
+	}
 }
 
-func InputFolderRead(localizer *i18n.Localizer, inputfolder string, memFs *afero.Fs) error {
+func InputFolderRead(ctx context.Context, localizer *i18n.Localizer, inputfolder string, memFs *afero.Fs) error {
 
-	return newReader(localizer, inputfolder, memFs).readInputFolder()
+	return newReader(localizer, inputfolder, memFs).readInputFolder(ctx)
 }
 
-func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *afero.Fs, sigCh chan os.Signal) error {
+func InputFolderReadAsync(ctx context.Context, localizer *i18n.Localizer, inputfolder string, memFs *afero.Fs) error {
 
 	reader := newReader(localizer, inputfolder, memFs)
 
@@ -122,78 +132,27 @@ func InputFolderReadAsync(localizer *i18n.Localizer, inputfolder string, memFs *
 
 	spinner.Reverse()
 
-	if err := spinner.Start(); err != nil {
+	if err = spinner.Start(); err != nil {
 
 		panic(fmt.Errorf("spinner start failed: %w", err))
 	}
 
-	defer spinner.Stop()
+	defer spinner.Stop() // Don't forget to stop the spinner when done
 
 	//-------------------------------------------------------------------------
 
-	doneChannel := make(chan error, 1)
-	panicChannel := make(chan error, 1)
+	if err = reader.readInputFolder(ctx); err != nil {
 
-	go func() {
+		if errors.Is(err, context.Canceled) {
 
-		defer func() {
-
-			if rec := recover(); rec != nil {
-
-				switch value := rec.(type) {
-
-				case error:
-
-					panicChannel <- value
-
-				case string:
-
-					panicChannel <- errors.New(value)
-
-				default:
-
-					panicChannel <- constants.ErrRecoveredPanicWithoutType
-				}
-			} else {
-
-				panicChannel <- constants.ErrRecoveredPanicWithoutType
-			}
-		}()
-
-		doneChannel <- reader.readInputFolder()
-	}()
-
-	//-------------------------------------------------------------------------
-
-	select {
-
-	case <-sigCh:
-
-		stopFailMessage := reader.getLocalizedMessage(constants.CheckError_AbortedByUser, "", "")
-
-		spinner.StopFailMessage(stopFailMessage)
-
-		spinner.StopFail()
-
-		return constants.ErrInterrupted
-
-	case err := <-doneChannel:
-
-		if err != nil {
+			spinner.StopFailMessage(reader.getLocalizedMessage(constants.CheckError_AbortedByUser, "", ""))
+		} else {
 
 			spinner.StopFailMessage(err.Error())
-
-			spinner.StopFail()
 		}
 
-		return err
-
-	case err := <-panicChannel:
-
-		spinner.StopFailMessage(reader.getLocalizedMessage(constants.SpinnerStopMessageError, "", ""))
-
 		spinner.StopFail()
-
-		panic(err) // panics in main
 	}
+
+	return err
 }

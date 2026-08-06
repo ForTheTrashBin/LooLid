@@ -1,6 +1,7 @@
 package inputFolderWrite
 
 import (
+	"context"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -14,7 +15,7 @@ import (
 // Delete files/directories that are not (or no longer) present in the source
 //-----------------------------------------------------------------------------
 
-func cleanDir(destFs afero.Fs, destFolder string, sourceFs afero.Fs) error {
+func cleanDir(ctx context.Context, destFs afero.Fs, destFolder string, sourceFs afero.Fs) error {
 
 	dirExists, err := afero.DirExists(destFs, destFolder)
 
@@ -38,6 +39,19 @@ func cleanDir(destFs afero.Fs, destFolder string, sourceFs afero.Fs) error {
 			if err != nil {
 
 				return err
+			}
+
+			//-----------------------------------------------------------------
+			// Check cancellation
+			//-----------------------------------------------------------------
+
+			select {
+
+			case <-ctx.Done():
+
+				return ctx.Err()
+
+			default:
 			}
 
 			//-----------------------------------------------------------------
@@ -79,6 +93,21 @@ func cleanDir(destFs afero.Fs, destFolder string, sourceFs afero.Fs) error {
 		//---------------------------------------------------------------------
 
 		for _, path := range slices.Backward(toBeDeleted) {
+
+			//-----------------------------------------------------------------
+			// Check cancellation
+			//-----------------------------------------------------------------
+
+			select {
+
+			case <-ctx.Done():
+
+				return ctx.Err()
+
+			default:
+			}
+
+			//-----------------------------------------------------------------
 
 			if err = destFs.Remove(path); err != nil {
 

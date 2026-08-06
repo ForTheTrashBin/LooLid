@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -75,40 +76,51 @@ func (cmd *BuildCommand) Parse(localizer *i18n.Localizer, args []string) error {
 
 func (cmd *BuildCommand) Execute() error {
 
+	//-------------------------------------------------------------------------
+	// Create a context that is canceled (ctx.Done()) when an interrupt signal is received
+	//-------------------------------------------------------------------------
+
+	ctx, stopSignaling := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+
+	defer stopSignaling() // Don't forget to stop the signal notification when done
+
+	//-------------------------------------------------------------------------
+
 	inputFolder := constants.AppConfig_DefaultInputFolder
 	outputFolder := constants.AppConfig_DefaultOutputFolder
 	templatesFolder := constants.AppConfig_DefaultTemplatesFolder
 
 	//-------------------------------------------------------------------------
 
-	sigCh := make(chan os.Signal, 1)
-
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-
-	defer signal.Stop(sigCh)
-
-	//-------------------------------------------------------------------------
-
-	if err := inputFolderCheck.InputFolderCheckAsync(cmd.localizer, inputFolder, templatesFolder, sigCh); err != nil {
+	if err := inputFolderCheck.InputFolderCheckAsync(ctx, cmd.localizer, inputFolder, templatesFolder); err != nil {
 
 		return nil
 	}
 
-	memFs := afero.NewMemMapFs()
+	if ctx.Err() == nil {
 
-	if err := inputFolderRead.InputFolderReadAsync(cmd.localizer, inputFolder, &memFs, sigCh); err != nil {
+		memFs := afero.NewMemMapFs()
 
-		return nil
-	}
+		if err := inputFolderRead.InputFolderReadAsync(ctx, cmd.localizer, inputFolder, &memFs); err != nil {
 
-	if err := inputFolderProccess.InputFolderProccessAsync(cmd.localizer, &memFs, sigCh); err != nil {
+			return nil
+		}
 
-		return nil
-	}
+		if ctx.Err() == nil {
 
-	if err := inputFolderWrite.InputFolderWriteAsync(cmd.localizer, outputFolder, &memFs, sigCh); err != nil {
+			if err := inputFolderProccess.InputFolderProccessAsync(ctx, cmd.localizer, &memFs); err != nil {
 
-		return nil
+				return nil
+			}
+		}
+
+		if ctx.Err() == nil {
+
+			if err := inputFolderWrite.InputFolderWriteAsync(ctx, cmd.localizer, outputFolder, &memFs); err != nil {
+
+				return nil
+			}
+		}
 	}
 
 	return nil

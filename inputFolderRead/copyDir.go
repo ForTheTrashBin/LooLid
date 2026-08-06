@@ -1,6 +1,7 @@
 package inputFolderRead
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
@@ -11,7 +12,20 @@ import (
 	"github.com/spf13/afero"
 )
 
-func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, rulesConfig *configParser.RulesConfig, depth int) error {
+func copyDir(ctx context.Context, localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, destFs afero.Fs, destFolder string, rulesConfig *configParser.RulesConfig, depth int) error {
+
+	//-------------------------------------------------------------------------
+	// Check cancellation
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	default:
+	}
 
 	//-------------------------------------------------------------------------
 	// Get all files and directories in the source folder
@@ -36,6 +50,21 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 		//---------------------------------------------------------------------
 
 		for _, sourceFileInfo := range sourceFileInfos {
+
+			//-----------------------------------------------------------------
+			// Check cancellation
+			//-----------------------------------------------------------------
+
+			select {
+
+			case <-ctx.Done():
+
+				return ctx.Err()
+
+			default:
+			}
+
+			//-----------------------------------------------------------------
 
 			if !sourceFileInfo.IsDir() && (sourceFileInfo.Name() == configFileName) {
 
@@ -73,6 +102,19 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 		}
 
 		//---------------------------------------------------------------------
+		// Check cancellation
+		//---------------------------------------------------------------------
+
+		select {
+
+		case <-ctx.Done():
+
+			return ctx.Err()
+
+		default:
+		}
+
+		//---------------------------------------------------------------------
 		// Write FrontMatter to a file in the destination folder for later use
 		//---------------------------------------------------------------------
 
@@ -94,6 +136,21 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 		for _, sourceFileInfo := range sourceFileInfos {
 
+			//-----------------------------------------------------------------
+			// Check cancellation
+			//-----------------------------------------------------------------
+
+			select {
+
+			case <-ctx.Done():
+
+				return ctx.Err()
+
+			default:
+			}
+
+			//-----------------------------------------------------------------
+
 			if !deepCopyRulesConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir()) {
 
 				if !osspecific.IsHiddenOrSystem(sourceFolder) {
@@ -108,7 +165,7 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 							return err
 						}
 
-						if err = copyDir(localizer, sourceFs, newSource, destFs, newDest, deepCopyRulesConfig, depth+1); err != nil {
+						if err = copyDir(ctx, localizer, sourceFs, newSource, destFs, newDest, deepCopyRulesConfig, depth+1); err != nil {
 
 							return err
 						}
@@ -121,7 +178,20 @@ func copyDir(localizer *i18n.Localizer, sourceFs afero.Fs, sourceFolder string, 
 
 						if sourceFileInfo.Name() != configFileName { // Never copy configuration file, because it is already written
 
-							if err = copyFile(sourceFs, newSource, destFs, newDest); err != nil {
+							//--------------------------------------------------
+							// Check cancellation
+							//--------------------------------------------------
+
+							select {
+
+							case <-ctx.Done():
+
+								return ctx.Err()
+
+							default:
+							}
+
+							if err = copyFile(ctx, sourceFs, newSource, destFs, newDest); err != nil {
 
 								return err
 							}
