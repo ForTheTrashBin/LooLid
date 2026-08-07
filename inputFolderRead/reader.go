@@ -107,6 +107,20 @@ func InputFolderReadAsync(ctx context.Context, localizer *i18n.Localizer, inputf
 
 	reader := newReader(localizer, inputfolder, memFs)
 
+	//-------------------------------------------------------------------------
+	// Disable echo for the duration of the processing
+	//-------------------------------------------------------------------------
+
+	if err := osspecific.SetEcho(false); err == nil {
+
+		// Remember: defered functions are executed in LIFO order, so FlushStdin will be called before SetEcho(true)
+
+		defer osspecific.SetEcho(true) // Restore echo on exit
+		defer osspecific.FlushStdin()  // Flush stdin on exit
+	}
+
+	//-------------------------------------------------------------------------
+
 	spinnerSuffix := reader.getLocalizedMessage(constants.SpinnerSuffixInputFolderRead, "", "")
 	spinnerStopMessage := reader.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 

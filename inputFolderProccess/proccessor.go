@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
+	"github.com/ForTheTrashBin/LooLid/helper/osspecific"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/spf13/afero"
 	"github.com/theckman/yacspin"
@@ -67,6 +68,18 @@ func InputFolderProccess(ctx context.Context, localizer *i18n.Localizer, memFs *
 func InputFolderProccessAsync(ctx context.Context, localizer *i18n.Localizer, memFs *afero.Fs) error {
 
 	proccessor := newProccessor(localizer, memFs)
+
+	//-------------------------------------------------------------------------
+	// Disable echo for the duration of the processing
+	//-------------------------------------------------------------------------
+
+	if err := osspecific.SetEcho(false); err == nil {
+
+		// Remember: defered functions are executed in LIFO order, so FlushStdin will be called before SetEcho(true)
+
+		defer osspecific.SetEcho(true) // Restore echo on exit
+		defer osspecific.FlushStdin()  // Flush stdin on exit
+	}
 
 	//-------------------------------------------------------------------------
 

@@ -85,21 +85,12 @@ func (wrt *writer) writeInputFolder(ctx context.Context) error {
 
 	err := cleanDir(ctx, destFs, wrt.outputFolder, *wrt.memFs)
 
-	if err != nil {
+	if err == nil {
 
-		return err
+		err = syncDir(ctx, *wrt.memFs, "", destFs, wrt.outputFolder, time.Now(), 0)
 	}
 
-	//-------------------------------------------------------------------------
-
-	err = syncDir(ctx, *wrt.memFs, "", destFs, wrt.outputFolder, time.Now(), 0)
-
-	if err != nil {
-
-		panic(err)
-	}
-
-	return nil
+	return err
 }
 
 func InputFolderWrite(ctx context.Context, localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs) error {
@@ -110,6 +101,20 @@ func InputFolderWrite(ctx context.Context, localizer *i18n.Localizer, outputfold
 func InputFolderWriteAsync(ctx context.Context, localizer *i18n.Localizer, outputfolder string, memFs *afero.Fs) error {
 
 	writer := newWriter(localizer, outputfolder, memFs)
+
+	//-------------------------------------------------------------------------
+	// Disable echo for the duration of the processing
+	//-------------------------------------------------------------------------
+
+	if err := osspecific.SetEcho(false); err == nil {
+
+		// Remember: defered functions are executed in LIFO order, so FlushStdin will be called before SetEcho(true)
+
+		defer osspecific.SetEcho(true) // Restore echo on exit
+		defer osspecific.FlushStdin()  // Flush stdin on exit
+	}
+
+	//-------------------------------------------------------------------------
 
 	spinnerSuffix := writer.getLocalizedMessage(constants.SpinnerSuffixInputFolderWrite, "", "")
 	spinnerStopMessage := writer.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")

@@ -533,6 +533,20 @@ func InputFolderCheckAsync(ctx context.Context, localizer *i18n.Localizer, input
 
 	checker := newChecker(localizer, inputfolder, templateFolder)
 
+	//-------------------------------------------------------------------------
+	// Disable echo for the duration of the processing
+	//-------------------------------------------------------------------------
+
+	if err := osspecific.SetEcho(false); err == nil {
+
+		// Remember: defered functions are executed in LIFO order, so FlushStdin will be called before SetEcho(true)
+
+		defer osspecific.SetEcho(true) // Restore echo on exit
+		defer osspecific.FlushStdin()  // Flush stdin on exit
+	}
+
+	//-------------------------------------------------------------------------
+
 	spinnerSuffix := checker.getLocalizedMessage(constants.SpinnerSuffixInputfolderCheck, "", "")
 	spinnerStopMessage := checker.getLocalizedMessage(constants.SpinnerStopMessageDone, "", "")
 

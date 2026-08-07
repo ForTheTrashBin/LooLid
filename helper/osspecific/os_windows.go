@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
+	"golang.org/x/sys/windows"
 )
 
 //-----------------------------------------------------------------------------
@@ -23,6 +24,42 @@ func fileInfoStat(v interface{}) *syscall.Win32FileAttributeData {
 	}
 
 	return s
+}
+
+//-----------------------------------------------------------------------------
+// Set the terminal echo on or off.
+//
+// If the teminal is redirected "GetConsoleMode" will return an error.
+// In that case, the caller should ignore the error and continue. This is
+// useful for example when running in a docker container
+//-----------------------------------------------------------------------------
+
+func SetEcho(enable bool) error {
+
+	var mode uint32
+
+	handle := windows.Handle(os.Stdin.Fd())
+
+	if err := windows.GetConsoleMode(handle, &mode); err != nil {
+
+		return err
+	}
+
+	if enable {
+
+		mode |= windows.ENABLE_ECHO_INPUT
+
+	} else {
+
+		mode &^= windows.ENABLE_ECHO_INPUT
+	}
+
+	return windows.SetConsoleMode(handle, mode)
+}
+
+func FlushStdin() error {
+
+	return windows.FlushConsoleInputBuffer(windows.Handle(os.Stdin.Fd()))
 }
 
 //-----------------------------------------------------------------------------
