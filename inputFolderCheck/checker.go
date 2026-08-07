@@ -137,7 +137,20 @@ func (chk *checker) getLocalizedMessage(MessageId string, value1 string, value2 
 		})
 }
 
-func (chk *checker) checkInputFolder() error {
+func (chk *checker) checkInputFolder(ctx context.Context) error {
+
+	//-------------------------------------------------------------------------
+	// Check cancellation
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	default:
+	}
 
 	//-------------------------------------------------------------------------
 	// get fileinfo of given input-path
@@ -176,6 +189,19 @@ func (chk *checker) checkInputFolder() error {
 	}
 
 	//-------------------------------------------------------------------------
+	// Check cancellation
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	default:
+	}
+
+	//-------------------------------------------------------------------------
 	// On windows the directory must not be hidden or system
 	//-------------------------------------------------------------------------
 
@@ -191,6 +217,19 @@ func (chk *checker) checkInputFolder() error {
 	if strings.EqualFold(baseName, nutsandbolts.GetConfigFileName()) {
 
 		return errors.New(chk.getLocalizedMessage(constants.CheckError_Confusion, chk.inputFolder, ""))
+	}
+
+	//-------------------------------------------------------------------------
+	// Check cancellation
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	default:
 	}
 
 	//-------------------------------------------------------------------------
@@ -280,6 +319,21 @@ func (chk *checker) checkInputFolder() error {
 
 	for _, dirEntry := range dirEntries {
 
+		//---------------------------------------------------------------------
+		// Check cancellation
+		//---------------------------------------------------------------------
+
+		select {
+
+		case <-ctx.Done():
+
+			return ctx.Err()
+
+		default:
+		}
+
+		//---------------------------------------------------------------------
+
 		if dirEntry.IsDir() {
 
 			if dirEntry.Name() != baseName { // it's NOT me!
@@ -307,13 +361,13 @@ func (chk *checker) checkInputFolder() error {
 	return err
 }
 
-func (chk *checker) checkBulkData() error {
+func (chk *checker) checkBulkData(ctx context.Context) error {
 
 	diskFs := afero.NewOsFs()
 
 	rulesConfig := configParser.NewRulesConfig()
 
-	if err := chk.scanDir(diskFs, chk.inputFolder, rulesConfig, 0); err != nil {
+	if err := chk.scanDir(ctx, diskFs, chk.inputFolder, rulesConfig, 0); err != nil {
 
 		return err
 	}
@@ -326,7 +380,22 @@ func (chk *checker) checkBulkData() error {
 	return nil
 }
 
-func (chk *checker) checkTemplatesFolder() error {
+func (chk *checker) checkTemplatesFolder(ctx context.Context) error {
+
+	//-------------------------------------------------------------------------
+	// Check cancellation
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	default:
+	}
+
+	//-------------------------------------------------------------------------
 
 	diskFs := afero.NewOsFs()
 
@@ -347,6 +416,21 @@ func (chk *checker) checkTemplatesFolder() error {
 	extensions := make(map[string][]string)
 
 	for _, fileInfo := range fileInfos {
+
+		//---------------------------------------------------------------------
+		// Check cancellation
+		//---------------------------------------------------------------------
+
+		select {
+
+		case <-ctx.Done():
+
+			return ctx.Err()
+
+		default:
+		}
+
+		//---------------------------------------------------------------------
 
 		if fileInfo.IsDir() {
 
@@ -370,6 +454,21 @@ func (chk *checker) checkTemplatesFolder() error {
 	}
 
 	for extension, files := range extensions {
+
+		//---------------------------------------------------------------------
+		// Check cancellation
+		//---------------------------------------------------------------------
+
+		select {
+
+		case <-ctx.Done():
+
+			return ctx.Err()
+
+		default:
+		}
+
+		//---------------------------------------------------------------------
 
 		if len(files) > 1 {
 
@@ -397,11 +496,11 @@ func InputFolderCheck(ctx context.Context, localizer *i18n.Localizer, inputfolde
 
 	// TODO: Alle drei Funktionen mit Context ausrüsten!
 
-	if err = checker.checkInputFolder(); err == nil {
+	if err = checker.checkInputFolder(ctx); err == nil {
 
-		if err = checker.checkTemplatesFolder(); err == nil {
+		if err = checker.checkTemplatesFolder(ctx); err == nil {
 
-			if err = checker.checkBulkData(); err != nil {
+			if err = checker.checkBulkData(ctx); err != nil {
 
 				if err == constants.ErrBulkDataIncorrect {
 
@@ -470,11 +569,11 @@ func InputFolderCheckAsync(ctx context.Context, localizer *i18n.Localizer, input
 
 	// TODO: Alle drei Funktionen mit Context ausrüsten!
 
-	if err = checker.checkInputFolder(); err == nil {
+	if err = checker.checkInputFolder(ctx); err == nil {
 
-		if err = checker.checkTemplatesFolder(); err == nil {
+		if err = checker.checkTemplatesFolder(ctx); err == nil {
 
-			err = checker.checkBulkData()
+			err = checker.checkBulkData(ctx)
 		}
 	}
 
@@ -486,24 +585,38 @@ func InputFolderCheckAsync(ctx context.Context, localizer *i18n.Localizer, input
 
 			spinner.StopFailMessage(checker.getLocalizedMessage(constants.CheckError_AbortedByUser, "", ""))
 
+			spinner.StopFail()
+
 		} else if errors.Is(err, constants.ErrInputFolderIncorrect) {
+
+			spinner.StopFailMessage(checker.getLocalizedMessage(constants.CheckError_InputfolderIncorrect, "", ""))
+
+			spinner.StopFail()
 
 			checker.reportInputFolderErrors()
 
 		} else if errors.Is(err, constants.ErrTemplateFolderIncorrect) {
 
+			spinner.StopFailMessage(checker.getLocalizedMessage(constants.CheckError_TemplatefolderIncorrect, "", ""))
+
+			spinner.StopFail()
+
 			checker.reportTemplatesFolderErrors()
 
 		} else if errors.Is(err, constants.ErrBulkDataIncorrect) {
+
+			spinner.StopFailMessage(checker.getLocalizedMessage(constants.CheckError_BulkdataIncorrect, "", ""))
+
+			spinner.StopFail()
 
 			checker.reportBulkDataErrors()
 
 		} else {
 
 			spinner.StopFailMessage(err.Error())
-		}
 
-		spinner.StopFail()
+			spinner.StopFail()
+		}
 	}
 
 	return err

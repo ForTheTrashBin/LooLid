@@ -1,6 +1,7 @@
 package inputFolderCheck
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"slices"
@@ -13,7 +14,20 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, rulesConfig *configParser.RulesConfig, depth int) error {
+func (chk *checker) scanDir(ctx context.Context, sourceFs afero.Fs, sourceFolder string, rulesConfig *configParser.RulesConfig, depth int) error {
+
+	//-------------------------------------------------------------------------
+	// Check cancellation
+	//-------------------------------------------------------------------------
+
+	select {
+
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	default:
+	}
 
 	//-------------------------------------------------------------------------
 	// Get all files and directories in the source folder
@@ -40,6 +54,21 @@ func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, rulesConfig 
 		var hasDirs bool = false // Keep track if there are any directories in the source folder
 
 		for _, fileInfo := range sourceFileInfos {
+
+			//-----------------------------------------------------------------
+			// Check cancellation
+			//-----------------------------------------------------------------
+
+			select {
+
+			case <-ctx.Done():
+
+				return ctx.Err()
+
+			default:
+			}
+
+			//-----------------------------------------------------------------
 
 			filePath := filepath.Join(sourceFolder, fileInfo.Name())
 
@@ -176,6 +205,21 @@ func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, rulesConfig 
 
 			for _, sourceFileInfo := range sourceFileInfos {
 
+				//-------------------------------------------------------------
+				// Check cancellation
+				//-------------------------------------------------------------
+
+				select {
+
+				case <-ctx.Done():
+
+					return ctx.Err()
+
+				default:
+				}
+
+				//-------------------------------------------------------------
+
 				if !deepCopyRulesConfig.IsListed(sourceFileInfo.Name(), sourceFileInfo.IsDir()) {
 
 					if sourceFileInfo.IsDir() {
@@ -184,7 +228,7 @@ func (chk *checker) scanDir(sourceFs afero.Fs, sourceFolder string, rulesConfig 
 
 							newSourcePath := filepath.Join(sourceFolder, sourceFileInfo.Name())
 
-							if err = chk.scanDir(sourceFs, newSourcePath, deepCopyRulesConfig, depth+1); err != nil {
+							if err = chk.scanDir(ctx, sourceFs, newSourcePath, deepCopyRulesConfig, depth+1); err != nil {
 
 								return err
 							}
