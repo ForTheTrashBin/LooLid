@@ -78,13 +78,7 @@ func (chk *checker) scanDir(ctx context.Context, sourceFs afero.Fs, sourceFolder
 				// Validate a single file or directory and add any issues to the checker's issue lists
 				//-------------------------------------------------------------
 
-				chk.validateEntry(Entry{
-
-					filePath:  filePath,
-					entryName: fileInfo.Name(),
-					isDir:     fileInfo.IsDir(),
-					isSymlink: (fileInfo.Mode() & os.ModeSymlink) != 0,
-				})
+				chk.validateEntry(filePath, fileInfo.Name(), fileInfo.IsDir(), (fileInfo.Mode()&os.ModeSymlink) != 0)
 
 				//-------------------------------------------------------------
 				// Check for ambiguous filenames of configuration-files
@@ -151,6 +145,12 @@ func (chk *checker) scanDir(ctx context.Context, sourceFs afero.Fs, sourceFolder
 							if norm.NFC.String(groupMember) == norm.NFC.String(groupMemberTest) {
 
 								siblingsFound = true
+							} else {
+
+								if nutsandbolts.NormalizeExtension(groupMember) == nutsandbolts.NormalizeExtension(groupMemberTest) {
+
+									siblingsFound = true
+								}
 							}
 						}
 					}
@@ -164,7 +164,7 @@ func (chk *checker) scanDir(ctx context.Context, sourceFs afero.Fs, sourceFolder
 
 			if len(duplicateGroup.items) >= 2 {
 
-				chk.duplicateGroups = append(chk.duplicateGroups, duplicateGroup)
+				chk.contentDuplicateGroups = append(chk.contentDuplicateGroups, duplicateGroup)
 			}
 		}
 
@@ -224,7 +224,7 @@ func (chk *checker) scanDir(ctx context.Context, sourceFs afero.Fs, sourceFolder
 
 					if sourceFileInfo.IsDir() {
 
-						if !osspecific.IsHiddenOrSystem(sourceFolder) { // TODO: Path?
+						if !osspecific.IsHiddenOrSystem(sourceFolder) {
 
 							newSourcePath := filepath.Join(sourceFolder, sourceFileInfo.Name())
 

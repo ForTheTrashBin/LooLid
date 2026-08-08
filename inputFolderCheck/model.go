@@ -2,23 +2,6 @@ package inputFolderCheck
 
 //-----------------------------------------------------------------------------
 
-type Entry struct {
-	filePath  string
-	entryName string
-	isDir     bool
-	isSymlink bool
-}
-
-//-----------------------------------------------------------------------------
-
-type Violations struct {
-	Directories   []string
-	NoExtension   []string
-	DupExtensions map[string][]string
-}
-
-//-----------------------------------------------------------------------------
-
 type DuplicateItem struct {
 	itemName string
 	isDir    bool

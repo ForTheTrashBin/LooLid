@@ -3,7 +3,6 @@ package inputFolderCheck
 import (
 	"fmt"
 	"os"
-	"slices"
 	"sort"
 
 	"github.com/ForTheTrashBin/LooLid/helper/constants"
@@ -28,6 +27,7 @@ func (chk *checker) printIssues(MessageID string, issues []Issue) {
 		//---------------------------------------------------------------------
 
 		sort.Slice(issues, func(i, j int) bool {
+
 			return issues[i].filePath < issues[j].filePath
 		})
 
@@ -42,9 +42,12 @@ func (chk *checker) printIssues(MessageID string, issues []Issue) {
 		var needed int
 
 		for _, issue := range issues {
+
 			if issue.isDir {
+
 				needed = max(needed, lenFolder)
 			} else {
+
 				needed = max(needed, lenFile)
 			}
 		}
@@ -52,9 +55,12 @@ func (chk *checker) printIssues(MessageID string, issues []Issue) {
 		lineFormat := fmt.Sprintf("  - %%-%ds", needed+2)
 
 		for _, issue := range issues {
+
 			if issue.isDir {
+
 				fmt.Fprintf(os.Stderr, lineFormat, strFolder+":")
 			} else {
+
 				fmt.Fprintf(os.Stderr, lineFormat, strFile+":")
 			}
 
@@ -67,9 +73,9 @@ func (chk *checker) printIssues(MessageID string, issues []Issue) {
 // Print formatted list of 'duplicates' with header
 //-----------------------------------------------------------------------------
 
-func (chk *checker) printDuplicates() {
+func (chk *checker) printContentDuplicates() {
 
-	numDuplicateGroups := len(chk.duplicateGroups)
+	numDuplicateGroups := len(chk.contentDuplicateGroups)
 
 	if numDuplicateGroups > 0 {
 
@@ -79,14 +85,17 @@ func (chk *checker) printDuplicates() {
 		// Sorting for a better customer-experience
 		//---------------------------------------------------------------------
 
-		sort.Slice(chk.duplicateGroups, func(i, j int) bool {
-			return chk.duplicateGroups[i].groupName < chk.duplicateGroups[j].groupName
+		sort.Slice(chk.contentDuplicateGroups, func(i, j int) bool {
+
+			return chk.contentDuplicateGroups[i].groupName < chk.contentDuplicateGroups[j].groupName
 		})
 
-		for looperGroups := 0; looperGroups < len(chk.duplicateGroups); looperGroups++ {
-			duplicateGroup := &chk.duplicateGroups[looperGroups]
+		for looperGroups := 0; looperGroups < len(chk.contentDuplicateGroups); looperGroups++ {
+
+			duplicateGroup := &chk.contentDuplicateGroups[looperGroups]
 
 			sort.Slice(duplicateGroup.items, func(i, j int) bool {
+
 				return duplicateGroup.items[i].itemName < duplicateGroup.items[j].itemName
 			})
 		}
@@ -101,16 +110,19 @@ func (chk *checker) printDuplicates() {
 
 		//---------------------------------------------------------------------
 
-		for _, duplicateGroup := range chk.duplicateGroups {
+		for _, duplicateGroup := range chk.contentDuplicateGroups {
 
 			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strFolder, duplicateGroup.groupName)
 
 			var needed int
 
 			for _, items := range duplicateGroup.items {
+
 				if items.isDir {
+
 					needed = max(needed, lenFolder)
 				} else {
+
 					needed = max(needed, lenFile)
 				}
 			}
@@ -120,8 +132,82 @@ func (chk *checker) printDuplicates() {
 			for _, items := range duplicateGroup.items {
 
 				if items.isDir {
+
 					fmt.Fprintf(os.Stderr, lineheaderFormat, strFolder+":")
 				} else {
+
+					fmt.Fprintf(os.Stderr, lineheaderFormat, strFile+":")
+				}
+
+				fmt.Fprintf(os.Stderr, "%s\n", items.itemName)
+			}
+		}
+	}
+}
+
+func (chk *checker) printTemplatesDuplicates() {
+
+	numDuplicateGroups := len(chk.templatesDuplicateGroups)
+
+	if numDuplicateGroups > 0 {
+
+		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_DuplicateEntries, numDuplicateGroups)
+
+		//---------------------------------------------------------------------
+		// Sorting for a better customer-experience
+		//---------------------------------------------------------------------
+
+		sort.Slice(chk.templatesDuplicateGroups, func(i, j int) bool {
+
+			return chk.templatesDuplicateGroups[i].groupName < chk.templatesDuplicateGroups[j].groupName
+		})
+
+		for looperGroups := 0; looperGroups < len(chk.templatesDuplicateGroups); looperGroups++ {
+
+			duplicateGroup := &chk.templatesDuplicateGroups[looperGroups]
+
+			sort.Slice(duplicateGroup.items, func(i, j int) bool {
+
+				return duplicateGroup.items[i].itemName < duplicateGroup.items[j].itemName
+			})
+		}
+
+		//---------------------------------------------------------------------
+
+		strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_Folder})
+		strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_File})
+
+		lenFolder := len(strFolder)
+		lenFile := len(strFile)
+
+		//---------------------------------------------------------------------
+
+		for _, duplicateGroup := range chk.templatesDuplicateGroups {
+
+			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strFolder, duplicateGroup.groupName)
+
+			var needed int
+
+			for _, items := range duplicateGroup.items {
+
+				if items.isDir {
+
+					needed = max(needed, lenFolder)
+				} else {
+
+					needed = max(needed, lenFile)
+				}
+			}
+
+			lineheaderFormat := fmt.Sprintf("    - %%-%ds", needed+2)
+
+			for _, items := range duplicateGroup.items {
+
+				if items.isDir {
+
+					fmt.Fprintf(os.Stderr, lineheaderFormat, strFolder+":")
+				} else {
+
 					fmt.Fprintf(os.Stderr, lineheaderFormat, strFile+":")
 				}
 
@@ -142,94 +228,9 @@ func (chk *checker) reportInputFolderErrors() {
 
 func (chk *checker) reportTemplatesFolderErrors() {
 
-	strFile := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_File})
-	strFolder := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_Folder})
-	strExtension := chk.localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: constants.Label_Extension})
+	chk.printIssues(constants.CheckError_SubfoldersFound, chk.issuesTemplatesDirectoryChildren)
 
-	//-------------------------------------------------------------------------
-
-	numEntries := len(chk.violations.Directories)
-
-	if numEntries > 0 {
-
-		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_SubfoldersFound, numEntries)
-
-		//---------------------------------------------------------------------
-		// Sorting for a better customer-experience
-		//---------------------------------------------------------------------
-
-		slices.Sort(chk.violations.Directories)
-
-		//---------------------------------------------------------------------
-
-		for _, dirName := range chk.violations.Directories {
-
-			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strFolder, dirName)
-		}
-	}
-
-	//-------------------------------------------------------------------------
-
-	numEntries = len(chk.violations.NoExtension)
-
-	if numEntries > 0 {
-
-		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_NoExtensions, numEntries) // TODO
-
-		//---------------------------------------------------------------------
-		// Sorting for a better customer-experience
-		//---------------------------------------------------------------------
-
-		slices.Sort(chk.violations.NoExtension)
-
-		//---------------------------------------------------------------------
-
-		for _, fileName := range chk.violations.NoExtension {
-
-			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strFile, fileName)
-		}
-	}
-
-	//-------------------------------------------------------------------------
-
-	numEntries = len(chk.violations.DupExtensions)
-
-	if numEntries > 0 {
-
-		nutsandbolts.PrintLocalizedListHeader(chk.localizer, constants.CheckError_DuplicateExtension, numEntries) // TODO
-
-		//---------------------------------------------------------------------
-		// Sorting for a better customer-experience
-		//---------------------------------------------------------------------
-
-		keySlice := make([]string, 0, numEntries)
-
-		for key := range chk.violations.DupExtensions {
-
-			keySlice = append(keySlice, key)
-		}
-
-		slices.Sort(keySlice)
-
-		//---------------------------------------------------------------------
-
-		for _, key := range keySlice {
-
-			fmt.Fprintf(os.Stderr, "  - %s: %s\n", strExtension, key)
-
-			fileNames := chk.violations.DupExtensions[key]
-
-			slices.Sort(fileNames)
-
-			//-----------------------------------------------------------------
-
-			for _, fileName := range chk.violations.DupExtensions[key] {
-
-				fmt.Fprintf(os.Stderr, "    - %s: %s\n", strFile, fileName)
-			}
-
-		}
-	}
+	chk.printTemplatesDuplicates()
 }
 
 func (chk *checker) reportBulkDataErrors() {
@@ -243,5 +244,5 @@ func (chk *checker) reportBulkDataErrors() {
 	chk.printIssues(constants.CheckError_SymbolicLinkDetected, chk.issuesSymLink)
 	chk.printIssues(constants.CheckError_ConfigFile, chk.issuesConfigFile)
 
-	chk.printDuplicates()
+	chk.printContentDuplicates()
 }

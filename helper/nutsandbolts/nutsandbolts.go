@@ -12,6 +12,7 @@ import (
 )
 
 //-----------------------------------------------------------------------------
+// Errormessage for invalid number of commands when parsing the commandline
 //-----------------------------------------------------------------------------
 
 var ErrInvalidNumberOfCommands = errors.New("invalid number of commands")
@@ -118,6 +119,7 @@ func GetConfigFileName() string {
 }
 
 //-----------------------------------------------------------------------------
+// Remapping of "flag" error messages to make them i18n-friendly
 //-----------------------------------------------------------------------------
 
 /*
@@ -209,6 +211,7 @@ func GetFlagMessage(err error) (string, []string) {
 }
 
 //-----------------------------------------------------------------------------
+// Standardized sorting of fileInfos for a better customer-experience
 //-----------------------------------------------------------------------------
 
 func SortFileInfos(fileInfos []os.FileInfo, directoriesFirst bool) {
@@ -228,6 +231,44 @@ func SortFileInfos(fileInfos []os.FileInfo, directoriesFirst bool) {
 }
 
 //-----------------------------------------------------------------------------
+// Normalizing file extensions to a standard form to prevent ambiguity
+//-----------------------------------------------------------------------------
+
+var extensionAliases = map[string]string{
+	".htm": ".html",
+	".yml": ".yaml",
+	".md":  ".markdown",
+	".jpg": ".jpeg",
+	".tif": ".tiff",
+	".crt": ".cert",
+	".tgz": ".tar.gz",
+}
+
+func NormalizeExtension(inputPath string) string {
+
+	originalExtension := filepath.Ext(inputPath)
+
+	if originalExtension == "" {
+
+		return inputPath
+	}
+
+	originalExtension = strings.ToLower(originalExtension)
+
+	standardExt, exists := extensionAliases[originalExtension]
+
+	if !exists {
+
+		return inputPath
+	}
+
+	basePath := strings.TrimSuffix(inputPath, originalExtension)
+
+	return basePath + standardExt
+}
+
+//-----------------------------------------------------------------------------
+// Generic-Must-Pattern to simplify error handling in certain situations
 //-----------------------------------------------------------------------------
 
 func Must[T any](x T, err error) T {

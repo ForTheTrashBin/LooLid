@@ -258,6 +258,3 @@ other = "Verzeichnis"
 
 [label.file]
 other = "Datei"
-
-[label.extension]
-other = "Erweiterung"

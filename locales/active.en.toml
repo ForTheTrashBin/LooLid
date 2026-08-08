@@ -258,6 +258,3 @@ other = "Folder"
 
 [label.file]
 other = "File"
-
-[label.extension]
-other = "Extension"

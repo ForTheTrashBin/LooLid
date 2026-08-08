@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/spf13/afero"
 	"github.com/theckman/yacspin"
+	"golang.org/x/text/unicode/norm"
 )
 
 type checker struct {
@@ -23,19 +25,19 @@ type checker struct {
 	inputFolder    string
 	templateFolder string
 
-	issuesInputDirectorySiblings []Issue // checker.go
-	issuesInvalidWindowsChar     []Issue // rules.go
-	issuesTrailingDotSpace       []Issue // rules.go
-	issuesReservedWindowsName    []Issue // rules.go
-	issuesFileNameLength         []Issue // rules.go
-	issuesPathNameLength         []Issue // rules.go
-	issuesUnicodeNormalization   []Issue // rules.go
-	issuesSymLink                []Issue // rules.go
-	issuesConfigFile             []Issue // scanner.go
+	issuesInputDirectorySiblings     []Issue // checker.go
+	issuesInvalidWindowsChar         []Issue // rules.go
+	issuesTrailingDotSpace           []Issue // rules.go
+	issuesReservedWindowsName        []Issue // rules.go
+	issuesFileNameLength             []Issue // rules.go
+	issuesPathNameLength             []Issue // rules.go
+	issuesUnicodeNormalization       []Issue // rules.go
+	issuesSymLink                    []Issue // rules.go
+	issuesConfigFile                 []Issue // scanner.go
+	issuesTemplatesDirectoryChildren []Issue // checker.go
 
-	duplicateGroups []DuplicateGroup
-
-	violations Violations
+	contentDuplicateGroups   []DuplicateGroup
+	templatesDuplicateGroups []DuplicateGroup
 }
 
 func newChecker(localizer *i18n.Localizer, inputFolder string, templateFolder string) *checker {
@@ -45,12 +47,6 @@ func newChecker(localizer *i18n.Localizer, inputFolder string, templateFolder st
 		localizer:      localizer,
 		inputFolder:    inputFolder,
 		templateFolder: templateFolder,
-
-		violations: Violations{
-			Directories:   []string{},
-			NoExtension:   []string{},
-			DupExtensions: make(map[string][]string),
-		},
 	}
 
 	return chk
@@ -112,7 +108,7 @@ func (chk *checker) isBulkDataCorrect() bool {
 		return false
 	}
 
-	if len(chk.duplicateGroups) > 0 {
+	if len(chk.contentDuplicateGroups) > 0 {
 
 		result = false
 	}
@@ -120,9 +116,21 @@ func (chk *checker) isBulkDataCorrect() bool {
 	return result
 }
 
-func (chk *checker) isTemplatesCorrect() bool {
+func (chk *checker) isTemplatesDirectoryCorrect() bool {
 
-	return len(chk.violations.Directories) == 0 && len(chk.violations.NoExtension) == 0 && len(chk.violations.DupExtensions) == 0
+	result := true
+
+	if len(chk.issuesTemplatesDirectoryChildren) > 0 {
+
+		result = false
+	}
+
+	if len(chk.templatesDuplicateGroups) > 0 {
+
+		result = false
+	}
+
+	return result
 }
 
 func (chk *checker) getLocalizedMessage(MessageId string, value1 string, value2 string) string {
@@ -396,6 +404,17 @@ func (chk *checker) checkTemplatesFolder(ctx context.Context) error {
 	}
 
 	//-------------------------------------------------------------------------
+	// Check, if the given template-folder is "hidden" or "system" (on Windows)
+	//-------------------------------------------------------------------------
+
+	if osspecific.IsHiddenOrSystem(chk.templateFolder) {
+
+		return nil // Template-folder is hidden or system, so no need to check it
+	}
+
+	//-------------------------------------------------------------------------
+	// Does the template-folder exist?
+	//-------------------------------------------------------------------------
 
 	diskFs := afero.NewOsFs()
 
@@ -403,17 +422,22 @@ func (chk *checker) checkTemplatesFolder(ctx context.Context) error {
 
 	if err != nil {
 
-		if exists, _ := afero.Exists(diskFs, chk.templateFolder); !exists {
+		if errors.Is(err, os.ErrNotExist) {
 
-			return nil
+			return nil // Template-folder does not exist, so no need to check it
 		}
 
 		return err
 	}
 
 	//-------------------------------------------------------------------------
+	// Check, if the given target directory contains any sub-directories and
+	// count the number of files while checking directories
+	//-------------------------------------------------------------------------
 
-	extensions := make(map[string][]string)
+	var numFiles int = 0
+
+	//-------------------------------------------------------------------------
 
 	for _, fileInfo := range fileInfos {
 
@@ -434,49 +458,84 @@ func (chk *checker) checkTemplatesFolder(ctx context.Context) error {
 
 		if fileInfo.IsDir() {
 
-			chk.violations.Directories = append(chk.violations.Directories, fileInfo.Name())
+			if !osspecific.IsHiddenOrSystem(filepath.Join(chk.inputFolder, fileInfo.Name())) {
+
+				chk.issuesTemplatesDirectoryChildren = append(chk.issuesTemplatesDirectoryChildren,
+
+					Issue{
+						isDir:    true,
+						filePath: fileInfo.Name(),
+						info:     chk.templateFolder,
+					})
+			}
 		} else {
 
-			fileName := fileInfo.Name()
+			numFiles++
+		}
+	}
 
-			fileExtension := filepath.Ext(fileName)
+	//-------------------------------------------------------------------------
+	// Check for duplicate or ambiguous file- and directory names
+	//-------------------------------------------------------------------------
 
-			if fileExtension == "" || !strings.Contains(fileName, ".") {
+	if numFiles >= 2 { // There have to be at least 2 items in the folder to have duplicates
 
-				chk.violations.NoExtension = append(chk.violations.NoExtension, fileName)
-			} else {
+		duplicateGroup := DuplicateGroup{groupName: chk.templateFolder}
 
-				fileExtension = strings.ToLower(strings.TrimPrefix(fileExtension, "."))
+		for _, fileInfo := range fileInfos {
 
-				extensions[fileExtension] = append(extensions[fileExtension], fileName)
+			if !fileInfo.IsDir() {
+
+				duplicateGroup.items = append(duplicateGroup.items, DuplicateItem{itemName: fileInfo.Name(), isDir: fileInfo.IsDir()})
 			}
 		}
-	}
 
-	for extension, files := range extensions {
+		for memberIdx := len(duplicateGroup.items) - 1; memberIdx >= 0; memberIdx-- {
 
-		//---------------------------------------------------------------------
-		// Check cancellation
-		//---------------------------------------------------------------------
+			groupMember, _ := strings.CutPrefix(strings.ToLower(duplicateGroup.items[memberIdx].itemName), ".")
 
-		select {
+			var siblingsFound bool = false
 
-		case <-ctx.Done():
+			for testerIdx := 0; !siblingsFound && (testerIdx < len(duplicateGroup.items)); testerIdx++ {
 
-			return ctx.Err()
+				if memberIdx != testerIdx {
 
-		default:
+					groupMemberTest, _ := strings.CutPrefix(strings.ToLower(duplicateGroup.items[testerIdx].itemName), ".")
+
+					if groupMember == groupMemberTest {
+
+						siblingsFound = true
+					} else {
+
+						if norm.NFC.String(groupMember) == norm.NFC.String(groupMemberTest) {
+
+							siblingsFound = true
+						} else {
+
+							if nutsandbolts.NormalizeExtension(groupMember) == nutsandbolts.NormalizeExtension(groupMemberTest) {
+
+								siblingsFound = true
+							}
+						}
+					}
+				}
+			}
+
+			if !siblingsFound {
+
+				duplicateGroup.items = slices.Delete(duplicateGroup.items, memberIdx, memberIdx+1)
+			}
 		}
 
-		//---------------------------------------------------------------------
+		if len(duplicateGroup.items) >= 2 {
 
-		if len(files) > 1 {
-
-			chk.violations.DupExtensions[extension] = files
+			chk.templatesDuplicateGroups = append(chk.templatesDuplicateGroups, duplicateGroup)
 		}
 	}
 
-	if !chk.isTemplatesCorrect() {
+	//-------------------------------------------------------------------------
+
+	if !chk.isTemplatesDirectoryCorrect() {
 
 		return constants.ErrTemplateFolderIncorrect
 	}
@@ -493,8 +552,6 @@ func InputFolderCheck(ctx context.Context, localizer *i18n.Localizer, inputfolde
 	var err error
 
 	checker := newChecker(localizer, inputfolder, templateFolder)
-
-	// TODO: Alle drei Funktionen mit Context ausrüsten!
 
 	if err = checker.checkInputFolder(ctx); err == nil {
 
@@ -580,8 +637,6 @@ func InputFolderCheckAsync(ctx context.Context, localizer *i18n.Localizer, input
 	defer spinner.Stop() // Don't forget to stop the spinner when done
 
 	//-------------------------------------------------------------------------
-
-	// TODO: Alle drei Funktionen mit Context ausrüsten!
 
 	if err = checker.checkInputFolder(ctx); err == nil {
 

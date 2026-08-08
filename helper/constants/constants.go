@@ -83,7 +83,6 @@ const (
 	SpinnerStopMessageDone           = "spinner.stopmessage.done"
 	SpinnerStopMessageError          = "spinner.stopmessage.error"
 
-	Label_Folder    = "label.folder"
-	Label_File      = "label.file"
-	Label_Extension = "label.extension"
+	Label_Folder = "label.folder"
+	Label_File   = "label.file"
 )
